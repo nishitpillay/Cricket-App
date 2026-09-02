@@ -11,10 +11,6 @@ interface HeaderProps {
   onOpenProfile?: () => void;
   onGoogleSyncClick?: () => void;
   onGuardianPortalClick?: () => void;
-  onSecurityClick?: () => void;
-  onPrivacyClick?: () => void;
-  onEncryptionClick?: () => void;
-  onMobileSecurityClick?: () => void;
   onBack?: () => void;
   showBack?: boolean;
 }
@@ -28,10 +24,6 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenProfile,
   onGoogleSyncClick,
   onGuardianPortalClick,
-  onSecurityClick,
-  onPrivacyClick,
-  onEncryptionClick,
-  onMobileSecurityClick,
   onBack,
   showBack = false
 }) => {
@@ -61,39 +53,6 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right action: Google Integration + Role Pill + Avatar Trigger */}
         <div className="flex items-center gap-2">
-          {onMobileSecurityClick && (
-            <button
-              onClick={onMobileSecurityClick}
-              title="OWASP MASVS Mobile App Security (Keychain & Keystore)"
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-mono text-[#83ea00] hover:border-[#83ea00]/40 transition-all active:scale-95 cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-[16px]">smartphone</span>
-              <span className="hidden lg:inline text-[11px] font-bold">Mobile Sec</span>
-            </button>
-          )}
-
-          {onPrivacyClick && (
-            <button
-              onClick={onPrivacyClick}
-              title="Data Privacy & Classification Governance"
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-mono text-[#c3f400] hover:border-[#c3f400]/40 transition-all active:scale-95 cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-[16px]">verified_user</span>
-              <span className="hidden md:inline text-[11px] font-bold">Privacy</span>
-            </button>
-          )}
-
-          {onEncryptionClick && (
-            <button
-              onClick={onEncryptionClick}
-              title="Data Encryption (TLS 1.3 & Cloud KMS)"
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-mono text-[#9cf0ff] hover:border-[#9cf0ff]/40 transition-all active:scale-95 cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-[16px]">lock</span>
-              <span className="hidden md:inline text-[11px] font-bold">Encryption</span>
-            </button>
-          )}
-
           {onGoogleSyncClick && (
             <button
               onClick={onGoogleSyncClick}
@@ -102,16 +61,6 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <span className="material-symbols-outlined text-[16px] text-[#c3f400]">cloud_sync</span>
               <span className="hidden sm:inline">Google Sync</span>
-            </button>
-          )}
-
-          {onSecurityClick && (
-            <button
-              onClick={onSecurityClick}
-              title="Security, MFA & Sessions"
-              className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-[#c3f400] hover:border-[#c3f400]/40 transition-all active:scale-95 cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-[18px]">shield</span>
             </button>
           )}
 

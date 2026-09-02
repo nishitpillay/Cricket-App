@@ -11,10 +11,33 @@ export interface AuthState {
   botScore: number;
 }
 
+export type SecurityEventType = 
+  | 'login'
+  | 'logout'
+  | 'failed_authentication'
+  | 'mfa_changes'
+  | 'password_changes'
+  | 'account_recovery'
+  | 'new_devices'
+  | 'coach_player_linking'
+  | 'guardian_linking'
+  | 'privilege_changes'
+  | 'administrative_actions'
+  | 'sensitive_data_access'
+  | 'media_deletion'
+  | 'account_deletion'
+  | 'suspicious_api_activity'
+  | 'login_success'
+  | 'mfa_challenge'
+  | 'failed_login_lockout'
+  | 'password_reset_requested'
+  | 'session_terminated'
+  | 'passkey_registered';
+
 export interface SecurityEvent {
   id: string;
   timestamp: string;
-  type: 'login_success' | 'mfa_challenge' | 'failed_login_lockout' | 'password_reset_requested' | 'session_terminated' | 'passkey_registered';
+  type: SecurityEventType;
   details: string;
   location: string;
   status: 'success' | 'flagged' | 'blocked';
@@ -106,6 +129,29 @@ export const terminateAllOtherSessions = (currentSessionId: string): UserSession
   return updated;
 };
 
+export function scrubSensitiveData(text: string): string {
+  let clean = text;
+
+  // 1. Scrub passwords and credentials phrases
+  clean = clean.replace(/(password|passwd|pwd|pass|secret)\s*[:=]\s*['"]?([^\s'"]{4,})['"]?/ig, '$1=[REDACTED_CREDENTIAL]');
+  
+  // 2. Scrub Auth Tokens & Bearer Keys
+  clean = clean.replace(/Bearer\s+[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+=]*/g, 'Bearer [REDACTED_TOKEN]');
+  clean = clean.replace(/token\s*[:=]\s*['"]?([A-Za-z0-9-_]{10,})['"]?/ig, 'token=[REDACTED_TOKEN]');
+
+  // 3. Scrub Payment Cards (13-19 digit pans)
+  clean = clean.replace(/\b(?:\d[ -]*?){13,19}\b/g, '[REDACTED_CARD_INFO]');
+
+  // 4. Scrub Private Encryption Keys
+  clean = clean.replace(/-----BEGIN[A-Z ]+KEY-----[\s\S]*?-----END[A-Z ]+KEY-----/g, '[REDACTED_PRIVATE_KEY]');
+  
+  // 5. Scrub Unnecessary Sensitive Player PII (phone numbers, Raw UK Postcodes)
+  clean = clean.replace(/\+?[0-9]{3,4}[ -]?[0-9]{3,4}[ -]?[0-9]{4,}/g, '[REDACTED_CONTACT_INFO]');
+  clean = clean.replace(/\b([A-Z]{1,2}[0-9][A-Z0-9]? [0-9][ABD-HJLNP-UW-Z]{2})\b/ig, '[REDACTED_POSTAL_LOCATION]');
+
+  return clean;
+}
+
 export const getSecurityLogs = (): SecurityEvent[] => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_SECURITY_LOG);
@@ -113,50 +159,152 @@ export const getSecurityLogs = (): SecurityEvent[] => {
   } catch (e) {
     console.warn('Failed to read security logs', e);
   }
+  
+  // High fidelity default seed logs representing all 15 security-relevant categories requested by the auditor
   return [
     {
-      id: 'sec-01',
-      timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
-      type: 'login_success',
-      details: 'Passkey biometric hardware token verified (FIDO2/WebAuthn)',
-      location: 'London, UK',
+      id: 'sec-log-01',
+      timestamp: new Date(Date.now() - 1000 * 60 * 3).toISOString(),
+      type: 'login',
+      details: 'User login completed. Biometric passkey verified securely.',
+      location: 'London, UK (Device: MacBook Pro)',
       status: 'success'
     },
     {
-      id: 'sec-02',
-      timestamp: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-      type: 'mfa_challenge',
-      details: 'MFA TOTP Authenticator code verified (RFC 6238)',
-      location: 'London, UK',
+      id: 'sec-log-02',
+      timestamp: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
+      type: 'logout',
+      details: 'User logout initiated. Session token and local secure vault references cleared.',
+      location: 'London, UK (Device: MacBook Pro)',
       status: 'success'
     },
     {
-      id: 'sec-03',
+      id: 'sec-log-03',
+      timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+      type: 'failed_authentication',
+      details: 'Failed authentication check. Incorrect TOTP token provided. (Scrubbed attempt: password=[REDACTED_CREDENTIAL]).',
+      location: 'Manchester, UK (IP: 198.51.100.12)',
+      status: 'flagged'
+    },
+    {
+      id: 'sec-log-04',
+      timestamp: new Date(Date.now() - 1000 * 3600 * 2).toISOString(),
+      type: 'mfa_changes',
+      details: 'MFA settings modified. Added Google Authenticator hardware key backup.',
+      location: 'London, UK (Device: iPhone 16)',
+      status: 'success'
+    },
+    {
+      id: 'sec-log-05',
+      timestamp: new Date(Date.now() - 1000 * 3600 * 4).toISOString(),
+      type: 'password_changes',
+      details: 'User password changed successfully. Old password cryptographically invalidated.',
+      location: 'London, UK (Device: MacBook Pro)',
+      status: 'success'
+    },
+    {
+      id: 'sec-log-06',
       timestamp: new Date(Date.now() - 1000 * 3600 * 6).toISOString(),
-      type: 'failed_login_lockout',
-      details: 'Credential stuffing defense: Rate-limiting tripped after 3 rapid failures from unrecognized ASN.',
-      location: 'Frankfurt, Germany (Blocked IP 45.154.**.**)',
+      type: 'account_recovery',
+      details: 'Out-of-band account recovery link generated and sent to verified address.',
+      location: 'System Server Agent',
+      status: 'success'
+    },
+    {
+      id: 'sec-log-07',
+      timestamp: new Date(Date.now() - 1000 * 3600 * 12).toISOString(),
+      type: 'new_devices',
+      details: 'New device added to keychain: iPad Air Field Cam Rig. Session verification required.',
+      location: 'The Oval Cricket Ground, London',
+      status: 'success'
+    },
+    {
+      id: 'sec-log-08',
+      timestamp: new Date(Date.now() - 1000 * 3600 * 18).toISOString(),
+      type: 'coach_player_linking',
+      details: 'Coach-player link authorized. Coach ID coach-arin linked with player usr-liam-junior with active expiry.',
+      location: 'London, UK (Guardian Consent Portal)',
+      status: 'success'
+    },
+    {
+      id: 'sec-log-09',
+      timestamp: new Date(Date.now() - 1000 * 3600 * 24).toISOString(),
+      type: 'guardian_linking',
+      details: 'Guardian profile verified. Sarah Chen linked as supervisor to junior Liam Chen.',
+      location: 'London, UK',
+      status: 'success'
+    },
+    {
+      id: 'sec-log-10',
+      timestamp: new Date(Date.now() - 1000 * 3600 * 30).toISOString(),
+      type: 'privilege_changes',
+      details: 'Role privileges modified. User role promoted from guest to verified_coach.',
+      location: 'System Administrative panel',
+      status: 'success'
+    },
+    {
+      id: 'sec-log-11',
+      timestamp: new Date(Date.now() - 1000 * 3600 * 36).toISOString(),
+      type: 'administrative_actions',
+      details: 'Administrative lock executed. Disabled inactive accounts older than 90 days.',
+      location: 'System CRON worker node',
+      status: 'success'
+    },
+    {
+      id: 'sec-log-12',
+      timestamp: new Date(Date.now() - 1000 * 3600 * 42).toISOString(),
+      type: 'sensitive_data_access',
+      details: 'Sensitive data access logs read. Viewed historical safeguarding reports.',
+      location: 'London, UK (User: security_admin)',
+      status: 'success'
+    },
+    {
+      id: 'sec-log-13',
+      timestamp: new Date(Date.now() - 1000 * 3600 * 48).toISOString(),
+      type: 'media_deletion',
+      details: 'Video delivery drill media manually purged. Hard delete executed on block storage.',
+      location: 'London, UK (User: usr-liam-junior)',
+      status: 'success'
+    },
+    {
+      id: 'sec-log-14',
+      timestamp: new Date(Date.now() - 1000 * 3600 * 72).toISOString(),
+      type: 'account_deletion',
+      details: 'Account deletion requested and queued for standard GDPR 30-day scrub cycle.',
+      location: 'London, UK (User: usr-test-archived)',
+      status: 'success'
+    },
+    {
+      id: 'sec-log-15',
+      timestamp: new Date(Date.now() - 1000 * 3600 * 96).toISOString(),
+      type: 'suspicious_api_activity',
+      details: 'Suspicious API activity: SQL injection character sequence detected in query filter.',
+      location: 'Unrecognized Proxy IP: 185.190.140.35',
       status: 'blocked'
     }
   ];
 };
 
 export const logSecurityEvent = (
-  type: SecurityEvent['type'],
+  type: SecurityEventType,
   details: string,
   location: string = 'Current Client Node',
   status: 'success' | 'flagged' | 'blocked' = 'success'
 ): void => {
   const logs = getSecurityLogs();
+  
+  // Mandatory Security Rule: Scrub passwords, keys, tokens, unnecessary sensitive player details
+  const scrubbedDetails = scrubSensitiveData(details);
+  
   const newEntry: SecurityEvent = {
     id: `sec-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
     timestamp: new Date().toISOString(),
     type,
-    details,
+    details: scrubbedDetails,
     location,
     status
   };
-  const updated = [newEntry, ...logs.slice(0, 24)];
+  const updated = [newEntry, ...logs.slice(0, 49)]; // Expanded log history limit to 50 entries
   try {
     localStorage.setItem(STORAGE_KEY_SECURITY_LOG, JSON.stringify(updated));
   } catch (e) {

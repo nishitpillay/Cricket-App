@@ -19,7 +19,12 @@ export type ScreenType =
   | 'security-settings'
   | 'privacy-governance'
   | 'encryption-governance'
-  | 'mobile-security';
+  | 'mobile-security'
+  | 'work'
+  | 'more'
+  | 'support'
+  | 'help'
+  | 'terms';
 
 export type MASVSDomain = 
   | 'MASVS-STORAGE'

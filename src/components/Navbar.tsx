@@ -4,41 +4,25 @@ import { ScreenType } from '../types';
 interface NavbarProps {
   currentScreen: ScreenType;
   onNavigate: (screen: ScreenType) => void;
+  onBack?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ currentScreen, onNavigate }) => {
-  const navItems: { id: ScreenType; label: string; icon: string; aliases?: ScreenType[] }[] = [
+export const Navbar: React.FC<NavbarProps> = ({ currentScreen, onNavigate, onBack }) => {
+  const navItems: { id: ScreenType | 'back'; label: string; icon: string; aliases?: ScreenType[] }[] = [
     { id: 'home', label: 'HOME', icon: 'home' },
     {
-      id: 'video-analysis',
-      label: 'MOTION LAB',
-      icon: 'slow_motion_video',
-      aliases: ['record', 'video-analysis']
+      id: 'work',
+      label: 'WORK',
+      icon: 'engineering',
+      aliases: ['record', 'video-analysis', 'stats', 'drills-vault', 'drills', 'drill-details', 'drill-practice', 'scenarios', 'masterclasses', 'chalkboard', 'planner', 'academy', 'feedback']
     },
     {
-      id: 'drills-vault',
-      label: 'VAULT',
-      icon: 'fitness_center',
-      aliases: ['drills', 'drills-vault', 'drill-details', 'drill-practice']
+      id: 'more',
+      label: 'MORE',
+      icon: 'menu',
+      aliases: ['support', 'help', 'terms', 'security-settings', 'privacy-governance', 'encryption-governance', 'mobile-security']
     },
-    {
-      id: 'scenarios',
-      label: 'TACTICS',
-      icon: 'psychology',
-      aliases: ['scenarios', 'masterclasses', 'chalkboard', 'planner']
-    },
-    {
-      id: 'stats',
-      label: 'WAGON/STATS',
-      icon: 'radar',
-      aliases: ['stats']
-    },
-    {
-      id: 'academy',
-      label: 'ACADEMY',
-      icon: 'school',
-      aliases: ['academy', 'feedback']
-    }
+    { id: 'back', label: 'BACK', icon: 'arrow_back' }
   ];
 
   return (
@@ -46,13 +30,20 @@ export const Navbar: React.FC<NavbarProps> = ({ currentScreen, onNavigate }) => 
       <div className="h-16 max-w-xl mx-auto flex justify-around items-center px-1">
         {navItems.map((item) => {
           const isActive =
-            currentScreen === item.id ||
-            (item.aliases && item.aliases.includes(currentScreen));
+            item.id !== 'back' &&
+            (currentScreen === item.id ||
+            (item.aliases && item.aliases.includes(currentScreen)));
 
           return (
             <button
               key={item.id}
-              onClick={() => onNavigate(item.id)}
+              onClick={() => {
+                if (item.id === 'back') {
+                  onBack?.();
+                } else {
+                  onNavigate(item.id as ScreenType);
+                }
+              }}
               className={`flex flex-col items-center justify-center gap-0.5 w-14 sm:w-16 py-1 transition-all duration-200 cursor-pointer ${
                 isActive
                   ? 'text-[#c3f400] font-bold scale-105'

@@ -23,6 +23,10 @@ import { SecurityAndSessionsScreen } from './components/screens/SecurityAndSessi
 import { DataPrivacyGovernanceScreen } from './components/privacy/DataPrivacyGovernanceScreen';
 import { DataEncryptionGovernanceScreen } from './components/encryption/DataEncryptionGovernanceScreen';
 import { MobileSecurityGovernanceScreen } from './components/screens/MobileSecurityGovernanceScreen';
+import { WorkScreen } from './components/screens/WorkScreen';
+import { MoreScreen } from './components/screens/MoreScreen';
+import { SupportScreen } from './components/screens/SupportScreen';
+import { PlaceholderScreen } from './components/screens/PlaceholderScreen';
 import { VideoAnalysisTool } from './components/videoAnalysis/VideoAnalysisTool';
 import { TacticalMasterclasses } from './components/tactics/TacticalMasterclasses';
 import { ScenarioTraining } from './components/tactics/ScenarioTraining';
@@ -37,7 +41,53 @@ import { JuniorSafetyBanner } from './components/safeguarding/JuniorSafetyBanner
 import { GoogleFitnessData, GoogleCricketVenueLocation } from './types';
 import { playBeep } from './utils/audioFeedback';
 
+const PARENT_SCREEN_MAP: Partial<Record<ScreenType, ScreenType>> = {
+  'video-analysis': 'work',
+  'record': 'work',
+  'drills-vault': 'work',
+  'scenarios': 'work',
+  'stats': 'work',
+  'planner': 'work',
+  'drills': 'work',
+  
+  'drill-details': 'drills-vault',
+  'drill-practice': 'drill-details',
+
+  'masterclasses': 'scenarios',
+  'chalkboard': 'scenarios',
+
+  'academy': 'more',
+  'feedback': 'more',
+  'support': 'more',
+  'help': 'more',
+  'terms': 'more',
+  'security-settings': 'more',
+
+  'privacy-governance': 'support',
+  'encryption-governance': 'support',
+  'mobile-security': 'support',
+
+  'auth-player': 'home',
+  'auth-coach': 'home',
+  'auth-admin': 'home',
+};
+
+const buildHierarchy = (screen: ScreenType): ScreenType[] => {
+  const stack: ScreenType[] = [screen];
+  let current = screen;
+  while (PARENT_SCREEN_MAP[current]) {
+    current = PARENT_SCREEN_MAP[current]!;
+    stack.unshift(current);
+  }
+  // Ensure 'home' is at the root if not already, to guarantee we can always back out to home
+  if (stack[0] !== 'home' && screen !== 'home') {
+    stack.unshift('home');
+  }
+  return stack;
+};
+
 export default function App() {
+  const [historyStack, setHistoryStack] = useState<ScreenType[]>(['home']);
   const [currentScreen, setCurrentScreen] = useState<ScreenType>('home');
   const [currentUser, setCurrentUser] = useState<UserProfile>(mockUsers.player);
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
@@ -52,7 +102,20 @@ export default function App() {
 
   const handleNavigate = (screen: ScreenType) => {
     playBeep(650, 0.06);
+    const newStack = buildHierarchy(screen);
+    setHistoryStack(newStack);
     setCurrentScreen(screen);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleBack = () => {
+    playBeep(550, 0.05);
+    setHistoryStack(prev => {
+      if (prev.length <= 1) return prev;
+      const newStack = prev.slice(0, -1);
+      setCurrentScreen(newStack[newStack.length - 1]);
+      return newStack;
+    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -68,22 +131,35 @@ export default function App() {
 
   // Compute header title and back button
   let headerTitle = '';
-  let showBack = false;
-  let onBack: (() => void) | undefined = undefined;
+  let showBack = historyStack.length > 1;
 
   switch (currentScreen) {
     case 'home':
       headerTitle = '';
+      showBack = false;
+      break;
+    case 'work':
+      headerTitle = 'Workspace';
+      showBack = false;
+      break;
+    case 'more':
+      headerTitle = 'More Options';
+      showBack = false;
+      break;
+    case 'support':
+      headerTitle = 'Support & Security';
+      break;
+    case 'help':
+      headerTitle = 'Help Center';
+      break;
+    case 'terms':
+      headerTitle = 'Terms of Service';
       break;
     case 'record':
       headerTitle = 'Live Camera Record';
-      showBack = true;
-      onBack = () => handleNavigate('home');
       break;
     case 'video-analysis':
       headerTitle = 'Video Analysis & Slow-Mo';
-      showBack = true;
-      onBack = () => handleNavigate('home');
       break;
     case 'stats':
       headerTitle = 'Data & Wagon Wheels';
@@ -93,71 +169,47 @@ export default function App() {
       break;
     case 'drills-vault':
       headerTitle = 'Smart Drills Vault';
-      showBack = true;
-      onBack = () => handleNavigate('home');
       break;
     case 'scenarios':
       headerTitle = 'Scenario-Based Training';
-      showBack = true;
-      onBack = () => handleNavigate('home');
       break;
     case 'masterclasses':
       headerTitle = 'Tactical Masterclasses';
-      showBack = true;
-      onBack = () => handleNavigate('home');
       break;
     case 'planner':
       headerTitle = 'Training Planner';
-      showBack = true;
-      onBack = () => handleNavigate('home');
       break;
     case 'chalkboard':
       headerTitle = 'Digital Chalkboard';
-      showBack = true;
-      onBack = () => handleNavigate('home');
       break;
     case 'academy':
       headerTitle = 'Academy & Rules Breakdown';
       break;
     case 'drill-details':
       headerTitle = 'Drill Details';
-      showBack = true;
-      onBack = () => handleNavigate('drills-vault');
       break;
     case 'drill-practice':
       headerTitle = 'Live Practice';
-      showBack = true;
-      onBack = () => handleNavigate('drill-details');
       break;
     case 'feedback':
       headerTitle = 'Session Feedback';
       break;
     case 'security-settings':
       headerTitle = 'Security & Sessions';
-      showBack = true;
-      onBack = () => handleNavigate('home');
       break;
     case 'privacy-governance':
       headerTitle = 'Privacy & Classification';
-      showBack = true;
-      onBack = () => handleNavigate('home');
       break;
     case 'encryption-governance':
       headerTitle = 'Data Encryption & KMS';
-      showBack = true;
-      onBack = () => handleNavigate('home');
       break;
     case 'mobile-security':
       headerTitle = 'Mobile App Security';
-      showBack = true;
-      onBack = () => handleNavigate('home');
       break;
     case 'auth-player':
     case 'auth-coach':
     case 'auth-admin':
       headerTitle = 'Sign In';
-      showBack = true;
-      onBack = () => handleNavigate('home');
       break;
     default:
       headerTitle = '';
@@ -172,15 +224,11 @@ export default function App() {
       <Header
         title={headerTitle}
         showBack={showBack}
-        onBack={onBack}
+        onBack={handleBack}
         currentUser={currentUser}
         onProfileClick={() => setIsRoleModalOpen(true)}
         onGoogleSyncClick={() => setIsGoogleModalOpen(true)}
         onGuardianPortalClick={() => setIsGuardianPortalOpen(true)}
-        onSecurityClick={() => handleNavigate('security-settings')}
-        onPrivacyClick={() => handleNavigate('privacy-governance')}
-        onEncryptionClick={() => handleNavigate('encryption-governance')}
-        onMobileSecurityClick={() => handleNavigate('mobile-security')}
       />
 
       {/* Main Screen Content View */}
@@ -208,6 +256,26 @@ export default function App() {
               handleNavigate('drill-details');
             }}
           />
+        )}
+        
+        {currentScreen === 'work' && (
+          <WorkScreen onNavigate={handleNavigate} />
+        )}
+
+        {currentScreen === 'more' && (
+          <MoreScreen onNavigate={handleNavigate} />
+        )}
+
+        {currentScreen === 'support' && (
+          <SupportScreen onNavigate={handleNavigate} />
+        )}
+
+        {currentScreen === 'help' && (
+          <PlaceholderScreen title="Help Center" description="Access FAQs, support tickets, and contact information." />
+        )}
+
+        {currentScreen === 'terms' && (
+          <PlaceholderScreen title="Terms of Service" description="Read our comprehensive legal agreements and usage terms." />
         )}
 
         {currentScreen === 'video-analysis' && (
@@ -345,6 +413,7 @@ export default function App() {
         <Navbar
           currentScreen={currentScreen}
           onNavigate={handleNavigate}
+          onBack={handleBack}
         />
       )}
 

@@ -77,6 +77,16 @@ export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps>
   const [incDesc, setIncDesc] = useState('');
   const [incAction, setIncAction] = useState('');
 
+  // Security Simulation, Scrubbing & Filter States
+  const [simType, setSimType] = useState<string>('login');
+  const [simDetails, setSimDetails] = useState('User logged in. Session token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9 and temp-pass="hunter2" used. Client billing credit_card: 4111-2222-3333-4444.');
+  const [simStatus, setSimStatus] = useState<'success' | 'flagged' | 'blocked'>('success');
+  const [simLocation, setSimLocation] = useState('London, UK (Core Edge Node)');
+  
+  const [logFilterStatus, setLogFilterStatus] = useState<string>('all');
+  const [logFilterType, setLogFilterType] = useState<string>('all');
+  const [logSearchQuery, setLogSearchQuery] = useState<string>('');
+
   const roleRequiresMfa = isMfaMandatory(currentUser.role);
 
   const showNotification = (msg: string) => {
@@ -900,63 +910,435 @@ export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps>
       )}
 
       {/* TAB 3: AUDIT STREAM */}
-      {activeTab === 'audit_logs' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 rounded-2xl bg-[#1c1b1b] border border-white/10">
-            <div>
-              <h3 className="font-headline font-bold text-sm text-white">Cryptographic Security Telemetry</h3>
-              <p className="text-xs text-[#c4c9ac]">
-                Immutable access events, rate-limiting locks, and authentication attempts.
-              </p>
+      {activeTab === 'audit_logs' && (() => {
+        // Compute active suspicious activity alerts dynamically
+        const activeAlerts = securityLogs.filter(log => 
+          (log.status === 'blocked' || log.status === 'flagged' || log.type === 'failed_authentication' || log.type === 'suspicious_api_activity') && 
+          !(window as any).acknowledgedAlertIds?.includes(log.id)
+        );
+
+        // Filter security logs based on user filters & search query
+        const filteredLogs = securityLogs.filter(log => {
+          const matchesSearch = log.details.toLowerCase().includes(logSearchQuery.toLowerCase()) || 
+                                log.type.toLowerCase().includes(logSearchQuery.toLowerCase()) ||
+                                log.location.toLowerCase().includes(logSearchQuery.toLowerCase());
+          const matchesStatus = logFilterStatus === 'all' || log.status === logFilterStatus;
+          const matchesType = logFilterType === 'all' || log.type === logFilterType;
+          return matchesSearch && matchesStatus && matchesType;
+        });
+
+        const handleSimulateLog = () => {
+          playBeep(800, 0.05);
+          logSecurityEvent(simType as any, simDetails, simLocation, simStatus);
+          setSecurityLogs(getSecurityLogs());
+          showNotification(`Executed secure write: Simulated ${simType.replace(/_/g, ' ')} event.`);
+        };
+
+        const handleAcknowledgeAlert = (id: string) => {
+          playBeep(600, 0.04);
+          if (!(window as any).acknowledgedAlertIds) {
+            (window as any).acknowledgedAlertIds = [];
+          }
+          (window as any).acknowledgedAlertIds.push(id);
+          // force component update
+          setSecurityLogs([...getSecurityLogs()]);
+          showNotification('Security alert acknowledged by operator.');
+        };
+
+        const preloadTemplate = (title: string, details: string, type: string, status: 'success' | 'flagged' | 'blocked') => {
+          playBeep(700, 0.03);
+          setSimType(type);
+          setSimDetails(details);
+          setSimStatus(status);
+          showNotification(`Preloaded: ${title}`);
+        };
+
+        return (
+          <div className="space-y-6">
+            {/* Live Telemetry Title Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-[#1c1b1b] border border-white/10 gap-3">
+              <div>
+                <h3 className="font-headline font-bold text-sm text-white">Cryptographic Security Telemetry & Audit Trail</h3>
+                <p className="text-xs text-[#c4c9ac] mt-0.5">
+                  Immutable access records, boundary compliance, and automated PII/credential redaction logging.
+                </p>
+              </div>
+              <span className="text-[10px] font-mono px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 flex items-center gap-1.5 self-start sm:self-center">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                Live Audit Stream Active
+              </span>
             </div>
-            <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              Live Audit Stream
-            </span>
-          </div>
 
-          <div className="space-y-2">
-            {securityLogs.map(log => (
-              <div
-                key={log.id}
-                className="p-3.5 rounded-xl bg-[#181818] border border-white/10 flex items-start justify-between gap-3 text-xs"
-              >
-                <div className="flex items-start gap-3">
-                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border ${
-                    log.status === 'blocked'
-                      ? 'bg-red-500/20 text-red-300 border-red-500/30'
-                      : log.status === 'flagged'
-                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-                      : 'bg-[#c3f400]/20 text-[#c3f400] border-[#c3f400]/30'
-                  }`}>
-                    <span className="material-symbols-outlined text-[16px]">
-                      {log.status === 'blocked' ? 'gpp_bad' : log.status === 'flagged' ? 'warning' : 'verified_user'}
-                    </span>
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-white uppercase tracking-wider text-[11px]">
-                        {log.type.replace(/_/g, ' ')}
-                      </span>
-                      <span className={`px-2 py-0.2 rounded text-[9px] font-mono uppercase ${
-                        log.status === 'blocked' ? 'bg-red-900/60 text-red-200' : 'bg-emerald-950 text-emerald-300'
-                      }`}>
-                        {log.status}
-                      </span>
-                    </div>
-                    <p className="text-[#c4c9ac] mt-0.5">{log.details}</p>
-                    <p className="text-[10px] text-[#8e918f] font-mono mt-1">{log.location}</p>
-                  </div>
+            {/* Suspicious Activity Alert Center (REAL-TIME ALERTS FOR SUSPICIOUS ACTIVITIES) */}
+            <div className="p-5 rounded-2xl bg-black/40 border border-white/5 space-y-4">
+              <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-amber-500 text-[18px]">gpp_maybe</span>
+                  <h4 className="font-headline font-bold text-xs uppercase tracking-wider text-white">
+                    Suspicious Activity Alert Center
+                  </h4>
                 </div>
-
-                <span className="text-[10px] text-[#8e918f] font-mono shrink-0">
-                  {new Date(log.timestamp).toLocaleTimeString()}
+                <span className="text-[9px] font-mono bg-red-500/20 text-red-300 px-2 py-0.5 rounded-full border border-red-500/30">
+                  {activeAlerts.length} Unresolved Anomalies
                 </span>
               </div>
-            ))}
+
+              {activeAlerts.length === 0 ? (
+                <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/10 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+                    <span className="material-symbols-outlined text-[18px]">verified</span>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-white">All Security Operations Nominal</p>
+                    <p className="text-[10px] text-[#c4c9ac] mt-0.5">
+                      No active intrusion signatures, raw credentials exposure, or suspicious API behaviors detected.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {activeAlerts.map(alert => (
+                    <div
+                      key={alert.id}
+                      className={`p-3.5 rounded-xl border flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs transition-all ${
+                        alert.status === 'blocked'
+                          ? 'bg-red-500/5 border-red-500/20 hover:border-red-500/30'
+                          : 'bg-amber-500/5 border-amber-500/20 hover:border-amber-500/30'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${
+                          alert.status === 'blocked'
+                            ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                            : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                        }`}>
+                          <span className="material-symbols-outlined text-[16px]">
+                            {alert.status === 'blocked' ? 'report_gmailerrorred' : 'warning_amber'}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-bold text-red-300 uppercase font-mono text-[10px] tracking-wider">
+                              Suspicious Action: {alert.type.replace(/_/g, ' ')}
+                            </span>
+                            <span className={`px-1.5 py-0.2 rounded text-[8px] font-bold uppercase tracking-wider ${
+                              alert.status === 'blocked' ? 'bg-red-950 text-red-200' : 'bg-amber-950 text-amber-200'
+                            }`}>
+                              {alert.status}
+                            </span>
+                          </div>
+                          <p className="text-white text-xs mt-1 font-semibold">{alert.details}</p>
+                          <div className="flex items-center gap-2 text-[9px] text-[#8e918f] font-mono mt-1">
+                            <span>Node: {alert.location}</span>
+                            <span>•</span>
+                            <span>Time: {new Date(alert.timestamp).toLocaleString()}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 self-end md:self-center shrink-0">
+                        <button
+                          onClick={() => handleAcknowledgeAlert(alert.id)}
+                          className="px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white text-[10px] font-bold transition-all border border-white/10 cursor-pointer"
+                        >
+                          Acknowledge
+                        </button>
+                        <button
+                          onClick={() => {
+                            playBeep(400, 0.1);
+                            showNotification(`Source node ${alert.location.split(' ')[0]} isolated & blocked from main API gateway.`);
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-200 text-[10px] font-bold transition-all border border-red-500/30 cursor-pointer"
+                        >
+                          Isolate Node
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Interactive Logging Sandbox & Scrubber Tester */}
+            <div className="p-5 rounded-2xl bg-[#141414] border border-white/10 space-y-4">
+              <div>
+                <h4 className="font-headline font-bold text-xs uppercase tracking-wider text-[#c3f400]">
+                  Real-time Regulatory Scrubber & Event Sandbox
+                </h4>
+                <p className="text-[11px] text-[#c4c9ac] mt-0.5">
+                  Test the automatic filtration rules. Any input of raw credentials, payment cards, private keys, or excessive PII is dynamically scrubbed before committing to disk.
+                </p>
+              </div>
+
+              {/* Preload Test Templates */}
+              <div className="space-y-1.5">
+                <span className="text-[9px] font-bold uppercase tracking-wider text-[#8e918f] block">
+                  Select Compliance Test Scenarios:
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <button
+                    onClick={() => preloadTemplate(
+                      'Failed auth with raw password',
+                      'Attempted login with user_pass="hunter2" and user_key="session-key-998822"',
+                      'failed_authentication',
+                      'flagged'
+                    )}
+                    className="p-2 rounded-xl bg-black/40 border border-white/5 hover:border-[#c3f400]/40 text-left text-[10px] transition-all cursor-pointer"
+                  >
+                    <span className="font-bold text-white block">1. Raw Password Ingress</span>
+                    <span className="text-[#8e918f] text-[9px] block truncate mt-0.5">Filters: pass="hunter2"</span>
+                  </button>
+
+                  <button
+                    onClick={() => preloadTemplate(
+                      'API check with active JWT token',
+                      'Standard query initiated. JWT token verified: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
+                      'suspicious_api_activity',
+                      'blocked'
+                    )}
+                    className="p-2 rounded-xl bg-black/40 border border-white/5 hover:border-[#c3f400]/40 text-left text-[10px] transition-all cursor-pointer"
+                  >
+                    <span className="font-bold text-white block">2. Raw Bearer JWT Token</span>
+                    <span className="text-[#8e918f] text-[9px] block truncate mt-0.5">Filters: Bearer eyJhbGci...</span>
+                  </button>
+
+                  <button
+                    onClick={() => preloadTemplate(
+                      'Client Billing Credit Card',
+                      'Updated administrative settings with visa primary payment card: 4111 2222 3333 4444. CVV excluded.',
+                      'administrative_actions',
+                      'success'
+                    )}
+                    className="p-2 rounded-xl bg-black/40 border border-white/5 hover:border-[#c3f400]/40 text-left text-[10px] transition-all cursor-pointer"
+                  >
+                    <span className="font-bold text-white block">3. Payment Card Details</span>
+                    <span className="text-[#8e918f] text-[9px] block truncate mt-0.5">Filters: 4111-2222-...</span>
+                  </button>
+
+                  <button
+                    onClick={() => preloadTemplate(
+                      'Sensitive Athlete Location PII',
+                      'Coach registered junior liam contact phone +44 7700 900077 and raw home post code EC1A 1BB.',
+                      'coach_player_linking',
+                      'success'
+                    )}
+                    className="p-2 rounded-xl bg-black/40 border border-white/5 hover:border-[#c3f400]/40 text-left text-[10px] transition-all cursor-pointer"
+                  >
+                    <span className="font-bold text-white block">4. Non-Essential PII Details</span>
+                    <span className="text-[#8e918f] text-[9px] block truncate mt-0.5">Filters: +44 7700...</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Sandbox Form */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+                <div>
+                  <label className="block text-[10px] font-bold text-[#8e918f] uppercase mb-1">
+                    Security Event Category (15 Types)
+                  </label>
+                  <select
+                    value={simType}
+                    onChange={(e) => setSimType(e.target.value)}
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#c3f400]"
+                  >
+                    <option value="login">login</option>
+                    <option value="logout">logout</option>
+                    <option value="failed_authentication">failed authentication</option>
+                    <option value="mfa_changes">MFA changes</option>
+                    <option value="password_changes">password changes</option>
+                    <option value="account_recovery">account recovery</option>
+                    <option value="new_devices">new devices</option>
+                    <option value="coach_player_linking">coach/player linking</option>
+                    <option value="guardian_linking">guardian linking</option>
+                    <option value="privilege_changes">privilege changes</option>
+                    <option value="administrative_actions">administrative actions</option>
+                    <option value="sensitive_data_access">sensitive-data access</option>
+                    <option value="media_deletion">media deletion</option>
+                    <option value="account_deletion">account deletion</option>
+                    <option value="suspicious_api_activity">suspicious API activity</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-[#8e918f] uppercase mb-1">
+                    Location/Client Node
+                  </label>
+                  <input
+                    type="text"
+                    value={simLocation}
+                    onChange={(e) => setSimLocation(e.target.value)}
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#c3f400]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-[#8e918f] uppercase mb-1">
+                    Event Severity / Status
+                  </label>
+                  <select
+                    value={simStatus}
+                    onChange={(e) => setSimStatus(e.target.value as any)}
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#c3f400]"
+                  >
+                    <option value="success">Success (Approved / Filtered)</option>
+                    <option value="flagged">Flagged (Requires Review)</option>
+                    <option value="blocked">Blocked (Immediate Threat Mitigated)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-[10px] font-bold text-[#8e918f] uppercase">
+                  Raw Log Description details (Type any secrets to test the scrubber)
+                </label>
+                <textarea
+                  value={simDetails}
+                  onChange={(e) => setSimDetails(e.target.value)}
+                  rows={2}
+                  className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-xs text-white font-mono placeholder:text-[#c4c9ac]/30 focus:outline-none focus:border-[#c3f400]"
+                  placeholder="e.g. Authenticated user_id: 123. Input password='mysecretpassword'"
+                />
+              </div>
+
+              <button
+                onClick={handleSimulateLog}
+                className="w-full py-2.5 bg-[#c3f400] hover:bg-[#a9d100] text-black font-headline font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
+              >
+                <span className="material-symbols-outlined text-[16px]">terminal</span>
+                <span>Scrub and Commit to Log Trail</span>
+              </button>
+            </div>
+
+            {/* Audit Log Trail Filter & Search Controls */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 p-4 rounded-xl bg-black/20 border border-white/5">
+              <div className="md:col-span-2 relative">
+                <span className="absolute left-3 top-2.5 material-symbols-outlined text-white/40 text-[16px]">
+                  search
+                </span>
+                <input
+                  type="text"
+                  placeholder="Search logs by keyword, location, type..."
+                  value={logSearchQuery}
+                  onChange={(e) => setLogSearchQuery(e.target.value)}
+                  className="w-full bg-black/50 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#c3f400]"
+                />
+              </div>
+
+              <div>
+                <select
+                  value={logFilterStatus}
+                  onChange={(e) => setLogFilterStatus(e.target.value)}
+                  className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#c3f400]"
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="success">Success</option>
+                  <option value="flagged">Flagged</option>
+                  <option value="blocked">Blocked</option>
+                </select>
+              </div>
+
+              <div>
+                <select
+                  value={logFilterType}
+                  onChange={(e) => setLogFilterType(e.target.value)}
+                  className="w-full bg-black/50 border border-[#1c1b1b] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#c3f400]"
+                >
+                  <option value="all">All Event Categories</option>
+                  <option value="login">login</option>
+                  <option value="logout">logout</option>
+                  <option value="failed_authentication">failed_authentication</option>
+                  <option value="mfa_changes">mfa_changes</option>
+                  <option value="password_changes">password_changes</option>
+                  <option value="account_recovery">account_recovery</option>
+                  <option value="new_devices">new_devices</option>
+                  <option value="coach_player_linking">coach_player_linking</option>
+                  <option value="guardian_linking">guardian_linking</option>
+                  <option value="privilege_changes">privilege_changes</option>
+                  <option value="administrative_actions">administrative_actions</option>
+                  <option value="sensitive_data_access">sensitive_data_access</option>
+                  <option value="media_deletion">media_deletion</option>
+                  <option value="account_deletion">account_deletion</option>
+                  <option value="suspicious_api_activity">suspicious_api_activity</option>
+                  <option value="login_success">login_success (Legacy)</option>
+                  <option value="mfa_challenge">mfa_challenge (Legacy)</option>
+                  <option value="failed_login_lockout">failed_login_lockout (Legacy)</option>
+                  <option value="password_reset_requested">password_reset_requested (Legacy)</option>
+                  <option value="session_terminated">session_terminated (Legacy)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Audit Logs Trail Stream Grid */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-[11px] text-[#8e918f] font-mono px-2">
+                <span>Showing {filteredLogs.length} matching events</span>
+                <span>Audit Trail Cryptographically Chained</span>
+              </div>
+
+              {filteredLogs.length === 0 ? (
+                <div className="text-center py-8 text-white/40 text-xs italic bg-black/20 border border-white/5 rounded-xl">
+                  No logs found matching your filters. Try selecting "All Event Categories" or clear the search.
+                </div>
+              ) : (
+                filteredLogs.map(log => (
+                  <div
+                    key={log.id}
+                    className="p-4 rounded-xl bg-[#121212] border border-white/5 flex flex-col sm:flex-row sm:items-start justify-between gap-3 text-xs hover:bg-[#181818] transition-all"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${
+                        log.status === 'blocked'
+                          ? 'bg-red-500/10 text-red-400 border-red-500/25'
+                          : log.status === 'flagged'
+                          ? 'bg-amber-500/10 text-amber-400 border-amber-500/25'
+                          : 'bg-[#c3f400]/10 text-[#c3f400] border-[#c3f400]/25'
+                      }`}>
+                        <span className="material-symbols-outlined text-[15px]">
+                          {log.status === 'blocked' ? 'gpp_bad' : log.status === 'flagged' ? 'warning' : 'verified_user'}
+                        </span>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-bold text-white uppercase tracking-wider text-[10px] font-mono">
+                            {log.type.replace(/_/g, ' ')}
+                          </span>
+                          <span className={`px-2 py-0.2 rounded text-[9px] font-mono uppercase tracking-wider ${
+                            log.status === 'blocked'
+                              ? 'bg-red-950 text-red-300 border border-red-500/20'
+                              : log.status === 'flagged'
+                              ? 'bg-amber-950 text-amber-300 border border-amber-500/20'
+                              : 'bg-emerald-950 text-emerald-300 border border-emerald-500/20'
+                          }`}>
+                            {log.status}
+                          </span>
+                        </div>
+                        <p className="text-[#c4c9ac] mt-1.5 text-xs font-mono break-all bg-black/20 p-2 rounded border border-white/5">
+                          {log.details}
+                        </p>
+                        <div className="flex items-center gap-2 text-[10px] text-[#8e918f] font-mono mt-2">
+                          <span className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[12px]">place</span>
+                            {log.location}
+                          </span>
+                          <span>•</span>
+                          <span className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[12px]">fingerprint</span>
+                            ID: {log.id}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <span className="text-[10px] text-[#8e918f] font-mono shrink-0 bg-black/30 px-2 py-1 rounded border border-white/5 self-start">
+                      {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* TAB 4: INCIDENT RESPONSE CENTER */}
       {activeTab === 'incident_response' && (
