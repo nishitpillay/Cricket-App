@@ -49,6 +49,28 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           </div>
         </div>
 
+        {/* Global Search Bar */}
+        <div className="relative group">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <span className="material-symbols-outlined text-[#c4c9ac] group-focus-within:text-[#c3f400] transition-colors text-[20px]">
+              search
+            </span>
+          </div>
+          <input
+            type="text"
+            placeholder="Search drills, masterclasses, or sessions..."
+            className="w-full bg-[#1f1e1e] text-white text-sm rounded-2xl pl-12 pr-12 py-3.5 outline-none border border-white/10 focus:border-[#c3f400]/50 focus:bg-[#282727] focus:shadow-[0_0_15px_rgba(195,244,0,0.1)] transition-all shadow-inner placeholder:text-[#c4c9ac]/70"
+          />
+          <div className="absolute inset-y-0 right-0 pr-1.5 flex items-center">
+            <button 
+              className="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all text-[#c4c9ac] hover:text-[#c3f400] flex items-center justify-center"
+              title="Advanced Filters"
+            >
+              <span className="material-symbols-outlined text-[18px]">tune</span>
+            </button>
+          </div>
+        </div>
+
         {/* Action Grid: Start Live Recording + Google Health & Venue Bar */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <button
