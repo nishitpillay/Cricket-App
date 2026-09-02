@@ -34,9 +34,9 @@ const INITIAL_AUDIT_LOGS: SafeguardingAuditLog[] = [
     id: 'audit-102',
     timestamp: new Date(Date.now() - 86400000 * 1).toISOString(),
     actionType: 'coach_access_granted',
-    actorName: 'Sarah Chen (Guardian)',
+    actorName: 'Sarah Chen & Devi Pillay (Guardians)',
     actorRole: 'Guardian',
-    details: 'Authorized Coach Mark Richardson (ECB Level 4) for technical bowling analysis. Direct open social messaging blocked.',
+    details: 'Authorized Coach Arin Mishra (ECB Level 4) & Coach Roshan Srilanka (ICC Level 3) for technical analysis. Direct open social messaging blocked.',
     juniorUserId: 'usr-liam-junior',
     guardianCcDelivered: true
   },
@@ -54,7 +54,7 @@ const INITIAL_AUDIT_LOGS: SafeguardingAuditLog[] = [
     id: 'audit-104',
     timestamp: new Date(Date.now() - 3600000 * 2).toISOString(),
     actionType: 'coach_feedback_sent',
-    actorName: 'Coach Mark Richardson',
+    actorName: 'Arin Mishra',
     actorRole: 'Coach',
     details: 'Sent biomechanical review on Outswing Delivery. Automated encrypted copy delivered to sarah.chen.parent@gmail.com.',
     juniorUserId: 'usr-liam-junior',
@@ -64,12 +64,22 @@ const INITIAL_AUDIT_LOGS: SafeguardingAuditLog[] = [
 
 export const INITIAL_APPROVED_COACHES = [
   {
-    coachId: 'coach-mark',
-    coachName: 'Coach Mark Richardson',
+    coachId: 'coach-arin',
+    coachName: 'Arin Mishra',
     specialization: 'Fast Bowling Pace & Seam Mechanics',
     accreditation: 'ICC Level 3 / ECB Level 4 Master Instructor',
-    approvedBy: 'Sarah Chen (Guardian)',
+    approvedBy: 'Sarah Chen & Devi Pillay (Guardians)',
     approvedDate: '2026-08-20',
+    status: 'Authorized & Verified',
+    dbsSafeguardingCleared: true
+  },
+  {
+    coachId: 'coach-roshan',
+    coachName: 'Roshan Srilanka',
+    specialization: 'Tactical Batting Masterclasses & Spin Corridor Mastery',
+    accreditation: 'ICC Level 3 Master Coach / DBS Safeguarding Cleared',
+    approvedBy: 'Sarah Chen & Devi Pillay (Guardians)',
+    approvedDate: '2026-08-21',
     status: 'Authorized & Verified',
     dbsSafeguardingCleared: true
   }
@@ -299,7 +309,7 @@ export function createJuniorProfile(
       disablePublicComments: true,
       stripExifMetadata: true,
       videoPrivacyLevel: 'private-guardian-coach-only',
-      assignedCoachIds: ['coach-mark']
+      assignedCoachIds: ['coach-arin', 'coach-roshan']
     }
   };
 }

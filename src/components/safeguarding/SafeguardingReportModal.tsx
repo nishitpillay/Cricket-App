@@ -73,7 +73,7 @@ export const SafeguardingReportModal: React.FC<SafeguardingReportModalProps> = (
 }) => {
   const reporterId = currentUser?.id || currentUserId || 'usr-liam-junior';
   const reporterRole: UserRole | 'guardian' = currentUser?.role || currentUserRole || 'player';
-  const assignedTargetRole: UserRole = targetUserRole;
+  const assignedTargetRole: UserRole = (targetUserRole as UserRole) || 'coach';
 
   const [selectedCategory, setSelectedCategory] = useState<SafeguardingReportCategory>('inappropriate_coaching_communication');
   const [description, setDescription] = useState<string>('');

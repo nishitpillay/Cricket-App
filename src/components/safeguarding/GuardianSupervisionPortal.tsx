@@ -63,7 +63,7 @@ export const GuardianSupervisionPortal: React.FC<GuardianSupervisionPortalProps>
     disablePublicComments: true,
     stripExifMetadata: true,
     videoPrivacyLevel: 'private-guardian-coach-only' as const,
-    assignedCoachIds: ['coach-mark']
+    assignedCoachIds: ['coach-arin', 'coach-roshan']
   };
 
   const refreshData = () => {

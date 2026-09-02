@@ -50,9 +50,17 @@ export const RoleSwitcherModal: React.FC<RoleSwitcherModalProps> = ({
       id: 'player',
       userObj: mockUsers.player,
       title: 'Senior Player Profile',
-      subtitle: 'Alex Mercer (Level 42, 23 yrs)',
+      subtitle: 'Devang Dalvi (Level 42, 23 yrs)',
       tag: 'ELITE PRO',
       tagColor: 'bg-[#c3f400]/20 text-[#c3f400] border-[#c3f400]/30'
+    },
+    {
+      id: 'kiyara',
+      userObj: mockUsers.kiyara,
+      title: 'Academy Junior Prodigy',
+      subtitle: 'Kiyara Pillay (Age 15 • Supervised by Arin & Roshan)',
+      tag: 'SAFEGUARDED',
+      tagColor: 'bg-[#4ade80]/20 text-[#4ade80] border-[#4ade80]/30'
     },
     {
       id: 'junior',
@@ -65,10 +73,18 @@ export const RoleSwitcherModal: React.FC<RoleSwitcherModalProps> = ({
     {
       id: 'coach',
       userObj: mockUsers.coach,
-      title: 'High Performance Coach',
-      subtitle: 'Coach Mark Richardson (ECB Level 4)',
+      title: 'Lead Bowling Coach',
+      subtitle: 'Arin Mishra (ECB Level 4)',
       tag: 'DBS CLEARED',
       tagColor: 'bg-[#9cf0ff]/20 text-[#9cf0ff] border-[#9cf0ff]/30'
+    },
+    {
+      id: 'coach_roshan',
+      userObj: mockUsers.coach_roshan,
+      title: 'Master Batting & Spin Coach',
+      subtitle: 'Roshan Srilanka (ICC Level 3)',
+      tag: 'DBS CLEARED',
+      tagColor: 'bg-[#ffdb3c]/20 text-[#ffdb3c] border-[#ffdb3c]/30'
     },
     {
       id: 'admin',
@@ -193,18 +209,18 @@ export const RoleSwitcherModal: React.FC<RoleSwitcherModalProps> = ({
           })}
         </div>
 
-        {/* Safeguarding Actions Row */}
-        <div className="flex gap-2 mb-4">
+        {/* Safeguarding & Security Actions Row */}
+        <div className="grid grid-cols-4 gap-2 mb-4">
           {onOpenGuardianPortal && (
             <button
               onClick={() => {
                 onClose();
                 onOpenGuardianPortal();
               }}
-              className="flex-1 p-2 rounded-xl bg-[#4ade80]/15 border border-[#4ade80]/30 hover:bg-[#4ade80]/25 text-[11px] font-bold text-[#4ade80] flex items-center justify-center gap-1.5 cursor-pointer"
+              className="p-2 rounded-xl bg-[#4ade80]/15 border border-[#4ade80]/30 hover:bg-[#4ade80]/25 text-[10px] font-bold text-[#4ade80] flex flex-col items-center justify-center gap-1 cursor-pointer"
             >
               <span className="material-symbols-outlined text-[16px]">family_restroom</span>
-              <span>Guardian Hub</span>
+              <span>Guardian</span>
             </button>
           )}
 
@@ -214,10 +230,36 @@ export const RoleSwitcherModal: React.FC<RoleSwitcherModalProps> = ({
                 onClose();
                 onOpenReportModal();
               }}
-              className="flex-1 p-2 rounded-xl bg-red-500/15 border border-red-500/30 hover:bg-red-500/25 text-[11px] font-bold text-red-300 flex items-center justify-center gap-1.5 cursor-pointer"
+              className="p-2 rounded-xl bg-red-500/15 border border-red-500/30 hover:bg-red-500/25 text-[10px] font-bold text-red-300 flex flex-col items-center justify-center gap-1 cursor-pointer"
             >
               <span className="material-symbols-outlined text-[16px]">flag</span>
-              <span>Report Issue</span>
+              <span>Report</span>
+            </button>
+          )}
+
+          {onNavigate && (
+            <button
+              onClick={() => {
+                onClose();
+                onNavigate('security-settings');
+              }}
+              className="p-2 rounded-xl bg-[#9cf0ff]/15 border border-[#9cf0ff]/30 hover:bg-[#9cf0ff]/25 text-[10px] font-bold text-[#9cf0ff] flex flex-col items-center justify-center gap-1 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[16px]">shield</span>
+              <span>Security</span>
+            </button>
+          )}
+
+          {onNavigate && (
+            <button
+              onClick={() => {
+                onClose();
+                onNavigate('privacy-governance');
+              }}
+              className="p-2 rounded-xl bg-[#c3f400]/15 border border-[#c3f400]/30 hover:bg-[#c3f400]/25 text-[10px] font-bold text-[#c3f400] flex flex-col items-center justify-center gap-1 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[16px]">verified_user</span>
+              <span>Privacy</span>
             </button>
           )}
         </div>

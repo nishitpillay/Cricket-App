@@ -19,6 +19,8 @@ import { DrillPracticeScreen } from './components/screens/DrillPracticeScreen';
 import { FeedbackScreen } from './components/screens/FeedbackScreen';
 import { AcademyScreen } from './components/screens/AcademyScreen';
 import { AuthScreens } from './components/screens/AuthScreens';
+import { SecurityAndSessionsScreen } from './components/screens/SecurityAndSessionsScreen';
+import { DataPrivacyGovernanceScreen } from './components/privacy/DataPrivacyGovernanceScreen';
 import { VideoAnalysisTool } from './components/videoAnalysis/VideoAnalysisTool';
 import { TacticalMasterclasses } from './components/tactics/TacticalMasterclasses';
 import { ScenarioTraining } from './components/tactics/ScenarioTraining';
@@ -128,6 +130,16 @@ export default function App() {
     case 'feedback':
       headerTitle = 'Session Feedback';
       break;
+    case 'security-settings':
+      headerTitle = 'Security & Sessions';
+      showBack = true;
+      onBack = () => handleNavigate('home');
+      break;
+    case 'privacy-governance':
+      headerTitle = 'Privacy & Classification';
+      showBack = true;
+      onBack = () => handleNavigate('home');
+      break;
     case 'auth-player':
     case 'auth-coach':
     case 'auth-admin':
@@ -153,6 +165,8 @@ export default function App() {
         onProfileClick={() => setIsRoleModalOpen(true)}
         onGoogleSyncClick={() => setIsGoogleModalOpen(true)}
         onGuardianPortalClick={() => setIsGuardianPortalOpen(true)}
+        onSecurityClick={() => handleNavigate('security-settings')}
+        onPrivacyClick={() => handleNavigate('privacy-governance')}
       />
 
       {/* Main Screen Content View */}
@@ -222,7 +236,7 @@ export default function App() {
         )}
 
         {currentScreen === 'stats' && (
-          <StatsScreen onNavigate={handleNavigate} />
+          <StatsScreen currentUser={currentUser} onNavigate={handleNavigate} />
         )}
 
         {currentScreen === 'drills' && (
@@ -263,6 +277,22 @@ export default function App() {
           />
         )}
 
+        {currentScreen === 'security-settings' && (
+          <SecurityAndSessionsScreen
+            currentUser={currentUser}
+            onUpdateUser={(updated) => setCurrentUser(updated)}
+            onNavigateBack={() => handleNavigate('home')}
+            onOpenPrivacy={() => handleNavigate('privacy-governance')}
+          />
+        )}
+
+        {currentScreen === 'privacy-governance' && (
+          <DataPrivacyGovernanceScreen
+            currentUser={currentUser}
+            onNavigate={handleNavigate}
+          />
+        )}
+
         {isAuthScreen && (
           <AuthScreens
             authMode={authMode}
@@ -297,6 +327,7 @@ export default function App() {
         onSelectUser={handleSelectUser}
         onOpenGuardianPortal={() => setIsGuardianPortalOpen(true)}
         onOpenReportModal={() => setIsReportModalOpen(true)}
+        onNavigate={handleNavigate}
         onOpenWizard={() => {
           setIsWizardOpen(true);
         }}

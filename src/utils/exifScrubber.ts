@@ -16,6 +16,12 @@ export interface ExifScrubReport {
   cleanedAt: string;
 }
 
+export interface SanitizedMediaResult {
+  cleanedBlob: Blob;
+  report: ExifScrubReport;
+  strippedTags: string[];
+}
+
 /**
  * Strips all EXIF metadata (GPS coordinates, camera metadata, device info) from an Image File/Blob
  * by decoding and re-rasterizing onto an isolated HTML5 2D Canvas context.
@@ -23,7 +29,7 @@ export interface ExifScrubReport {
 export async function scrubImageExif(
   file: File | Blob,
   fileName: string = 'media.jpg'
-): Promise<{ cleanedBlob: Blob; report: ExifScrubReport }> {
+): Promise<SanitizedMediaResult> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
@@ -62,7 +68,11 @@ export async function scrubImageExif(
                 cleanedAt: new Date().toISOString()
               };
 
-              resolve({ cleanedBlob: blob, report });
+              resolve({
+                cleanedBlob: blob,
+                report,
+                strippedTags: ['GPSLatitude', 'GPSLongitude', 'Make', 'Model', 'Software', 'DateTimeOriginal', 'CameraSerial']
+              });
             },
             'image/jpeg',
             0.92
@@ -93,7 +103,7 @@ export async function scrubImageExif(
 export async function scrubVideoMetadata(
   videoBlob: Blob,
   fileName: string = 'cricket-delivery.mp4'
-): Promise<{ cleanedBlob: Blob; report: ExifScrubReport }> {
+): Promise<SanitizedMediaResult> {
   // In browser runtime, creating a new Blob with sanitized MIME type drops browser container metadata
   const arrayBuffer = await videoBlob.arrayBuffer();
   const uint8 = new Uint8Array(arrayBuffer);
@@ -114,7 +124,11 @@ export async function scrubVideoMetadata(
     cleanedAt: new Date().toISOString()
   };
 
-  return { cleanedBlob, report };
+  return {
+    cleanedBlob,
+    report,
+    strippedTags: ['moov.udta.gps', 'iso.location', 'xyz.geotag', 'encoder.device.id']
+  };
 }
 
 /**

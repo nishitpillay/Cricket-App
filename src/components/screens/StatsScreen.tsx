@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { MatchStat, TechniqueScores, ScreenType, WagonWheelShot, PitchMapDelivery } from '../../types';
-import { mockMatches, mockTrainingHistory, mockTechniqueScores } from '../../data/mockData';
+import { MatchStat, TechniqueScores, ScreenType, WagonWheelShot, PitchMapDelivery, UserProfile } from '../../types';
+import { mockMatches, mockTrainingHistory, mockTechniqueScores, mockUsers } from '../../data/mockData';
 import { mockWagonWheelShots, mockPitchMapDeliveries } from '../../data/tacticsAndPlannerData';
 import { playBeep, playBallImpact } from '../../utils/audioFeedback';
 import { PlayerHealthDashboard } from '../health/PlayerHealthDashboard';
 
 interface StatsScreenProps {
   onNavigate: (screen: ScreenType) => void;
+  currentUser?: UserProfile;
 }
 
-export const StatsScreen: React.FC<StatsScreenProps> = ({ onNavigate }) => {
+export const StatsScreen: React.FC<StatsScreenProps> = ({ onNavigate, currentUser }) => {
+  const activeUser = currentUser || mockUsers.player;
   const [statsView, setStatsView] = useState<'dashboard' | 'health' | 'wagon-wheel' | 'pitch-map' | 'history'>('dashboard');
   const [activeHistoryTab, setActiveHistoryTab] = useState<'matches' | 'training'>('matches');
   const [techniqueScores, setTechniqueScores] = useState<TechniqueScores>(mockTechniqueScores);
@@ -184,21 +186,33 @@ export const StatsScreen: React.FC<StatsScreenProps> = ({ onNavigate }) => {
                 <div className="relative">
                   <img
                     className="w-16 h-16 rounded-full object-cover shadow-[0_0_15px_rgba(195,244,0,0.35)] border-2 border-[#c3f400]/30"
-                    alt="J. Root"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSw2JC59TxaxcJTzcFRnzOeQPsDng9yjyDQu4fYq40HT2lDw_2QSvEL5tvbp7ruwi0BFK8HmjO8_nQTm0ZuOrt8SKVl8eWXn0LMEgajHer9HoyBBPAJ-XKmwdJ55o0zwWP9mAqqWFRK1cXcT854QENfHXfZ5XUhJL1Cyuzfv-u0_6WaiTLqg87EGsU2-C7SP8kTTpNKRwsbIQJxKvqkKdhCMn4NtEtLyDrwDNGiJOv_SJ1SOYxuhyQ"
+                    alt={activeUser.name}
+                    src={activeUser.avatar}
                     referrerPolicy="no-referrer"
                   />
                   <div className="absolute bottom-0 right-0 w-4 h-4 bg-[#c3f400] rounded-full border-2 border-[#201f1f] shadow-[0_0_8px_#c3f400]" />
                 </div>
 
                 <div className="flex flex-col flex-1 min-w-0">
-                  <h2 className="font-headline font-bold text-xl text-white truncate">J. Root</h2>
-                  <span className="text-xs text-[#c4c9ac] font-medium">Top-Order Batsman & Captain</span>
+                  <div className="flex items-center gap-2">
+                    <h2 className="font-headline font-bold text-xl text-white truncate">{activeUser.name}</h2>
+                    {activeUser.isJunior && (
+                      <span className="px-2 py-0.5 rounded-full bg-[#4ade80]/20 text-[#4ade80] border border-[#4ade80]/30 text-[9px] font-bold uppercase">
+                        Safeguarded
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-xs text-[#c4c9ac] font-medium">{activeUser.specialty}</span>
+                  {activeUser.juniorPrivacy?.assignedCoachIds && (
+                    <span className="text-[10px] text-[#9cf0ff] font-bold mt-0.5">
+                      Coached by: Arin Mishra & Roshan Srilanka
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex flex-col items-end">
                   <span className="bg-[#ffdb3c]/15 text-[#ffdb3c] border border-[#ffdb3c]/30 px-3 py-1 rounded-full font-headline font-bold text-[10px] tracking-wider uppercase shadow-sm">
-                    ELITE TIER (10,400+ RUNS)
+                    {activeUser.tier || 'ELITE TIER (10,400+ RUNS)'}
                   </span>
                 </div>
               </div>

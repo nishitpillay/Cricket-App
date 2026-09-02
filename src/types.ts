@@ -15,9 +15,99 @@ export type ScreenType =
   | 'drill-practice' 
   | 'auth-player' 
   | 'auth-coach' 
-  | 'auth-admin';
+  | 'auth-admin'
+  | 'security-settings'
+  | 'privacy-governance';
 
-export type UserRole = 'player' | 'coach' | 'admin';
+export type DataClassificationLevel = 
+  | 'PUBLIC'
+  | 'INTERNAL'
+  | 'PERSONAL'
+  | 'SENSITIVE'
+  | 'CHILD-SENSITIVE'
+  | 'SECURITY-SENSITIVE'
+  | 'HIGHLY RESTRICTED';
+
+export interface DataFieldClassification {
+  fieldName: string;
+  category: string;
+  classification: DataClassificationLevel;
+  requiredForService: boolean;
+  purposeRationale: string;
+  retentionPeriod: string;
+  maskingMethod: string;
+  isRedactedFromLogs: boolean;
+  examples: string[];
+}
+
+export interface SanitizedTelemetryLog {
+  id: string;
+  timestamp: string;
+  category: 'telemetry' | 'analytics' | 'debug' | 'audit' | 'error';
+  rawPayloadSize: number;
+  sanitizedPayload: Record<string, any>;
+  redactedFieldsCount: number;
+  redactedCategories: DataClassificationLevel[];
+  sourceComponent: string;
+  complianceStatus: 'VERIFIED_ZERO_LEAKAGE' | 'FILTERED_SENSITIVE';
+}
+
+export interface DataPrivacySettings {
+  privacyByDesignEnforced: boolean;
+  dataMinimizationActive: boolean;
+  autoExifStripping: boolean;
+  strictChildProtectionActive: boolean;
+  analyticsRedactionLevel: 'FULL_ANONYMIZED' | 'PSEUDONYMIZED' | 'ZERO_TELEMETRY';
+  videoRetentionDays: number;
+  healthDataRestrictedToPlayerAndGuardian: boolean;
+  coachBehavioralNotesEncrypted: boolean;
+}
+
+export type UserRole = 
+  | 'player' 
+  | 'coach' 
+  | 'club_admin' 
+  | 'platform_admin' 
+  | 'security_admin' 
+  | 'admin';
+
+export interface UserSession {
+  id: string;
+  userId: string;
+  deviceName: string;
+  deviceType: 'mobile' | 'tablet' | 'desktop';
+  browser: string;
+  ipAddressMasked: string;
+  locationCity: string;
+  lastActive: string;
+  isCurrentSession: boolean;
+  createdAt: string;
+  mfaVerified: boolean;
+}
+
+export interface SecuritySettings {
+  mfaEnforced: boolean;
+  mfaEnabled: boolean;
+  mfaMethod: 'authenticator_app' | 'passkey' | 'sms' | 'email_otp';
+  passkeysRegistered: Array<{
+    id: string;
+    name: string;
+    createdDate: string;
+    lastUsed: string;
+    authenticatorType: string;
+  }>;
+  emailVerified: boolean;
+  twoFactorBackupCodesRemaining: number;
+  suspiciousLoginAlerts: boolean;
+  recentSecurityEvents: Array<{
+    id: string;
+    timestamp: string;
+    type: 'login_success' | 'mfa_challenge' | 'failed_login_lockout' | 'password_reset_requested' | 'session_terminated' | 'passkey_registered';
+    details: string;
+    location: string;
+    status: 'success' | 'flagged' | 'blocked';
+  }>;
+}
 
 export interface PlayerCricketProfile {
   name: string;
@@ -161,6 +251,7 @@ export interface CoachCricketProfile {
 export interface UserProfile {
   id: string;
   name: string;
+  email?: string;
   role: UserRole;
   avatar: string;
   level: number;
@@ -171,6 +262,8 @@ export interface UserProfile {
   guardianInfo?: GuardianInformation;
   juniorPrivacy?: JuniorPrivacyGuardrails;
   blockedUserIds?: string[];
+  securitySettings?: SecuritySettings;
+  sessions?: UserSession[];
   playerProfile?: PlayerCricketProfile;
   coachProfile?: CoachCricketProfile;
 }

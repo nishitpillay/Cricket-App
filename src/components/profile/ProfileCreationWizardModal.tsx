@@ -28,7 +28,7 @@ export const ProfileCreationWizardModal: React.FC<ProfileCreationWizardModalProp
   const [googleSession, setGoogleSession] = useState<GoogleAuthSession | null>(null);
 
   // --- PLAYER STATE ---
-  const [playerName, setPlayerName] = useState('Alex Mercer');
+  const [playerName, setPlayerName] = useState('Devang Dalvi');
   const [playerDob, setPlayerDob] = useState('2003-05-14');
   const [playerAge, setPlayerAge] = useState(23);
   const [playerStyle, setPlayerStyle] = useState<PlayerCricketProfile['playingStyle']>('Aggressive / Dominant');
@@ -55,7 +55,7 @@ export const ProfileCreationWizardModal: React.FC<ProfileCreationWizardModalProp
   const [fieldingPos, setFieldingPos] = useState('Slips / Gully');
 
   // --- COACH STATE ---
-  const [coachName, setCoachName] = useState('Coach Mark Richardson');
+  const [coachName, setCoachName] = useState('Arin Mishra');
   const [coachSpecialization, setCoachSpecialization] = useState<CoachCricketProfile['specialization']>('Fast Bowling Pace & Seam Mechanics');
   const [coachBio, setCoachBio] = useState(
     'Former international fast bowler and ECB Level 4 High Performance Director with 16+ years developing express pacers and technical top-order batsmen through real-time telemetry.'

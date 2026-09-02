@@ -1,0 +1,478 @@
+import React, { useState, useEffect } from 'react';
+import { UserProfile, UserSession, SecuritySettings } from '../../types';
+import {
+  getStoredSessions,
+  terminateSession,
+  terminateAllOtherSessions,
+  getSecurityLogs,
+  logSecurityEvent,
+  registerPasskeyWebAuthn,
+  isMfaMandatory,
+  SecurityEvent
+} from '../../utils/authSecurityManager';
+import { playBeep } from '../../utils/audioFeedback';
+
+interface SecurityAndSessionsScreenProps {
+  currentUser: UserProfile;
+  onUpdateUser?: (updated: UserProfile) => void;
+  onNavigateBack: () => void;
+  onOpenPrivacy?: () => void;
+}
+
+export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps> = ({
+  currentUser,
+  onUpdateUser,
+  onNavigateBack,
+  onOpenPrivacy
+}) => {
+  const [activeTab, setActiveTab] = useState<'sessions' | 'mfa_passkeys' | 'audit_logs'>('sessions');
+  const [sessions, setSessions] = useState<UserSession[]>(getStoredSessions());
+  const [securityLogs, setSecurityLogs] = useState<SecurityEvent[]>(getSecurityLogs());
+  const [isRegisteringPasskey, setIsRegisteringPasskey] = useState(false);
+  const [passkeySuccessMessage, setPasskeySuccessMessage] = useState<string | null>(null);
+  const [mfaEnabled, setMfaEnabled] = useState(
+    currentUser.securitySettings?.mfaEnabled ?? (isMfaMandatory(currentUser.role) ? true : false)
+  );
+  const [totpSecret, setTotpSecret] = useState('JBSWY3DPEHPK3PXP');
+  const [verificationCodeInput, setVerificationCodeInput] = useState('');
+  const [isEnablingMfa, setIsEnablingMfa] = useState(false);
+  const [actionNotice, setActionNotice] = useState<string | null>(null);
+
+  const roleRequiresMfa = isMfaMandatory(currentUser.role);
+
+  const showNotification = (msg: string) => {
+    setActionNotice(msg);
+    setTimeout(() => setActionNotice(null), 4000);
+  };
+
+  const handleTerminateSession = async (sessionId: string) => {
+    playBeep(450, 0.08);
+    const updated = terminateSession(sessionId);
+    setSessions(updated);
+    setSecurityLogs(getSecurityLogs());
+    showNotification('Device session revoked. Access token invalidated.');
+
+    // Also call server API
+    try {
+      await fetch('/api/auth/sessions/terminate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId })
+      });
+    } catch (e) {
+      console.warn('Server session sync error', e);
+    }
+  };
+
+  const handleTerminateAllOtherSessions = async () => {
+    playBeep(520, 0.1);
+    const currentSess = sessions.find(s => s.isCurrentSession);
+    const updated = terminateAllOtherSessions(currentSess?.id || 'sess-current-01');
+    setSessions(updated);
+    setSecurityLogs(getSecurityLogs());
+    showNotification('All other active sessions across all devices terminated.');
+
+    try {
+      await fetch('/api/auth/sessions/terminate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ terminateAllOthers: true, currentSessionId: currentSess?.id })
+      });
+    } catch (e) {
+      console.warn('Server session sync error', e);
+    }
+  };
+
+  const handleRegisterPasskey = async () => {
+    setIsRegisteringPasskey(true);
+    playBeep(880, 0.1);
+    try {
+      const res = await registerPasskeyWebAuthn(currentUser.name);
+      setIsRegisteringPasskey(false);
+      setPasskeySuccessMessage(`Passkey created on ${res.deviceName}`);
+      setSecurityLogs(getSecurityLogs());
+      showNotification('Hardware Passkey registered successfully.');
+    } catch (e) {
+      setIsRegisteringPasskey(false);
+    }
+  };
+
+  const handleConfirmMFA = () => {
+    if (verificationCodeInput.length === 6) {
+      playBeep(920, 0.12);
+      setMfaEnabled(true);
+      setIsEnablingMfa(false);
+      logSecurityEvent('mfa_challenge', 'Authenticator App (TOTP RFC 6238) paired and verified.', 'Security Settings');
+      setSecurityLogs(getSecurityLogs());
+      showNotification('MFA successfully activated on your account.');
+    } else {
+      showNotification('Please enter the 6-digit TOTP verification code.');
+    }
+  };
+
+  return (
+    <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 pb-24 text-white">
+      {/* Top Header & Breadcrumb */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onNavigateBack}
+            className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white transition-colors border border-white/10 cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+          </button>
+          <div>
+            <h1 className="font-headline font-extrabold text-2xl sm:text-3xl text-white tracking-tight flex items-center gap-2.5">
+              <span>Security & Identity Safeguards</span>
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#c3f400]/20 text-[#c3f400] font-mono border border-[#c3f400]/40 uppercase">
+                Zero Trust
+              </span>
+            </h1>
+            <p className="text-xs text-[#c4c9ac] mt-0.5">
+              Manage multi-factor authentication, active sessions, passkeys, and real-time audit telemetry.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Action Notification Banner */}
+      {actionNotice && (
+        <div className="mb-4 p-3 rounded-xl bg-[#c3f400]/15 border border-[#c3f400]/40 text-[#c3f400] text-xs font-semibold flex items-center gap-2 animate-fade-in shadow-lg">
+          <span className="material-symbols-outlined text-[18px]">verified_user</span>
+          <span>{actionNotice}</span>
+        </div>
+      )}
+
+      {/* Data Privacy by Design Banner */}
+      {onOpenPrivacy && (
+        <div className="mb-4 p-4 rounded-2xl bg-[#1c1b1b] border border-[#c3f400]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#c3f400]/10 border border-[#c3f400]/30 flex items-center justify-center text-[#c3f400]">
+              <span className="material-symbols-outlined text-[20px]">verified_user</span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                Privacy by Design & Data Classification
+              </h4>
+              <p className="text-[11px] text-[#8e9285] mt-0.5">
+                Inspect the 7-tier data classification matrix, data minimization rationale, and zero-leakage telemetry redactor.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onOpenPrivacy}
+            className="px-3.5 py-2 rounded-xl bg-[#c3f400] hover:bg-[#b0dc00] text-black text-xs font-bold flex items-center justify-center gap-1.5 whitespace-nowrap transition cursor-pointer"
+          >
+            <span>Open Privacy Center</span>
+            <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+          </button>
+        </div>
+      )}
+
+      {/* Role Mandate Notice */}
+      {roleRequiresMfa && (
+        <div className="mb-6 p-4 rounded-2xl bg-[#9cf0ff]/10 border border-[#9cf0ff]/30 text-white flex items-start gap-3 shadow-md">
+          <span className="material-symbols-outlined text-[#9cf0ff] text-[22px] shrink-0 mt-0.5">
+            verified
+          </span>
+          <div>
+            <h4 className="text-xs font-bold text-[#9cf0ff] uppercase tracking-wider">
+              Mandatory Safeguarding MFA Policy Active
+            </h4>
+            <p className="text-xs text-[#c4c9ac] mt-1 leading-relaxed">
+              As a verified <strong className="text-white capitalize">{currentUser.role.replace('_', ' ')}</strong> with access to junior players or club rosters, 
+              Multi-Factor Authentication (MFA) is strictly enforced under ECB, COPPA, and Club Safeguarding policies.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div className="flex gap-2 border-b border-white/10 pb-3 mb-6 overflow-x-auto no-scrollbar">
+        {[
+          { id: 'sessions' as const, label: 'Active Sessions & Devices', icon: 'devices' },
+          { id: 'mfa_passkeys' as const, label: 'Passkeys & 2FA Setup', icon: 'key' },
+          { id: 'audit_logs' as const, label: 'Security Audit Stream', icon: 'security' }
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-headline font-bold transition-all whitespace-nowrap cursor-pointer ${
+              activeTab === tab.id
+                ? 'bg-[#c3f400] text-[#161e00] shadow-[0_0_15px_rgba(195,244,0,0.25)]'
+                : 'bg-white/5 text-[#c4c9ac] hover:text-white hover:bg-white/10 border border-white/5'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[18px]">{tab.icon}</span>
+            <span>{tab.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* TAB 1: ACTIVE SESSIONS */}
+      {activeTab === 'sessions' && (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-[#1c1b1b] border border-white/10">
+            <div>
+              <h3 className="font-headline font-bold text-sm text-white">Active Device Sessions ({sessions.length})</h3>
+              <p className="text-xs text-[#c4c9ac]">
+                Signed-in hardware nodes authorized to access your cricket records.
+              </p>
+            </div>
+            {sessions.length > 1 && (
+              <button
+                onClick={handleTerminateAllOtherSessions}
+                className="px-3.5 py-2 rounded-xl bg-red-500/15 border border-red-500/30 text-red-300 hover:bg-red-500/25 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+              >
+                <span className="material-symbols-outlined text-[16px]">logout</span>
+                <span>Sign Out All Other Devices</span>
+              </button>
+            )}
+          </div>
+
+          <div className="space-y-3">
+            {sessions.map(sess => (
+              <div
+                key={sess.id}
+                className={`p-4 rounded-2xl border transition-all ${
+                  sess.isCurrentSession
+                    ? 'bg-[#201f1f] border-[#c3f400]/40 shadow-[0_0_20px_rgba(195,244,0,0.08)]'
+                    : 'bg-[#181818] border-white/10'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3.5">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
+                      sess.deviceType === 'mobile' 
+                        ? 'bg-blue-500/15 border-blue-500/30 text-blue-400' 
+                        : sess.deviceType === 'tablet'
+                        ? 'bg-purple-500/15 border-purple-500/30 text-purple-400'
+                        : 'bg-[#c3f400]/15 border-[#c3f400]/30 text-[#c3f400]'
+                    }`}>
+                      <span className="material-symbols-outlined text-[20px]">
+                        {sess.deviceType === 'mobile' ? 'smartphone' : sess.deviceType === 'tablet' ? 'tablet' : 'laptop_mac'}
+                      </span>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-headline font-bold text-sm text-white">{sess.deviceName}</span>
+                        {sess.isCurrentSession && (
+                          <span className="px-2 py-0.5 rounded-full bg-[#c3f400]/20 text-[#c3f400] text-[10px] font-bold border border-[#c3f400]/30">
+                            Current Device
+                          </span>
+                        )}
+                        {sess.mfaVerified && (
+                          <span className="px-2 py-0.5 rounded-full bg-[#9cf0ff]/20 text-[#9cf0ff] text-[10px] font-bold border border-[#9cf0ff]/30 flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[12px]">verified</span>
+                            MFA Verified
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-xs text-[#c4c9ac] mt-1">{sess.browser} • {sess.locationCity}</p>
+                      <div className="flex items-center gap-3 text-[11px] text-[#8e918f] mt-1.5 font-mono">
+                        <span>IP: {sess.ipAddressMasked}</span>
+                        <span>•</span>
+                        <span>{sess.lastActive}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {!sess.isCurrentSession && (
+                    <button
+                      onClick={() => handleTerminateSession(sess.id)}
+                      className="px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">cancel</span>
+                      <span>Revoke</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 2: MFA & PASSKEYS */}
+      {activeTab === 'mfa_passkeys' && (
+        <div className="space-y-6">
+          {/* Passkeys Card */}
+          <div className="p-5 rounded-2xl bg-[#1c1b1b] border border-white/10 space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#c3f400]/15 border border-[#c3f400]/30 flex items-center justify-center text-[#c3f400] shrink-0">
+                  <span className="material-symbols-outlined text-[22px]">fingerprint</span>
+                </div>
+                <div>
+                  <h3 className="font-headline font-bold text-sm text-white">Biometric Passkeys (FIDO2 / WebAuthn)</h3>
+                  <p className="text-xs text-[#c4c9ac] mt-0.5">
+                    Sign in with Touch ID, Apple Face ID, or Windows Hello. Cryptographically impervious to phishing & credential stuffing.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleRegisterPasskey}
+                disabled={isRegisteringPasskey}
+                className="px-4 py-2 rounded-xl bg-[#c3f400] text-[#161e00] font-headline font-bold text-xs hover:bg-[#abd600] transition-all flex items-center gap-1.5 shrink-0 cursor-pointer shadow-md disabled:opacity-50"
+              >
+                <span className="material-symbols-outlined text-[18px]">add</span>
+                <span>{isRegisteringPasskey ? 'Registering...' : 'Register Passkey'}</span>
+              </button>
+            </div>
+
+            {passkeySuccessMessage && (
+              <div className="p-3 rounded-xl bg-[#c3f400]/10 border border-[#c3f400]/30 text-[#c3f400] text-xs flex items-center gap-2">
+                <span className="material-symbols-outlined text-[16px]">check_circle</span>
+                <span>{passkeySuccessMessage}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Authenticator App MFA */}
+          <div className="p-5 rounded-2xl bg-[#1c1b1b] border border-white/10 space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-300 shrink-0">
+                  <span className="material-symbols-outlined text-[22px]">lock_clock</span>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-headline font-bold text-sm text-white">Time-based One-Time Password (TOTP)</h3>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                      mfaEnabled 
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' 
+                        : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                    }`}>
+                      {mfaEnabled ? 'ACTIVE & ENFORCED' : 'NOT CONFIGURED'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#c4c9ac] mt-0.5">
+                    Generate 6-digit verification codes using Google Authenticator, Authy, or 1Password.
+                  </p>
+                </div>
+              </div>
+
+              {!mfaEnabled && !isEnablingMfa && (
+                <button
+                  onClick={() => setIsEnablingMfa(true)}
+                  className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-headline font-bold text-xs transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[18px]">qr_code</span>
+                  <span>Pair Authenticator</span>
+                </button>
+              )}
+            </div>
+
+            {/* QR Setup Modal / In-line Flow */}
+            {isEnablingMfa && (
+              <div className="p-4 rounded-xl bg-[#252525] border border-white/10 space-y-4 animate-fade-in">
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  {/* Mock QR Canvas */}
+                  <div className="w-32 h-32 bg-white p-2 rounded-xl flex items-center justify-center shrink-0">
+                    <svg viewBox="0 0 100 100" className="w-full h-full text-black">
+                      <rect width="100" height="100" fill="#fff" />
+                      <rect x="10" y="10" width="25" height="25" fill="#000" />
+                      <rect x="15" y="15" width="15" height="15" fill="#fff" />
+                      <rect x="65" y="10" width="25" height="25" fill="#000" />
+                      <rect x="70" y="15" width="15" height="15" fill="#fff" />
+                      <rect x="10" y="65" width="25" height="25" fill="#000" />
+                      <rect x="15" y="70" width="15" height="15" fill="#fff" />
+                      <rect x="42" y="42" width="16" height="16" fill="#000" />
+                      <rect x="45" y="15" width="10" height="10" fill="#000" />
+                      <rect x="15" y="45" width="10" height="10" fill="#000" />
+                      <rect x="65" y="65" width="25" height="25" fill="#000" />
+                    </svg>
+                  </div>
+
+                  <div className="space-y-2 text-xs">
+                    <p className="font-semibold text-white">1. Scan QR code in Google Authenticator or 1Password.</p>
+                    <p className="text-[#c4c9ac]">
+                      Or manually copy secret key: <span className="font-mono text-[#c3f400] bg-black/40 px-2 py-0.5 rounded">{totpSecret}</span>
+                    </p>
+                    <div className="flex items-center gap-2 pt-2">
+                      <input
+                        type="text"
+                        maxLength={6}
+                        placeholder="000000"
+                        value={verificationCodeInput}
+                        onChange={(e) => setVerificationCodeInput(e.target.value.replace(/\D/g, ''))}
+                        className="w-32 bg-black/40 border border-white/20 rounded-lg px-3 py-1.5 text-center font-mono text-base text-white tracking-widest outline-none focus:border-[#c3f400]"
+                      />
+                      <button
+                        onClick={handleConfirmMFA}
+                        className="px-4 py-2 rounded-lg bg-[#c3f400] text-[#161e00] font-headline font-bold text-xs hover:bg-[#abd600] transition-colors cursor-pointer"
+                      >
+                        Verify & Activate
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: AUDIT STREAM */}
+      {activeTab === 'audit_logs' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-4 rounded-2xl bg-[#1c1b1b] border border-white/10">
+            <div>
+              <h3 className="font-headline font-bold text-sm text-white">Cryptographic Security Telemetry</h3>
+              <p className="text-xs text-[#c4c9ac]">
+                Immutable access events, rate-limiting locks, and authentication attempts.
+              </p>
+            </div>
+            <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              Live Audit Stream
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            {securityLogs.map(log => (
+              <div
+                key={log.id}
+                className="p-3.5 rounded-xl bg-[#181818] border border-white/10 flex items-start justify-between gap-3 text-xs"
+              >
+                <div className="flex items-start gap-3">
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border ${
+                    log.status === 'blocked'
+                      ? 'bg-red-500/20 text-red-300 border-red-500/30'
+                      : log.status === 'flagged'
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                      : 'bg-[#c3f400]/20 text-[#c3f400] border-[#c3f400]/30'
+                  }`}>
+                    <span className="material-symbols-outlined text-[16px]">
+                      {log.status === 'blocked' ? 'gpp_bad' : log.status === 'flagged' ? 'warning' : 'verified_user'}
+                    </span>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-white uppercase tracking-wider text-[11px]">
+                        {log.type.replace(/_/g, ' ')}
+                      </span>
+                      <span className={`px-2 py-0.2 rounded text-[9px] font-mono uppercase ${
+                        log.status === 'blocked' ? 'bg-red-900/60 text-red-200' : 'bg-emerald-950 text-emerald-300'
+                      }`}>
+                        {log.status}
+                      </span>
+                    </div>
+                    <p className="text-[#c4c9ac] mt-0.5">{log.details}</p>
+                    <p className="text-[10px] text-[#8e918f] font-mono mt-1">{log.location}</p>
+                  </div>
+                </div>
+
+                <span className="text-[10px] text-[#8e918f] font-mono shrink-0">
+                  {new Date(log.timestamp).toLocaleTimeString()}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

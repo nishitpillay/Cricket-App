@@ -1,9 +1,9 @@
 import { UserProfile, SessionRecord, MatchStat, TechniqueScores, DrillItem, TelestrationFeedback } from '../types';
 
-export const mockUsers: Record<'player' | 'junior' | 'coach' | 'admin', UserProfile> = {
+export const mockUsers: Record<'player' | 'junior' | 'coach' | 'coach_roshan' | 'kiyara' | 'admin', UserProfile> = {
   player: {
-    id: 'usr-alex',
-    name: 'Alex Mercer',
+    id: 'usr-devang',
+    name: 'Devang Dalvi',
     role: 'player',
     avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBSw2JC59TxaxcJTzcFRnzOeQPsDng9yjyDQu4fYq40HT2lDw_2QSvEL5tvbp7ruwi0BFK8HmjO8_nQTm0ZuOrt8SKVl8eWXn0LMEgajHer9HoyBBPAJ-XKmwdJ55o0zwWP9mAqqWFRK1cXcT854QENfHXfZ5XUhJL1Cyuzfv-u0_6WaiTLqg87EGsU2-C7SP8kTTpNKRwsbIQJxKvqkKdhCMn4NtEtLyDrwDNGiJOv_SJ1SOYxuhyQ',
     level: 42,
@@ -12,7 +12,7 @@ export const mockUsers: Record<'player' | 'junior' | 'coach' | 'admin', UserProf
     specialty: 'Right-Arm Fast / Top-Order Bat',
     isJunior: false,
     playerProfile: {
-      name: 'Alex Mercer',
+      name: 'Devang Dalvi',
       age: 23,
       dateOfBirth: '2003-05-14',
       playingStyle: 'Aggressive / Dominant',
@@ -65,7 +65,7 @@ export const mockUsers: Record<'player' | 'junior' | 'coach' | 'admin', UserProf
       disablePublicComments: true,
       stripExifMetadata: true,
       videoPrivacyLevel: 'private-guardian-coach-only',
-      assignedCoachIds: ['coach-mark']
+      assignedCoachIds: ['coach-arin', 'coach-roshan']
     },
     playerProfile: {
       name: 'Liam Chen',
@@ -90,19 +90,76 @@ export const mockUsers: Record<'player' | 'junior' | 'coach' | 'admin', UserProf
       googleConnected: true
     }
   },
+  kiyara: {
+    id: 'usr-kiyara-junior',
+    name: 'Kiyara Pillay',
+    role: 'player',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
+    level: 16,
+    xpProgress: 80,
+    tier: 'U-16 ACADEMY RISING STAR',
+    specialty: 'Top-Order Classical Bat / Off-Spin (Age 15)',
+    isJunior: true,
+    guardianInfo: {
+      guardianName: 'Devi Pillay',
+      guardianEmail: 'devi.pillay.parent@gmail.com',
+      guardianPhone: '+44 7700 900543',
+      relationship: 'Parent',
+      consentStatus: 'verified',
+      consentGrantedAt: '2026-08-18T09:30:00Z',
+      consentVerificationToken: 'GV-UK-94218-VERIFIED',
+      guardianPortalPin: '5932',
+      supervisionEnabled: true,
+      ccAllCoachCommunications: true,
+      notifyOnSessionUpload: true
+    },
+    juniorPrivacy: {
+      isJunior: true,
+      hideExactLocation: true,
+      disablePublicDiscovery: true,
+      allowOnlyAssignedCoaches: true,
+      blockDirectMessaging: true,
+      disablePublicComments: true,
+      stripExifMetadata: true,
+      videoPrivacyLevel: 'private-guardian-coach-only',
+      assignedCoachIds: ['coach-arin', 'coach-roshan']
+    },
+    playerProfile: {
+      name: 'Kiyara Pillay',
+      age: 15,
+      dateOfBirth: '2011-06-22',
+      playingStyle: 'Classical & Technical',
+      primaryCategory: 'All-Rounder',
+      isJunior: true,
+      battingDetails: {
+        handedness: 'Right-Hand Bat',
+        orderPosition: 'Top-Order (No. 3)',
+        keyStrengths: ['Cover Drive & High Elbow', 'Back-foot Punch', 'Wristy On-Drive'],
+        favoriteShots: 'Classic Cover Drive & Straight Punch'
+      },
+      bowlingDetails: {
+        speedCategory: 'Spin Bowler',
+        techniqueStyle: 'Right-Arm Off-Spin (Finger Spin & Doosra)',
+        tacticalRole: 'Middle Overs Strangler',
+        stockDelivery: 'Drifting Off-Break on Good Length'
+      },
+      fieldingPosition: 'Cover / Slips',
+      googleConnected: true
+    }
+  },
   coach: {
-    id: 'coach-mark',
-    name: 'Coach Mark Richardson',
+    id: 'coach-arin',
+    name: 'Arin Mishra',
     role: 'coach',
     avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCUzq34Ypjdvr1VtP6wNpRtOb-TGCQc0o_d_JZ7_jg7ro_hFhYcfUUJHoFsAWvJEzByZwWc09CwFFsLgNi1MY7Fu6qlg9M0EOe_ivDacQ6XuhMccufNLjQSgFbGs1970RsIYQ89EcM4IvVLSXevQys7hi9S8nHj_UB4aGBjsplLM-3izqbZ2-xHyS4APnovmfZspgZ9BnyxubJ8eunNlpxqFb3iRlJm6TIqnPM9Bj7cjrhFalxVxGq9',
     level: 88,
     xpProgress: 90,
     tier: 'HIGH PERFORMANCE COACH',
-    specialty: 'ICC Level 3 Master Instructor',
+    specialty: 'ICC Level 3 Master Instructor & Lead Pace Director',
     coachProfile: {
-      name: 'Coach Mark Richardson',
+      name: 'Arin Mishra',
       specialization: 'Fast Bowling Pace & Seam Mechanics',
-      bioSummary: 'Former international fast bowler and ECB Level 4 High Performance Director with 16+ years developing express pacers and technical top-order batsmen through real-time telemetry.',
+      bioSummary: 'Former international fast bowler and ECB Level 4 High Performance Director with 16+ years developing express pacers, spin technique, and top-order batsmen through real-time telemetry.',
       yearsOfExperience: 16,
       accreditations: ['ICC Level 3 Master Instructor', 'ECB High Performance Specialist', 'Biomechanical Motion Analysis Certified'],
       coachingHistory: [
@@ -130,6 +187,50 @@ export const mockUsers: Record<'player' | 'junior' | 'coach' | 'admin', UserProf
         trophiesWon: 6,
         proPlayersDeveloped: 28,
         matchesCoached: 342
+      },
+      googleConnected: true
+    }
+  },
+  coach_roshan: {
+    id: 'coach-roshan',
+    name: 'Roshan Srilanka',
+    role: 'coach',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80',
+    level: 92,
+    xpProgress: 95,
+    tier: 'ELITE MASTER COACH',
+    specialty: 'ICC Level 3 Batting & Spin Specialist',
+    coachProfile: {
+      name: 'Roshan Srilanka',
+      specialization: 'Spin Bowling Artistry & Deception',
+      bioSummary: 'Elite cricket coach and former First-Class veteran with 18+ years developing world-class spin bowlers, top-order stroke-makers, and junior academy prodigies.',
+      yearsOfExperience: 18,
+      accreditations: ['ICC Level 3 Master Coach', 'SLC Advanced Coaching Accreditation', 'Safeguarding & DBS Cleared Lead'],
+      coachingHistory: [
+        {
+          organizationOrTeam: 'Colombo Premier High Performance Center',
+          role: 'Head of Technical Development',
+          years: '2020 - Present',
+          notableAchievements: 'Mentored 12 national age-group representatives and academy champions'
+        },
+        {
+          organizationOrTeam: 'Sri Lanka U-17 Academy Squad',
+          role: 'Lead Batting & Spin Mentor',
+          years: '2015 - 2020',
+          notableAchievements: 'Guided youth squad to international bilateral championship wins'
+        },
+        {
+          organizationOrTeam: 'Southern Province Cricket Association',
+          role: 'Academy Director',
+          years: '2010 - 2015',
+          notableAchievements: 'Established state-of-the-art telemetry and video analysis program'
+        }
+      ],
+      historicStats: {
+        winRatePct: 78.2,
+        trophiesWon: 9,
+        proPlayersDeveloped: 34,
+        matchesCoached: 410
       },
       googleConnected: true
     }
@@ -455,7 +556,7 @@ export const mockTelestration: TelestrationFeedback = {
   videoCurrentTime: '0:12',
   videoProgress: 45,
   frameImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBF2zkt7HiJBkOubcIhEyE9evYb6SNXruUycT4ZXOlv_ujVyqjEIkunsEspRZeXwBK7coke_mYqjAbs4v-d3uM8P2W8EfX9vOA3PYzI2LesZ1rAQ03FgiIDFwkU4VMffqRBWOBeCMbVzdOH00wHbare88_nrKVDisHI5lYs9hULdCzv7VkuNZJC01ueMNRFBmNVj_CspRxg1kKBMHmQYe-VzK_hIatzqi4B79kYWMlJvTxiqxhmRfsZ',
-  coachName: 'Coach Mark Richardson',
+  coachName: 'Arin Mishra',
   coachAvatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCUzq34Ypjdvr1VtP6wNpRtOb-TGCQc0o_d_JZ7_jg7ro_hFhYcfUUJHoFsAWvJEzByZwWc09CwFFsLgNi1MY7Fu6qlg9M0EOe_ivDacQ6XuhMccufNLjQSgFbGs1970RsIYQ89EcM4IvVLSXevQys7hi9S8nHj_UB4aGBjsplLM-3izqbZ2-xHyS4APnovmfZspgZ9BnyxubJ8eunNlpxqFb3iRlJm6TIqnPM9Bj7cjrhFalxVxGq9',
   coreFocus: '"Keep your head absolutely still through the drive. Your weight is transferring well, but the slight head bob at contact is causing inconsistent timing. Watch the red circle in the video."',
   strengths: [
