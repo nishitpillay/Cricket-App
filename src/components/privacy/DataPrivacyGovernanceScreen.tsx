@@ -230,6 +230,13 @@ export const DataPrivacyGovernanceScreen: React.FC<DataPrivacyGovernanceScreenPr
 
           <div className="flex items-center gap-2 flex-wrap">
             <button
+              onClick={() => onNavigate('encryption-governance')}
+              className="px-3.5 py-2 rounded-lg bg-[#9cf0ff]/15 hover:bg-[#9cf0ff]/25 border border-[#9cf0ff]/30 text-xs font-semibold text-[#9cf0ff] flex items-center gap-2 transition cursor-pointer"
+            >
+              <ShieldCheck className="w-4 h-4 text-[#9cf0ff]" />
+              Data Encryption & KMS
+            </button>
+            <button
               onClick={handleExportDataPacket}
               className="px-3.5 py-2 rounded-lg bg-[#242323] hover:bg-[#2e2d2d] border border-[#3e3d3d] text-xs font-semibold text-white flex items-center gap-2 transition"
             >

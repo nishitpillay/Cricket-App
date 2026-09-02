@@ -17,13 +17,15 @@ interface SecurityAndSessionsScreenProps {
   onUpdateUser?: (updated: UserProfile) => void;
   onNavigateBack: () => void;
   onOpenPrivacy?: () => void;
+  onOpenEncryption?: () => void;
 }
 
 export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps> = ({
   currentUser,
   onUpdateUser,
   onNavigateBack,
-  onOpenPrivacy
+  onOpenPrivacy,
+  onOpenEncryption
 }) => {
   const [activeTab, setActiveTab] = useState<'sessions' | 'mfa_passkeys' | 'audit_logs'>('sessions');
   const [sessions, setSessions] = useState<UserSession[]>(getStoredSessions());
@@ -164,6 +166,32 @@ export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps>
             className="px-3.5 py-2 rounded-xl bg-[#c3f400] hover:bg-[#b0dc00] text-black text-xs font-bold flex items-center justify-center gap-1.5 whitespace-nowrap transition cursor-pointer"
           >
             <span>Open Privacy Center</span>
+            <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+          </button>
+        </div>
+      )}
+
+      {/* Data Encryption & Key Management Banner */}
+      {onOpenEncryption && (
+        <div className="mb-4 p-4 rounded-2xl bg-[#1c1b1b] border border-[#9cf0ff]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#9cf0ff]/10 border border-[#9cf0ff]/30 flex items-center justify-center text-[#9cf0ff]">
+              <span className="material-symbols-outlined text-[20px]">lock</span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                Data Encryption & Key Management (TLS 1.3 & Cloud KMS)
+              </h4>
+              <p className="text-[11px] text-[#8e9285] mt-0.5">
+                Managed AES-256-GCM envelope encryption, 90-day key rotation, HSTS preload, and mobile zero-secrets guard.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onOpenEncryption}
+            className="px-3.5 py-2 rounded-xl bg-[#9cf0ff] hover:bg-[#80e5f7] text-black text-xs font-bold flex items-center justify-center gap-1.5 whitespace-nowrap transition cursor-pointer"
+          >
+            <span>Open Encryption Center</span>
             <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
           </button>
         </div>

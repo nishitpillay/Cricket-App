@@ -210,7 +210,7 @@ export const RoleSwitcherModal: React.FC<RoleSwitcherModalProps> = ({
         </div>
 
         {/* Safeguarding & Security Actions Row */}
-        <div className="grid grid-cols-4 gap-2 mb-4">
+        <div className="grid grid-cols-5 gap-1.5 mb-4">
           {onOpenGuardianPortal && (
             <button
               onClick={() => {
@@ -260,6 +260,19 @@ export const RoleSwitcherModal: React.FC<RoleSwitcherModalProps> = ({
             >
               <span className="material-symbols-outlined text-[16px]">verified_user</span>
               <span>Privacy</span>
+            </button>
+          )}
+
+          {onNavigate && (
+            <button
+              onClick={() => {
+                onClose();
+                onNavigate('encryption-governance');
+              }}
+              className="p-2 rounded-xl bg-[#ffdb3c]/15 border border-[#ffdb3c]/30 hover:bg-[#ffdb3c]/25 text-[10px] font-bold text-[#ffdb3c] flex flex-col items-center justify-center gap-1 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[16px]">lock</span>
+              <span>Crypto</span>
             </button>
           )}
         </div>

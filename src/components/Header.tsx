@@ -13,6 +13,7 @@ interface HeaderProps {
   onGuardianPortalClick?: () => void;
   onSecurityClick?: () => void;
   onPrivacyClick?: () => void;
+  onEncryptionClick?: () => void;
   onBack?: () => void;
   showBack?: boolean;
 }
@@ -28,6 +29,7 @@ export const Header: React.FC<HeaderProps> = ({
   onGuardianPortalClick,
   onSecurityClick,
   onPrivacyClick,
+  onEncryptionClick,
   onBack,
   showBack = false
 }) => {
@@ -65,6 +67,17 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <span className="material-symbols-outlined text-[16px]">verified_user</span>
               <span className="hidden md:inline text-[11px] font-bold">Privacy</span>
+            </button>
+          )}
+
+          {onEncryptionClick && (
+            <button
+              onClick={onEncryptionClick}
+              title="Data Encryption (TLS 1.3 & Cloud KMS)"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-mono text-[#9cf0ff] hover:border-[#9cf0ff]/40 transition-all active:scale-95 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[16px]">lock</span>
+              <span className="hidden md:inline text-[11px] font-bold">Encryption</span>
             </button>
           )}
 

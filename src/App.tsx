@@ -21,6 +21,7 @@ import { AcademyScreen } from './components/screens/AcademyScreen';
 import { AuthScreens } from './components/screens/AuthScreens';
 import { SecurityAndSessionsScreen } from './components/screens/SecurityAndSessionsScreen';
 import { DataPrivacyGovernanceScreen } from './components/privacy/DataPrivacyGovernanceScreen';
+import { DataEncryptionGovernanceScreen } from './components/encryption/DataEncryptionGovernanceScreen';
 import { VideoAnalysisTool } from './components/videoAnalysis/VideoAnalysisTool';
 import { TacticalMasterclasses } from './components/tactics/TacticalMasterclasses';
 import { ScenarioTraining } from './components/tactics/ScenarioTraining';
@@ -140,6 +141,11 @@ export default function App() {
       showBack = true;
       onBack = () => handleNavigate('home');
       break;
+    case 'encryption-governance':
+      headerTitle = 'Data Encryption & KMS';
+      showBack = true;
+      onBack = () => handleNavigate('home');
+      break;
     case 'auth-player':
     case 'auth-coach':
     case 'auth-admin':
@@ -167,6 +173,7 @@ export default function App() {
         onGuardianPortalClick={() => setIsGuardianPortalOpen(true)}
         onSecurityClick={() => handleNavigate('security-settings')}
         onPrivacyClick={() => handleNavigate('privacy-governance')}
+        onEncryptionClick={() => handleNavigate('encryption-governance')}
       />
 
       {/* Main Screen Content View */}
@@ -283,11 +290,19 @@ export default function App() {
             onUpdateUser={(updated) => setCurrentUser(updated)}
             onNavigateBack={() => handleNavigate('home')}
             onOpenPrivacy={() => handleNavigate('privacy-governance')}
+            onOpenEncryption={() => handleNavigate('encryption-governance')}
           />
         )}
 
         {currentScreen === 'privacy-governance' && (
           <DataPrivacyGovernanceScreen
+            currentUser={currentUser}
+            onNavigate={handleNavigate}
+          />
+        )}
+
+        {currentScreen === 'encryption-governance' && (
+          <DataEncryptionGovernanceScreen
             currentUser={currentUser}
             onNavigate={handleNavigate}
           />

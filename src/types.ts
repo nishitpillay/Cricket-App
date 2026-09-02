@@ -17,7 +17,8 @@ export type ScreenType =
   | 'auth-coach' 
   | 'auth-admin'
   | 'security-settings'
-  | 'privacy-governance';
+  | 'privacy-governance'
+  | 'encryption-governance';
 
 export type DataClassificationLevel = 
   | 'PUBLIC'
@@ -27,6 +28,71 @@ export type DataClassificationLevel =
   | 'CHILD-SENSITIVE'
   | 'SECURITY-SENSITIVE'
   | 'HIGHLY RESTRICTED';
+
+export type EncryptionAlgorithm = 'AES-256-GCM' | 'ChaCha20-Poly1305' | 'RSA-OAEP-4096';
+export type KeyState = 'PRIMARY_ACTIVE' | 'ACTIVE_READ_ONLY' | 'DEPRECATED' | 'SCHEDULED_FOR_DESTRUCTION';
+export type CloudKmsProvider = 'GOOGLE_CLOUD_KMS' | 'AWS_KMS' | 'AZURE_KEY_VAULT' | 'HASHICORP_VAULT';
+
+export interface KMSKeyVersion {
+  versionId: string;
+  versionNumber: number;
+  state: KeyState;
+  algorithm: string;
+  protectionLevel: 'HSM_FIPS_140_2_L3' | 'SOFTWARE';
+  createdAt: string;
+  primarySince?: string;
+  rotationIntervalDays: number;
+  nextScheduledRotation: string;
+  totalRecordsEncrypted: number;
+}
+
+export interface KMSKeyRing {
+  keyRingId: string;
+  resourceArn: string;
+  provider: CloudKmsProvider;
+  region: string;
+  primaryKeyId: string;
+  activeVersion: number;
+  versions: KMSKeyVersion[];
+  autoRotationEnabled: boolean;
+  rotationPeriodDays: number;
+  managedHsm: boolean;
+}
+
+export interface EncryptedFieldEnvelope {
+  keyVersion: number;
+  algorithm: EncryptionAlgorithm;
+  ivB64: string;
+  authTagB64: string;
+  encryptedDekB64: string; // Wrapped Data Encryption Key under KMS KEK
+  ciphertextB64: string;
+  kmsKeyUri: string;
+  encryptedAt: string;
+}
+
+export interface MobileSecurityAuditItem {
+  id: string;
+  ruleCategory: 'DATABASE_CREDENTIALS' | 'SERVICE_ACCOUNT_SECRETS' | 'PRIVATE_API_SECRETS' | 'PRODUCTION_ENCRYPTION_KEYS' | 'ADMINISTRATIVE_CREDENTIALS';
+  ruleDescription: string;
+  compliant: boolean;
+  detectedThreatCount: number;
+  enforcementMethod: string;
+  verificationEvidence: string;
+  severity: 'CRITICAL_BLOCKER' | 'HIGH';
+}
+
+export interface TransitSecurityStatus {
+  tlsVersion: 'TLS 1.3' | 'TLS 1.2' | 'TLS 1.1 (DEPRECATED)' | 'PLAINTEXT (BLOCKED)';
+  cipherSuite: string;
+  forwardSecrecy: boolean;
+  hstsEnforced: boolean;
+  hstsPreloadApproved: boolean;
+  hstsMaxAgeSeconds: number;
+  httpFallbackPermitted: boolean;
+  alpnProtocols: string[];
+  certIssuer: string;
+  certValidityDaysRemaining: number;
+}
 
 export interface DataFieldClassification {
   fieldName: string;
