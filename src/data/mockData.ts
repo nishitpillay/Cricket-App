@@ -1,6 +1,6 @@
 import { UserProfile, SessionRecord, MatchStat, TechniqueScores, DrillItem, TelestrationFeedback } from '../types';
 
-export const mockUsers: Record<'player' | 'coach' | 'admin', UserProfile> = {
+export const mockUsers: Record<'player' | 'junior' | 'coach' | 'admin', UserProfile> = {
   player: {
     id: 'usr-alex',
     name: 'Alex Mercer',
@@ -9,7 +9,86 @@ export const mockUsers: Record<'player' | 'coach' | 'admin', UserProfile> = {
     level: 42,
     xpProgress: 75,
     tier: 'ELITE TIER',
-    specialty: 'Right-Arm Fast / Top-Order Bat'
+    specialty: 'Right-Arm Fast / Top-Order Bat',
+    isJunior: false,
+    playerProfile: {
+      name: 'Alex Mercer',
+      age: 23,
+      dateOfBirth: '2003-05-14',
+      playingStyle: 'Aggressive / Dominant',
+      primaryCategory: 'All-Rounder',
+      battingDetails: {
+        handedness: 'Right-Hand Bat',
+        orderPosition: 'Top-Order (No. 3)',
+        keyStrengths: ['Cover Drive & High Elbow Loft', 'Pull vs Express Short Ball', 'Spin Counter-Attack'],
+        favoriteShots: 'Extra Cover Drive & Pull'
+      },
+      bowlingDetails: {
+        speedCategory: 'Fast Bowler (140+ kph)',
+        techniqueStyle: 'Right-Arm Fast / Express',
+        tacticalRole: 'New Ball Strike Bowler',
+        stockDelivery: 'High-Release Outswinger (142 kph)'
+      },
+      fieldingPosition: 'Slips / Gully',
+      googleConnected: true
+    }
+  },
+  junior: {
+    id: 'usr-liam-junior',
+    name: 'Liam Chen',
+    role: 'player',
+    avatar: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=200&auto=format&fit=crop&q=80',
+    level: 14,
+    xpProgress: 60,
+    tier: 'U-15 JUNIOR ACADEMY',
+    specialty: 'Right-Arm Fast-Medium Pacer (Age 14)',
+    isJunior: true,
+    guardianInfo: {
+      guardianName: 'Sarah Chen',
+      guardianEmail: 'sarah.chen.parent@gmail.com',
+      guardianPhone: '+44 7700 900821',
+      relationship: 'Parent',
+      consentStatus: 'verified',
+      consentGrantedAt: '2026-08-15T10:00:00Z',
+      consentVerificationToken: 'GV-UK-78912-VERIFIED',
+      guardianPortalPin: '4821',
+      supervisionEnabled: true,
+      ccAllCoachCommunications: true,
+      notifyOnSessionUpload: true
+    },
+    juniorPrivacy: {
+      isJunior: true,
+      hideExactLocation: true,
+      disablePublicDiscovery: true,
+      allowOnlyAssignedCoaches: true,
+      blockDirectMessaging: true,
+      disablePublicComments: true,
+      stripExifMetadata: true,
+      videoPrivacyLevel: 'private-guardian-coach-only',
+      assignedCoachIds: ['coach-mark']
+    },
+    playerProfile: {
+      name: 'Liam Chen',
+      age: 14,
+      dateOfBirth: '2012-04-18',
+      playingStyle: 'Classical & Technical',
+      primaryCategory: 'Bowler',
+      isJunior: true,
+      battingDetails: {
+        handedness: 'Right-Hand Bat',
+        orderPosition: 'Tail-Ender (8-11)',
+        keyStrengths: ['Straight Defense', 'Forward Block', 'Running Between Wickets'],
+        favoriteShots: 'Forward Defensive & Late Cut'
+      },
+      bowlingDetails: {
+        speedCategory: 'Fast-Medium Pacer (125-140 kph)',
+        techniqueStyle: 'Right-Arm Fast-Medium Outswing',
+        tacticalRole: 'New Ball Strike Bowler',
+        stockDelivery: 'Good-Length Seam Up Delivery'
+      },
+      fieldingPosition: 'Cover / Mid-Off',
+      googleConnected: true
+    }
   },
   coach: {
     id: 'coach-mark',
@@ -19,7 +98,41 @@ export const mockUsers: Record<'player' | 'coach' | 'admin', UserProfile> = {
     level: 88,
     xpProgress: 90,
     tier: 'HIGH PERFORMANCE COACH',
-    specialty: 'ICC Level 3 Master Instructor'
+    specialty: 'ICC Level 3 Master Instructor',
+    coachProfile: {
+      name: 'Coach Mark Richardson',
+      specialization: 'Fast Bowling Pace & Seam Mechanics',
+      bioSummary: 'Former international fast bowler and ECB Level 4 High Performance Director with 16+ years developing express pacers and technical top-order batsmen through real-time telemetry.',
+      yearsOfExperience: 16,
+      accreditations: ['ICC Level 3 Master Instructor', 'ECB High Performance Specialist', 'Biomechanical Motion Analysis Certified'],
+      coachingHistory: [
+        {
+          organizationOrTeam: 'Surrey County High Performance Academy',
+          role: 'Head Bowling & Pace Director',
+          years: '2021 - Present',
+          notableAchievements: 'Produced 4 First-Class debutants, Championship Finalists'
+        },
+        {
+          organizationOrTeam: 'National U-19 Development Squad',
+          role: 'Assistant Coach & Pace Lead',
+          years: '2017 - 2021',
+          notableAchievements: 'World Cup Semi-Finals, Average pace increased by 6.2 kph across squad'
+        },
+        {
+          organizationOrTeam: 'Melbourne Elite Cricket Academy',
+          role: 'Technical Batting & Bowling Specialist',
+          years: '2012 - 2017',
+          notableAchievements: 'Developed 7 franchise draft picks'
+        }
+      ],
+      historicStats: {
+        winRatePct: 74.5,
+        trophiesWon: 6,
+        proPlayersDeveloped: 28,
+        matchesCoached: 342
+      },
+      googleConnected: true
+    }
   },
   admin: {
     id: 'admin-root',

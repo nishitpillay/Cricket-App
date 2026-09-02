@@ -9,6 +9,8 @@ interface HeaderProps {
   currentScreen?: ScreenType;
   onProfileClick?: () => void;
   onOpenProfile?: () => void;
+  onGoogleSyncClick?: () => void;
+  onGuardianPortalClick?: () => void;
   onBack?: () => void;
   showBack?: boolean;
 }
@@ -20,6 +22,8 @@ export const Header: React.FC<HeaderProps> = ({
   currentScreen,
   onProfileClick,
   onOpenProfile,
+  onGoogleSyncClick,
+  onGuardianPortalClick,
   onBack,
   showBack = false
 }) => {
@@ -47,8 +51,30 @@ export const Header: React.FC<HeaderProps> = ({
           </h1>
         </div>
 
-        {/* Right action: Role Pill + Avatar Trigger */}
+        {/* Right action: Google Integration + Role Pill + Avatar Trigger */}
         <div className="flex items-center gap-2">
+          {onGoogleSyncClick && (
+            <button
+              onClick={onGoogleSyncClick}
+              title="Google Health & Location Hub"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-mono text-[#9cf0ff] hover:border-[#9cf0ff]/40 transition-all active:scale-95 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[16px] text-[#c3f400]">cloud_sync</span>
+              <span className="hidden sm:inline">Google Sync</span>
+            </button>
+          )}
+
+          {activeUser?.isJunior && (
+            <button
+              onClick={onGuardianPortalClick}
+              title="Junior Safeguarded • Open Guardian Supervision Hub"
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#4ade80]/15 text-[#4ade80] border border-[#4ade80]/30 hover:bg-[#4ade80]/25 transition-all cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[13px]">shield_lock</span>
+              <span className="hidden xs:inline">JUNIOR SAFEGUARDED</span>
+            </button>
+          )}
+
           {activeUser?.role === 'coach' && (
             <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#ffdb3c]/15 text-[#ffdb3c] border border-[#ffdb3c]/30">
               COACH MODE

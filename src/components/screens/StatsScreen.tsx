@@ -3,13 +3,14 @@ import { MatchStat, TechniqueScores, ScreenType, WagonWheelShot, PitchMapDeliver
 import { mockMatches, mockTrainingHistory, mockTechniqueScores } from '../../data/mockData';
 import { mockWagonWheelShots, mockPitchMapDeliveries } from '../../data/tacticsAndPlannerData';
 import { playBeep, playBallImpact } from '../../utils/audioFeedback';
+import { PlayerHealthDashboard } from '../health/PlayerHealthDashboard';
 
 interface StatsScreenProps {
   onNavigate: (screen: ScreenType) => void;
 }
 
 export const StatsScreen: React.FC<StatsScreenProps> = ({ onNavigate }) => {
-  const [statsView, setStatsView] = useState<'dashboard' | 'wagon-wheel' | 'pitch-map' | 'history'>('dashboard');
+  const [statsView, setStatsView] = useState<'dashboard' | 'health' | 'wagon-wheel' | 'pitch-map' | 'history'>('dashboard');
   const [activeHistoryTab, setActiveHistoryTab] = useState<'matches' | 'training'>('matches');
   const [techniqueScores, setTechniqueScores] = useState<TechniqueScores>(mockTechniqueScores);
   const [selectedMatch, setSelectedMatch] = useState<MatchStat | null>(null);
@@ -71,6 +72,26 @@ export const StatsScreen: React.FC<StatsScreenProps> = ({ onNavigate }) => {
         <button
           onClick={() => {
             playBeep(700, 0.04);
+            setStatsView('health');
+          }}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-headline font-bold text-xs transition-all cursor-pointer whitespace-nowrap ${
+            statsView === 'health'
+              ? 'bg-[#c3f400] text-[#161e00] shadow-[0_0_12px_rgba(195,244,0,0.3)]'
+              : 'text-[#c4c9ac] hover:text-white'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[18px]">favorite</span>
+          <span>Health & Readiness</span>
+          <span className={`text-[8px] px-1.5 py-0.5 rounded font-mono font-bold ${
+            statsView === 'health' ? 'bg-[#161e00] text-[#c3f400]' : 'bg-[#c3f400]/20 text-[#c3f400]'
+          }`}>
+            AI PRO
+          </span>
+        </button>
+
+        <button
+          onClick={() => {
+            playBeep(700, 0.04);
             setStatsView('wagon-wheel');
           }}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-headline font-bold text-xs transition-all cursor-pointer whitespace-nowrap ${
@@ -114,9 +135,46 @@ export const StatsScreen: React.FC<StatsScreenProps> = ({ onNavigate }) => {
         </button>
       </div>
 
+      {/* VIEW 0: PLAYER HEALTH & READINESS (NEW DEDICATED TAB) */}
+      {statsView === 'health' && (
+        <PlayerHealthDashboard onNavigate={onNavigate} />
+      )}
+
       {/* VIEW 1: PERFORMANCE MATRIX DASHBOARD */}
       {statsView === 'dashboard' && (
         <div className="flex flex-col gap-5 animate-fadeIn">
+          {/* Health & Readiness Quick Card Banner */}
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#1c240d] via-[#201f1f] to-[#122126] glass p-5 border border-[#c3f400]/30 shadow-xl">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-[#c3f400]/20 flex items-center justify-center text-[#c3f400] shadow-[0_0_15px_rgba(195,244,0,0.3)]">
+                  <span className="material-symbols-outlined text-[28px]">favorite</span>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-headline font-bold text-base text-white">Player Health & Readiness: 88 / 100</h3>
+                    <span className="px-2 py-0.5 rounded-full bg-[#c3f400]/15 text-[#c3f400] border border-[#c3f400]/30 font-headline font-bold text-[9px] uppercase tracking-wider">
+                      OPTIMAL TIER
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#c4c9ac] mt-0.5">
+                    Resting HR: 49 bpm • Sleep: 8.2h (91%) • Workload ACWR: 1.14 (Safe Sweet Spot)
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  playBeep(800, 0.05);
+                  setStatsView('health');
+                }}
+                className="px-4 py-2.5 rounded-xl bg-[#c3f400] text-[#161e00] font-headline font-bold text-xs hover:bg-[#abd600] transition-colors flex items-center gap-1.5 cursor-pointer shadow-lg whitespace-nowrap self-stretch sm:self-auto justify-center"
+              >
+                <span>Launch Health Dashboard</span>
+                <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+              </button>
+            </div>
+          </div>
           {/* Top Player Profile Card */}
           <div className="relative overflow-hidden rounded-3xl bg-[#201f1f] glass p-6 border border-white/10 shadow-xl">
             <div className="absolute inset-0 z-0 bg-gradient-to-br from-[#c3f400]/10 via-transparent to-transparent opacity-60 pointer-events-none" />

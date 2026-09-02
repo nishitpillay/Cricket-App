@@ -49,33 +49,58 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           </div>
         </div>
 
-        {/* Main Action Button: Start Live Recording */}
-        <button
-          onClick={() => {
-            playBeep(880, 0.1);
-            onNavigate('record');
-          }}
-          className="w-full relative overflow-hidden rounded-2xl bg-[#c3f400] text-[#161e00] shadow-[0_0_24px_rgba(195,244,0,0.35)] active:scale-[0.98] transition-all duration-200 group cursor-pointer border border-[#c3f400]"
-        >
-          {/* Shimmer sweep effect */}
-          <div className="absolute inset-0 bg-white/25 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out" />
-          
-          <div className="py-4 px-5 flex items-center justify-between relative z-10">
-            <div className="flex flex-col items-start gap-0.5">
-              <span className="font-headline font-bold text-lg sm:text-xl tracking-tight leading-tight">
-                Start Live Recording
-              </span>
-              <span className="text-xs sm:text-sm font-medium opacity-85">
-                AI Camera Tracking & Telemetry
-              </span>
+        {/* Action Grid: Start Live Recording + Google Health & Venue Bar */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <button
+            onClick={() => {
+              playBeep(880, 0.1);
+              onNavigate('record');
+            }}
+            className="sm:col-span-2 relative overflow-hidden rounded-2xl bg-[#c3f400] text-[#161e00] shadow-[0_0_24px_rgba(195,244,0,0.35)] active:scale-[0.98] transition-all duration-200 group cursor-pointer border border-[#c3f400]"
+          >
+            {/* Shimmer sweep effect */}
+            <div className="absolute inset-0 bg-white/25 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out" />
+            
+            <div className="py-4 px-5 flex items-center justify-between relative z-10">
+              <div className="flex flex-col items-start gap-0.5">
+                <span className="font-headline font-bold text-lg sm:text-xl tracking-tight leading-tight">
+                  Start Live Recording
+                </span>
+                <span className="text-xs sm:text-sm font-medium opacity-85">
+                  AI Camera Tracking & Telemetry
+                </span>
+              </div>
+              <div className="w-12 h-12 rounded-full bg-[#161e00]/12 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
+                <span className="material-symbols-outlined text-[28px] text-[#161e00]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  videocam
+                </span>
+              </div>
             </div>
-            <div className="w-12 h-12 rounded-full bg-[#161e00]/12 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
-              <span className="material-symbols-outlined text-[28px] text-[#161e00]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                videocam
-              </span>
+          </button>
+
+          <button
+            onClick={() => {
+              playBeep(750, 0.05);
+              onNavigate('stats');
+            }}
+            className="relative overflow-hidden rounded-2xl bg-[#1f1e1e] hover:bg-[#282727] text-white border border-[#9cf0ff]/20 hover:border-[#9cf0ff]/50 active:scale-[0.98] transition-all duration-200 group cursor-pointer p-4 flex flex-col justify-between shadow-lg"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-[10px] font-mono text-[#9cf0ff] uppercase tracking-wider font-bold">
+                <span className="material-symbols-outlined text-[16px] text-[#c3f400]">cloud_done</span>
+                Google Fit Sync
+              </div>
+              <span className="w-2 h-2 rounded-full bg-[#c3f400] animate-pulse" />
             </div>
-          </div>
-        </button>
+            <div>
+              <div className="flex items-baseline gap-1 mt-2">
+                <span className="font-headline font-black text-2xl text-white">48</span>
+                <span className="text-xs text-[#c4c9ac]">bpm RHR</span>
+              </div>
+              <span className="text-[10px] text-[#c4c9ac] block">8.3h Sleep • 10,420 Steps</span>
+            </div>
+          </button>
+        </div>
       </section>
 
       {/* Weekly Progress Chart Widget */}

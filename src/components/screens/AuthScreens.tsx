@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ScreenType, UserProfile } from '../../types';
 import { mockUsers } from '../../data/mockData';
+import { ProfileCreationWizardModal } from '../profile/ProfileCreationWizardModal';
 import { playBeep } from '../../utils/audioFeedback';
 
 interface AuthScreensProps {
@@ -21,6 +22,8 @@ export const AuthScreens: React.FC<AuthScreensProps> = ({
   const [password, setPassword] = useState('••••••••••••');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [wizardRole, setWizardRole] = useState<'player' | 'coach'>('player');
 
   const handleAuth = (role: 'player' | 'coach' | 'admin') => {
     setIsLoading(true);
@@ -30,6 +33,18 @@ export const AuthScreens: React.FC<AuthScreensProps> = ({
       onLoginSuccess(mockUsers[role]);
       onNavigate('home');
     }, 600);
+  };
+
+  const handleOpenWizard = (role: 'player' | 'coach') => {
+    playBeep(750, 0.05);
+    setWizardRole(role);
+    setIsWizardOpen(true);
+  };
+
+  const handleSaveWizardProfile = (newProfile: UserProfile) => {
+    onLoginSuccess(newProfile);
+    setIsWizardOpen(false);
+    onNavigate('home');
   };
 
   // ==========================================
@@ -81,6 +96,25 @@ export const AuthScreens: React.FC<AuthScreensProps> = ({
               <path d="M12 5.38C13.62 5.38 15.06 5.94 16.2 7.03L19.36 3.87C17.46 2.1 14.97 1 12 1C7.69 1 3.96 3.47 2.15 7.06L5.82 9.9C6.7 7.31 9.13 5.38 12 5.38Z" />
             </svg>
             Sign in with Google
+          </button>
+
+          {/* Questionnaire Setup Button */}
+          <button
+            onClick={() => handleOpenWizard('player')}
+            className="w-full bg-[#201f1f] hover:bg-[#282727] text-white font-headline font-bold text-xs py-3 px-4 rounded-xl border border-[#c3f400]/40 flex items-center justify-between transition-all cursor-pointer shadow-md group"
+          >
+            <div className="flex items-center gap-2.5">
+              <span className="material-symbols-outlined text-[#c3f400] text-[20px]">
+                quiz
+              </span>
+              <div className="text-left">
+                <span className="block text-white font-bold">Player Questionnaire & Calibration</span>
+                <span className="block text-[10px] text-[#c4c9ac]">Batting & Bowling Deep Anatomy</span>
+              </div>
+            </div>
+            <span className="material-symbols-outlined text-[#c3f400] text-[18px] group-hover:translate-x-1 transition-transform">
+              arrow_forward
+            </span>
           </button>
 
           <div className="relative flex items-center py-2">
@@ -161,6 +195,15 @@ export const AuthScreens: React.FC<AuthScreensProps> = ({
             Admin Portal
           </button>
         </div>
+
+        {/* Wizard Modal */}
+        <ProfileCreationWizardModal
+          isOpen={isWizardOpen}
+          onClose={() => setIsWizardOpen(false)}
+          role={wizardRole}
+          initialProfile={mockUsers[wizardRole]}
+          onSaveProfile={handleSaveWizardProfile}
+        />
       </div>
     );
   }
@@ -224,6 +267,25 @@ export const AuthScreens: React.FC<AuthScreensProps> = ({
               Continue with Google
             </button>
 
+            {/* Coach Questionnaire Setup */}
+            <button
+              onClick={() => handleOpenWizard('coach')}
+              className="w-full bg-[#131313] hover:bg-[#1a1a1a] text-white font-headline font-bold text-xs py-3 px-4 rounded-xl border border-[#c3f400]/40 flex items-center justify-between transition-all cursor-pointer shadow-md group"
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="material-symbols-outlined text-[#c3f400] text-[20px]">
+                  psychology
+                </span>
+                <div className="text-left">
+                  <span className="block text-white font-bold">Coach Profile & Track Record</span>
+                  <span className="block text-[10px] text-[#c4c9ac]">Specialization, Bio & Historic Stats</span>
+                </div>
+              </div>
+              <span className="material-symbols-outlined text-[#c3f400] text-[18px] group-hover:translate-x-1 transition-transform">
+                arrow_forward
+              </span>
+            </button>
+
             <div className="relative flex items-center py-1">
               <div className="flex-grow border-t border-white/10" />
               <span className="flex-shrink-0 mx-3 text-[10px] uppercase font-bold text-[#c4c9ac]">Or</span>
@@ -253,6 +315,15 @@ export const AuthScreens: React.FC<AuthScreensProps> = ({
             Not a coach? Switch roles
           </button>
         </div>
+
+        {/* Wizard Modal */}
+        <ProfileCreationWizardModal
+          isOpen={isWizardOpen}
+          onClose={() => setIsWizardOpen(false)}
+          role={wizardRole}
+          initialProfile={mockUsers[wizardRole]}
+          onSaveProfile={handleSaveWizardProfile}
+        />
       </div>
     );
   }

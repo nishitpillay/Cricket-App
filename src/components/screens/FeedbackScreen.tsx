@@ -213,10 +213,12 @@ export const FeedbackScreen: React.FC<FeedbackScreenProps> = ({
         {showCoachChat && (
           <div className="glass rounded-2xl p-4 border border-[#c3f400]/30 flex flex-col gap-3 animate-fadeIn">
             <div className="flex justify-between items-center border-b border-white/5 pb-2">
-              <span className="text-xs font-bold text-[#c3f400] flex items-center gap-1">
+              <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#c3f400] animate-pulse" />
-                Direct Feedback Thread • {feedbackData.coachName}
-              </span>
+                <span className="text-xs font-bold text-[#c3f400]">
+                  Accredited Technical Feedback • {feedbackData.coachName}
+                </span>
+              </div>
               <button
                 onClick={() => setShowCoachChat(false)}
                 className="text-xs text-gray-400 hover:text-white"
@@ -224,6 +226,26 @@ export const FeedbackScreen: React.FC<FeedbackScreenProps> = ({
                 Close
               </button>
             </div>
+
+            {/* Junior Safeguard Notice & 2-Way Guardian CC */}
+            {currentUser?.isJunior && (
+              <div className="p-2.5 rounded-xl bg-[#121c12] border border-[#4ade80]/30 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#4ade80] text-[18px]">family_restroom</span>
+                  <div>
+                    <span className="text-[#4ade80] font-bold text-[11px] block">
+                      Junior Safeguard • Guardian CC Active
+                    </span>
+                    <span className="text-[10px] text-[#c4c9ac]">
+                      All coaching messages copied to {currentUser.guardianInfo?.guardianEmail || 'parent@guardian.com'}
+                    </span>
+                  </div>
+                </div>
+                <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-[#4ade80]/20 text-[#4ade80] border border-[#4ade80]/30">
+                  AUDITED
+                </span>
+              </div>
+            )}
 
             <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
               {chatMessages.map((msg, i) => (
@@ -253,7 +275,7 @@ export const FeedbackScreen: React.FC<FeedbackScreenProps> = ({
               />
               <button
                 type="submit"
-                className="px-3 py-1.5 rounded-xl bg-[#c3f400] text-[#161e00] font-bold text-xs hover:bg-[#abd600]"
+                className="px-3 py-1.5 rounded-xl bg-[#c3f400] text-[#161e00] font-bold text-xs hover:bg-[#abd600] cursor-pointer"
               >
                 Send
               </button>

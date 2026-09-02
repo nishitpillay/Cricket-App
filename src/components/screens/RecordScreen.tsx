@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ScreenType } from '../../types';
+import { ScreenType, UserProfile } from '../../types';
 import { playBeep, playBallImpact } from '../../utils/audioFeedback';
+import { scrubImageExif, scrubVideoMetadata, SanitizedMediaResult } from '../../utils/exifScrubber';
 
 interface RecordScreenProps {
   onNavigate: (screen: ScreenType) => void;
+  currentUser?: UserProfile;
 }
 
-export const RecordScreen: React.FC<RecordScreenProps> = ({ onNavigate }) => {
+export const RecordScreen: React.FC<RecordScreenProps> = ({ onNavigate, currentUser }) => {
   // State for recording simulation
   const [seconds, setSeconds] = useState(134); // 02:14
   const [isRecording, setIsRecording] = useState(true);
@@ -25,8 +27,11 @@ export const RecordScreen: React.FC<RecordScreenProps> = ({ onNavigate }) => {
   const [deliveryCount, setDeliveryCount] = useState(6);
   const [flaggedMoments, setFlaggedMoments] = useState<string[]>([]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [uploadedMediaResult, setUploadedMediaResult] = useState<SanitizedMediaResult | null>(null);
+  const [isScrubbing, setIsScrubbing] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Timer interval
   useEffect(() => {
@@ -112,8 +117,42 @@ export const RecordScreen: React.FC<RecordScreenProps> = ({ onNavigate }) => {
     }, 1000);
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsScrubbing(true);
+    playBeep(600, 0.1);
+
+    try {
+      let result: SanitizedMediaResult;
+      if (file.type.startsWith('video/')) {
+        result = await scrubVideoMetadata(file);
+      } else {
+        result = await scrubImageExif(file);
+      }
+
+      setUploadedMediaResult(result);
+      setIsScrubbing(false);
+      playBeep(880, 0.15);
+      showToast(`🛡️ Safeguard Cleaned: ${result.strippedTags.length} privacy tags & GPS removed!`);
+    } catch (err) {
+      console.error('Scrubbing error:', err);
+      setIsScrubbing(false);
+      showToast('Error processing media privacy metadata.');
+    }
+  };
+
   return (
     <div className="relative w-full h-[calc(100vh-64px)] min-h-[600px] overflow-hidden bg-[#131313] select-none">
+      {/* Hidden file input for media sanitization */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileUpload}
+        accept="video/*,image/*"
+        className="hidden"
+      />
       {/* Background: Real Camera or Authentic Stadium Bowler POV */}
       {useRealCamera ? (
         <video
@@ -208,18 +247,45 @@ export const RecordScreen: React.FC<RecordScreenProps> = ({ onNavigate }) => {
           </div>
 
           {/* Camera toggle pill */}
-          <button
-            onClick={() => {
-              playBeep(700, 0.1);
-              setUseRealCamera(!useRealCamera);
-            }}
-            className="px-2.5 py-1 rounded-lg bg-black/40 glass border border-white/10 hover:border-[#c3f400]/40 text-[10px] font-bold text-white flex items-center gap-1.5 w-fit"
-          >
-            <span className="material-symbols-outlined text-[14px] text-[#c3f400]">
-              {useRealCamera ? 'videocam_off' : 'photo_camera'}
-            </span>
-            {useRealCamera ? 'Switch to Sim' : 'Live Camera'}
-          </button>
+          <div className="flex flex-col gap-1.5">
+            <button
+              onClick={() => {
+                playBeep(700, 0.1);
+                setUseRealCamera(!useRealCamera);
+              }}
+              className="px-2.5 py-1 rounded-lg bg-black/40 glass border border-white/10 hover:border-[#c3f400]/40 text-[10px] font-bold text-white flex items-center gap-1.5 w-fit cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[14px] text-[#c3f400]">
+                {useRealCamera ? 'videocam_off' : 'photo_camera'}
+              </span>
+              {useRealCamera ? 'Switch to Sim' : 'Live Camera'}
+            </button>
+
+            {/* Upload Video / Photo with EXIF Scrubber */}
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isScrubbing}
+              title="Upload media with automated GPS & EXIF privacy scrubbing"
+              className="px-2.5 py-1 rounded-lg bg-black/40 glass border border-[#4ade80]/30 hover:border-[#4ade80] text-[10px] font-bold text-[#4ade80] flex items-center gap-1.5 w-fit cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[14px]">
+                {isScrubbing ? 'sync' : 'security'}
+              </span>
+              {isScrubbing ? 'Scrubbing...' : 'Upload & Scrub EXIF'}
+            </button>
+          </div>
+
+          {uploadedMediaResult && (
+            <div className="p-2 rounded-xl bg-[#121c12] border border-[#4ade80]/30 text-[10px] text-[#c4c9ac] space-y-1">
+              <span className="text-[#4ade80] font-bold flex items-center gap-1">
+                <span className="material-symbols-outlined text-[13px]">verified_user</span>
+                EXIF / GPS Stripped
+              </span>
+              <p className="text-[9px] line-clamp-2">
+                Removed: {uploadedMediaResult.strippedTags.slice(0, 3).join(', ')}...
+              </p>
+            </div>
+          )}
         </div>
       )}
 

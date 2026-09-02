@@ -25,12 +25,24 @@ import { ScenarioTraining } from './components/tactics/ScenarioTraining';
 import { TrainingPlanner } from './components/planner/TrainingPlanner';
 import { DigitalChalkboard } from './components/chalkboard/DigitalChalkboard';
 import { SmartDrillsVault } from './components/drills/SmartDrillsVault';
+import { GoogleIntegrationModal } from './components/GoogleIntegrationModal';
+import { ProfileCreationWizardModal } from './components/profile/ProfileCreationWizardModal';
+import { GuardianSupervisionPortal } from './components/safeguarding/GuardianSupervisionPortal';
+import { SafeguardingReportModal } from './components/safeguarding/SafeguardingReportModal';
+import { JuniorSafetyBanner } from './components/safeguarding/JuniorSafetyBanner';
+import { GoogleFitnessData, GoogleCricketVenueLocation } from './types';
 import { playBeep } from './utils/audioFeedback';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<ScreenType>('home');
   const [currentUser, setCurrentUser] = useState<UserProfile>(mockUsers.player);
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+  const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [isGuardianPortalOpen, setIsGuardianPortalOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [syncedFitness, setSyncedFitness] = useState<GoogleFitnessData | null>(null);
+  const [detectedVenue, setDetectedVenue] = useState<GoogleCricketVenueLocation | null>(null);
   const [selectedDrill, setSelectedDrill] = useState<DrillItem>(mockDrills[0]);
   const [authMode, setAuthMode] = useState<'player' | 'coach' | 'admin'>('player');
 
@@ -42,6 +54,11 @@ export default function App() {
 
   const handleSelectRole = (role: 'player' | 'coach' | 'admin') => {
     setCurrentUser(mockUsers[role]);
+    setIsRoleModalOpen(false);
+  };
+
+  const handleSelectUser = (user: UserProfile) => {
+    setCurrentUser(user);
     setIsRoleModalOpen(false);
   };
 
@@ -134,12 +151,25 @@ export default function App() {
         onBack={onBack}
         currentUser={currentUser}
         onProfileClick={() => setIsRoleModalOpen(true)}
+        onGoogleSyncClick={() => setIsGoogleModalOpen(true)}
+        onGuardianPortalClick={() => setIsGuardianPortalOpen(true)}
       />
 
       {/* Main Screen Content View */}
       <main className="flex-1 w-full flex flex-col relative pt-16">
         {/* Offline Ground Banner */}
         <OfflineBanner />
+
+        {/* Junior Safeguarding Status Banner */}
+        {currentUser.isJunior && (
+          <div className="px-4 sm:px-6 pt-2">
+            <JuniorSafetyBanner
+              user={currentUser}
+              onOpenPortal={() => setIsGuardianPortalOpen(true)}
+              onReportConcern={() => setIsReportModalOpen(true)}
+            />
+          </div>
+        )}
 
         {currentScreen === 'home' && (
           <HomeScreen
@@ -264,11 +294,65 @@ export default function App() {
         onClose={() => setIsRoleModalOpen(false)}
         currentUser={currentUser}
         onSelectRole={handleSelectRole}
+        onSelectUser={handleSelectUser}
+        onOpenGuardianPortal={() => setIsGuardianPortalOpen(true)}
+        onOpenReportModal={() => setIsReportModalOpen(true)}
+        onOpenWizard={() => {
+          setIsWizardOpen(true);
+        }}
         onOpenAuth={(mode) => {
           setAuthMode(mode);
           if (mode === 'player') handleNavigate('auth-player');
           if (mode === 'coach') handleNavigate('auth-coach');
           if (mode === 'admin') handleNavigate('auth-admin');
+        }}
+      />
+
+      {/* Google Ecosystem Hub (OAuth, Fitness & Location) Modal */}
+      <GoogleIntegrationModal
+        isOpen={isGoogleModalOpen}
+        onClose={() => setIsGoogleModalOpen(false)}
+        currentUser={currentUser}
+        onUpdateUser={(updated) => setCurrentUser(updated)}
+        onFitnessDataSynced={(data) => setSyncedFitness(data)}
+        onLocationDetected={(venue) => setDetectedVenue(venue)}
+      />
+
+      {/* Standalone Questionnaire Wizard Modal */}
+      <ProfileCreationWizardModal
+        isOpen={isWizardOpen}
+        onClose={() => setIsWizardOpen(false)}
+        role={currentUser.role === 'coach' ? 'coach' : 'player'}
+        initialProfile={currentUser}
+        onSaveProfile={(updated) => {
+          setCurrentUser(updated);
+        }}
+      />
+
+      {/* Guardian Supervision & Safeguarding Portal Modal */}
+      <GuardianSupervisionPortal
+        isOpen={isGuardianPortalOpen}
+        onClose={() => setIsGuardianPortalOpen(false)}
+        currentUser={currentUser}
+        onUpdateUser={(updated) => setCurrentUser(updated)}
+        onOpenReportModal={() => setIsReportModalOpen(true)}
+      />
+
+      {/* Comprehensive Safeguarding Incident Report & Block Modal */}
+      <SafeguardingReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        currentUser={currentUser}
+        targetUserId="usr-coach-richardson"
+        targetUserName="Coach Mark Richardson"
+        onBlockUser={(blockedId) => {
+          const currentBlocked = currentUser.blockedUserIds || [];
+          if (!currentBlocked.includes(blockedId)) {
+            setCurrentUser({
+              ...currentUser,
+              blockedUserIds: [...currentBlocked, blockedId]
+            });
+          }
         }}
       />
     </div>
