@@ -10,7 +10,10 @@ import {
   SafeguardingReportCategory,
   UserProfile,
   GuardianInformation,
-  JuniorPrivacyGuardrails
+  JuniorPrivacyGuardrails,
+  CoachAuthorization,
+  CoachRelationshipType,
+  CoachAuthorizationStatus
 } from '../types';
 
 const STORAGE_KEY_REPORTS = 'pitch_precision_safeguarding_reports';
@@ -62,28 +65,80 @@ const INITIAL_AUDIT_LOGS: SafeguardingAuditLog[] = [
   }
 ];
 
-export const INITIAL_APPROVED_COACHES = [
+export interface ExtendedCoachAuthorization extends CoachAuthorization {
+  specialization: string;
+  accreditation: string;
+  approvedBy: string;
+  approvedDate: string;
+  dbsSafeguardingCleared: boolean;
+}
+
+export const INITIAL_APPROVED_COACHES: ExtendedCoachAuthorization[] = [
   {
     coachId: 'coach-arin',
     coachName: 'Arin Mishra',
+    playerId: 'usr-liam-junior',
+    organizationId: 'org-london-academy-01',
+    organizationName: 'London Cricket Youth Academy',
+    relationshipType: 'Head Coach',
+    authorizedDate: '2026-08-20',
+    expiryDate: '2027-08-20', // Future Expiry
+    guardianApprovalRequired: true,
+    guardianApproved: true,
+    guardianApprovedBy: 'Sarah Chen (Guardian)',
+    guardianApprovedDate: '2026-08-20',
+    status: 'Active',
+    accessPermissions: ['view_videos', 'submit_reviews', 'assign_drills', 'view_telemetry'],
     specialization: 'Fast Bowling Pace & Seam Mechanics',
     accreditation: 'ICC Level 3 / ECB Level 4 Master Instructor',
     approvedBy: 'Sarah Chen & Devi Pillay (Guardians)',
     approvedDate: '2026-08-20',
-    status: 'Authorized & Verified',
     dbsSafeguardingCleared: true
   },
   {
     coachId: 'coach-roshan',
     coachName: 'Roshan Srilanka',
+    playerId: 'usr-liam-junior',
+    organizationId: 'org-london-academy-01',
+    organizationName: 'London Cricket Youth Academy',
+    relationshipType: 'Batting Specialist',
+    authorizedDate: '2026-08-21',
+    expiryDate: '2027-08-21', // Future Expiry
+    guardianApprovalRequired: true,
+    guardianApproved: true,
+    guardianApprovedBy: 'Sarah Chen (Guardian)',
+    guardianApprovedDate: '2026-08-21',
+    status: 'Active',
+    accessPermissions: ['view_videos', 'submit_reviews', 'assign_drills'],
     specialization: 'Tactical Batting Masterclasses & Spin Corridor Mastery',
     accreditation: 'ICC Level 3 Master Coach / DBS Safeguarding Cleared',
     approvedBy: 'Sarah Chen & Devi Pillay (Guardians)',
     approvedDate: '2026-08-21',
-    status: 'Authorized & Verified',
+    dbsSafeguardingCleared: true
+  },
+  {
+    coachId: 'coach-expired-richard',
+    coachName: 'Richard Richardson',
+    playerId: 'usr-liam-junior',
+    organizationId: 'org-london-academy-01',
+    organizationName: 'London Cricket Youth Academy',
+    relationshipType: 'Specialist Bowling Consultant',
+    authorizedDate: '2025-08-01',
+    expiryDate: '2026-08-01', // Expired in the past!
+    guardianApprovalRequired: true,
+    guardianApproved: true,
+    guardianApprovedBy: 'Sarah Chen (Guardian)',
+    guardianApprovedDate: '2025-08-01',
+    status: 'Expired',
+    accessPermissions: [], // Expired relationship has automatically nullified privileges
+    specialization: 'Outswing Seam Mechanics & Grip Alignment',
+    accreditation: 'ECB Level 3 Coach (Retention Tracked)',
+    approvedBy: 'Sarah Chen (Guardian)',
+    approvedDate: '2025-08-01',
     dbsSafeguardingCleared: true
   }
 ];
+
 
 export function getStoredAuditLogs(): SafeguardingAuditLog[] {
   try {
@@ -230,38 +285,88 @@ export function unblockUser(userId: string): void {
   }
 }
 
-export function getApprovedCoachesList(): typeof INITIAL_APPROVED_COACHES {
+export function getApprovedCoachesList(): ExtendedCoachAuthorization[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_COACH_WHITELIST);
-    return raw ? JSON.parse(raw) : INITIAL_APPROVED_COACHES;
+    let list: ExtendedCoachAuthorization[] = raw ? JSON.parse(raw) : INITIAL_APPROVED_COACHES;
+    
+    // 1. Dynamic Check & Automatic Expiration of Access
+    const todayStr = new Date().toISOString().split('T')[0];
+    let listChanged = false;
+    
+    list = list.map(c => {
+      // If the coach's expiryDate is in the past and they are marked active, automatically expire them!
+      if (c.expiryDate && c.expiryDate < todayStr && c.status === 'Active') {
+        listChanged = true;
+        return {
+          ...c,
+          status: 'Expired' as const,
+          accessPermissions: [] // Access privileges automatically nullified
+        };
+      }
+      return c;
+    });
+
+    // 2. Retention Rule: Keep logs for legal/safeguarding compliance, but physically prune entries older than 7 years
+    const sevenYearsAgo = new Date();
+    sevenYearsAgo.setFullYear(sevenYearsAgo.getFullYear() - 7);
+    const sevenYearsAgoStr = sevenYearsAgo.toISOString().split('T')[0];
+    
+    const prunedList = list.filter(c => {
+      const dateToCheck = c.expiryDate || c.authorizedDate;
+      if (dateToCheck && dateToCheck < sevenYearsAgoStr) {
+        listChanged = true;
+        return false; // Safely deleted after 7 years
+      }
+      return true;
+    });
+
+    if (listChanged) {
+      try {
+        localStorage.setItem(STORAGE_KEY_COACH_WHITELIST, JSON.stringify(prunedList));
+      } catch {
+        // Ignore
+      }
+    }
+
+    return prunedList;
   } catch {
     return INITIAL_APPROVED_COACHES;
   }
 }
 
-export function approveCoach(coach: typeof INITIAL_APPROVED_COACHES[0]): void {
+export function approveCoach(coach: ExtendedCoachAuthorization): void {
   const current = getApprovedCoachesList();
-  if (!current.some((c) => c.coachId === coach.coachId)) {
-    const updated = [...current, coach];
-    try {
-      localStorage.setItem(STORAGE_KEY_COACH_WHITELIST, JSON.stringify(updated));
-    } catch {
-      // Ignore
-    }
-    logSafeguardingEvent(
-      'coach_access_granted',
-      coach.approvedBy,
-      'Guardian',
-      `Authorized Coach ${coach.coachName} for junior player technical supervision.`,
-      'usr-liam-junior',
-      true
-    );
+  // Filter out any older entry for the same coach to update it
+  const filtered = current.filter((c) => c.coachId !== coach.coachId);
+  const updated = [...filtered, coach];
+  try {
+    localStorage.setItem(STORAGE_KEY_COACH_WHITELIST, JSON.stringify(updated));
+  } catch {
+    // Ignore
   }
+  logSafeguardingEvent(
+    'coach_access_granted',
+    coach.approvedBy,
+    'Guardian',
+    `Authorized Coach ${coach.coachName} [${coach.relationshipType}] for technical training. Expiry: ${coach.expiryDate}.`,
+    coach.playerId || 'usr-liam-junior',
+    true
+  );
 }
 
 export function revokeCoach(coachId: string, coachName: string): void {
   const current = getApprovedCoachesList();
-  const updated = current.filter((c) => c.coachId !== coachId);
+  const updated = current.map((c) => {
+    if (c.coachId === coachId) {
+      return {
+        ...c,
+        status: 'Revoked' as const,
+        accessPermissions: [] // Access privileges instantly cleared
+      };
+    }
+    return c;
+  });
   try {
     localStorage.setItem(STORAGE_KEY_COACH_WHITELIST, JSON.stringify(updated));
   } catch {
@@ -271,11 +376,12 @@ export function revokeCoach(coachId: string, coachName: string): void {
     'coach_access_revoked',
     'Parent / Legal Guardian',
     'Guardian',
-    `Revoked coaching and feedback access for ${coachName}.`,
+    `Revoked coaching and feedback access for ${coachName}. Record retained under legal safeguarding policy.`,
     'usr-liam-junior',
     true
   );
 }
+
 
 /**
  * Creates a standard Junior User Profile with verified guardian supervision & strict privacy guardrails

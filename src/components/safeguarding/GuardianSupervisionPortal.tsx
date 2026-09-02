@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { UserProfile, SafeguardingAuditLog, SafeguardingIncidentReport } from '../../types';
+import {
+  UserProfile,
+  SafeguardingAuditLog,
+  SafeguardingIncidentReport,
+  CoachRelationshipType,
+  CoachAuthorizationStatus,
+  CoachAuthorization
+} from '../../types';
 import {
   getStoredAuditLogs,
   getStoredIncidentReports,
@@ -9,7 +16,8 @@ import {
   getApprovedCoachesList,
   revokeCoach,
   approveCoach,
-  logSafeguardingEvent
+  logSafeguardingEvent,
+  ExtendedCoachAuthorization
 } from '../../utils/safeguardingManager';
 import { SafeguardingReportModal } from './SafeguardingReportModal';
 import { playBeep } from '../../utils/audioFeedback';
@@ -31,14 +39,22 @@ export const GuardianSupervisionPortal: React.FC<GuardianSupervisionPortalProps>
   const [auditLogs, setAuditLogs] = useState<SafeguardingAuditLog[]>([]);
   const [incidentReports, setIncidentReports] = useState<SafeguardingIncidentReport[]>([]);
   const [blockedUsersList, setBlockedUsersList] = useState<{ id: string; name: string; date: string; reason: string }[]>([]);
-  const [approvedCoaches, setApprovedCoaches] = useState(getApprovedCoachesList());
+  const [approvedCoaches, setApprovedCoaches] = useState<ExtendedCoachAuthorization[]>(getApprovedCoachesList());
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [successToast, setSuccessToast] = useState<string>('');
   
   // New coach invite state
   const [showAddCoachModal, setShowAddCoachModal] = useState(false);
   const [newCoachName, setNewCoachName] = useState('');
-  const [newCoachSpecialization, setNewCoachSpecialization] = useState('Batting Biomechanics');
+  const [newCoachSpecialization, setNewCoachSpecialization] = useState('Fast Bowling Pace & Seam Mechanics');
+  const [relationshipType, setRelationshipType] = useState<CoachRelationshipType>('Specialist Bowling Consultant');
+  const [organizationName, setOrganizationName] = useState('London Cricket Youth Academy');
+  const [expiryMonths, setExpiryMonths] = useState(12);
+
+  const [permViewVideos, setPermViewVideos] = useState(true);
+  const [permSubmitReviews, setPermSubmitReviews] = useState(true);
+  const [permAssignDrills, setPermAssignDrills] = useState(true);
+  const [permViewTelemetry, setPermViewTelemetry] = useState(false);
 
   const guardianInfo = currentUser.guardianInfo || {
     guardianName: 'Sarah Chen',
@@ -98,14 +114,36 @@ export const GuardianSupervisionPortal: React.FC<GuardianSupervisionPortalProps>
     if (!newCoachName.trim()) return;
     playBeep(750, 0.05);
 
-    const newCoach = {
+    // Calculate expiry date based on selected months
+    const expDate = new Date();
+    expDate.setMonth(expDate.getMonth() + expiryMonths);
+    const expiryDateStr = expDate.toISOString().split('T')[0];
+
+    const permissions: ('view_videos' | 'submit_reviews' | 'assign_drills' | 'view_telemetry')[] = [];
+    if (permViewVideos) permissions.push('view_videos');
+    if (permSubmitReviews) permissions.push('submit_reviews');
+    if (permAssignDrills) permissions.push('assign_drills');
+    if (permViewTelemetry) permissions.push('view_telemetry');
+
+    const newCoach: ExtendedCoachAuthorization = {
       coachId: `coach-${Date.now()}`,
       coachName: newCoachName.trim(),
+      playerId: currentUser.id || 'usr-liam-junior',
+      organizationId: 'org-london-academy-01',
+      organizationName: organizationName,
+      relationshipType: relationshipType,
+      authorizedDate: new Date().toISOString().split('T')[0],
+      expiryDate: expiryDateStr,
+      guardianApprovalRequired: true,
+      guardianApproved: true,
+      guardianApprovedBy: `${guardianInfo.guardianName} (Guardian)`,
+      guardianApprovedDate: new Date().toISOString().split('T')[0],
+      status: 'Active',
+      accessPermissions: permissions,
       specialization: newCoachSpecialization,
-      accreditation: 'DBS Verified & Safeguarding Cleared',
+      accreditation: 'DBS Cleared & Legal Safeguarding Authorized',
       approvedBy: `${guardianInfo.guardianName} (Guardian)`,
       approvedDate: new Date().toISOString().split('T')[0],
-      status: 'Authorized & Verified',
       dbsSafeguardingCleared: true
     };
 
@@ -115,6 +153,7 @@ export const GuardianSupervisionPortal: React.FC<GuardianSupervisionPortalProps>
     refreshData();
     showToast(`Authorized ${newCoach.coachName} for junior player technical training.`);
   };
+
 
   const handleUnblockUser = (userId: string, userName: string) => {
     playBeep(600, 0.04);
@@ -382,51 +421,151 @@ export const GuardianSupervisionPortal: React.FC<GuardianSupervisionPortalProps>
                 </div>
               ) : (
                 <div className="space-y-2.5">
-                  {approvedCoaches.map((coach) => (
-                    <div
-                      key={coach.coachId}
-                      className="p-4 rounded-2xl bg-black/40 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-[#c3f400]/20 border border-[#c3f400]/40 flex items-center justify-center text-[#c3f400] font-bold font-headline">
-                          {coach.coachName[0]}
-                        </div>
-                        <div>
+                  {approvedCoaches.map((coach) => {
+                    const isActive = coach.status === 'Active';
+                    const isExpired = coach.status === 'Expired';
+                    const isRevoked = coach.status === 'Revoked';
+
+                    return (
+                      <div
+                        key={coach.coachId}
+                        className={`p-5 rounded-2xl border transition-all ${
+                          isActive 
+                            ? 'bg-black/50 border-[#4ade80]/20 hover:border-[#4ade80]/40' 
+                            : 'bg-black/25 border-white/5 opacity-65'
+                        }`}
+                      >
+                        {/* Title & Actions Row */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold font-headline text-sm ${
+                              isActive 
+                                ? 'bg-[#c3f400]/10 border border-[#c3f400]/30 text-[#c3f400]' 
+                                : 'bg-white/5 border border-white/10 text-white/40'
+                            }`}>
+                              {coach.coachName[0]}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-bold text-sm text-white">{coach.coachName}</span>
+                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold tracking-wider uppercase border ${
+                                  isActive
+                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                                    : isExpired
+                                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                                    : 'bg-red-500/10 text-red-400 border-red-500/30'
+                                }`}>
+                                  {coach.status}
+                                </span>
+                              </div>
+                              <span className="text-xs text-[#c4c9ac] block mt-0.5">
+                                {coach.relationshipType} • {coach.specialization}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Action Controls */}
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-sm text-white">{coach.coachName}</span>
-                            <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-[#4ade80]/20 text-[#4ade80] border border-[#4ade80]/30">
-                              DBS Cleared
+                            <button
+                              onClick={() => {
+                                setIsReportModalOpen(true);
+                              }}
+                              className="px-2.5 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-300 text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 border border-red-500/20"
+                            >
+                              <span className="material-symbols-outlined text-[14px]">flag</span>
+                              <span>Report</span>
+                            </button>
+                            {isActive && (
+                              <button
+                                onClick={() => handleRevokeCoach(coach.coachId, coach.coachName)}
+                                className="px-3 py-1.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-white text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 border border-red-500/30"
+                              >
+                                <span className="material-symbols-outlined text-[14px]">person_remove</span>
+                                <span>Terminate relationship</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Guardrails Detailed Grid */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 py-3 border-b border-white/5 text-[10px] font-mono text-[#a6ab9d]">
+                          <div className="space-y-0.5">
+                            <span className="text-[#8e918f] font-bold uppercase block text-[8px]">Coach / Player IDs</span>
+                            <span className="text-white block font-semibold truncate">C: {coach.coachId}</span>
+                            <span className="text-white/60 block truncate">P: {coach.playerId || 'usr-liam-junior'}</span>
+                          </div>
+                          <div className="space-y-0.5">
+                            <span className="text-[#8e918f] font-bold uppercase block text-[8px]">Organisation</span>
+                            <span className="text-white block font-semibold truncate" title={coach.organizationName}>
+                              {coach.organizationName}
+                            </span>
+                            <span className="text-white/60 block text-[9px] truncate">ID: {coach.organizationId}</span>
+                          </div>
+                          <div className="space-y-0.5">
+                            <span className="text-[#8e918f] font-bold uppercase block text-[8px]">Validity Period</span>
+                            <span className="text-white block font-semibold">Auth: {coach.authorizedDate}</span>
+                            <span className={`block font-semibold ${isExpired ? 'text-amber-400' : 'text-white/60'}`}>
+                              Exp: {coach.expiryDate}
                             </span>
                           </div>
-                          <span className="text-[11px] text-[#c4c9ac] block">
-                            {coach.specialization} • {coach.accreditation}
-                          </span>
-                          <span className="text-[10px] text-[#c4c9ac]/70">
-                            Authorized by {coach.approvedBy} on {coach.approvedDate}
-                          </span>
+                          <div className="space-y-0.5">
+                            <span className="text-[#8e918f] font-bold uppercase block text-[8px]">Guardian Consent</span>
+                            <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[12px]">verified</span> Approved
+                            </span>
+                            <span className="text-white/60 block text-[9px] truncate">By: {coach.approvedBy}</span>
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => {
-                            setIsReportModalOpen(true);
-                          }}
-                          className="px-2.5 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-300 text-xs font-bold transition-all cursor-pointer flex items-center gap-1 border border-red-500/20"
-                        >
-                          <span className="material-symbols-outlined text-[15px]">flag</span>
-                          <span>Report</span>
-                        </button>
-                        <button
-                          onClick={() => handleRevokeCoach(coach.coachId, coach.coachName)}
-                          className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
-                        >
-                          <span className="material-symbols-outlined text-[15px]">person_remove</span>
-                          <span>Revoke Access</span>
-                        </button>
+                        {/* Allowed Access Permissions Checklist */}
+                        <div className="pt-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                          <div className="space-y-1">
+                            <span className="text-[#8e918f] font-bold uppercase text-[8px] tracking-wider block">
+                              Active Access Permissions
+                            </span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {[
+                                { key: 'view_videos', label: 'View Videos', icon: 'videocam' },
+                                { key: 'submit_reviews', label: 'Submit Reviews', icon: 'rate_review' },
+                                { key: 'assign_drills', label: 'Assign Drills', icon: 'task' },
+                                { key: 'view_telemetry', label: 'View Telemetry', icon: 'query_stats' }
+                              ].map((perm) => {
+                                const hasPerm = coach.accessPermissions.includes(perm.key as any) && isActive;
+                                return (
+                                  <span
+                                    key={perm.key}
+                                    className={`px-2 py-1 rounded-lg text-[9px] font-medium flex items-center gap-1 border ${
+                                      hasPerm
+                                        ? 'bg-[#c3f400]/10 text-[#c3f400] border-[#c3f400]/20'
+                                        : 'bg-black/40 text-white/20 border-white/5 line-through'
+                                    }`}
+                                  >
+                                    <span className="material-symbols-outlined text-[11px]">{perm.icon}</span>
+                                    {perm.label}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {!isActive && (
+                            <div className="px-2.5 py-1 rounded-lg bg-red-500/10 text-red-400 text-[9px] font-mono border border-red-500/20 flex items-center gap-1 shrink-0">
+                              <span className="material-symbols-outlined text-[12px]">gpp_maybe</span>
+                              Access Expired / Token Invalid
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Legal Retention Compliance Flag */}
+                        {!isActive && (
+                          <div className="mt-2.5 text-[9px] text-white/40 italic font-mono flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[11px]">info</span>
+                            Safeguarding Retention Rule Active: Retained until {new Date(new Date(coach.expiryDate || coach.authorizedDate).getTime() + 7 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]} for regulatory child safety records.
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -627,6 +766,94 @@ export const GuardianSupervisionPortal: React.FC<GuardianSupervisionPortalProps>
                   </select>
                 </div>
 
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-white mb-1 uppercase">Relationship Type</label>
+                    <select
+                      value={relationshipType}
+                      onChange={(e) => setRelationshipType(e.target.value as CoachRelationshipType)}
+                      className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#4ade80]"
+                    >
+                      <option value="Head Coach">Head Coach</option>
+                      <option value="Assistant Coach">Assistant Coach</option>
+                      <option value="Specialist Bowling Consultant">Specialist Bowling Consultant</option>
+                      <option value="Batting Specialist">Batting Specialist</option>
+                      <option value="Personal Trainer">Personal Trainer</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-white mb-1 uppercase">Validity Duration</label>
+                    <select
+                      value={expiryMonths}
+                      onChange={(e) => setExpiryMonths(Number(e.target.value))}
+                      className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#4ade80]"
+                    >
+                      <option value={1}>1 Month (Guest)</option>
+                      <option value={3}>3 Months (Seasonal)</option>
+                      <option value={6}>6 Months (Term)</option>
+                      <option value={12}>12 Months (Full Cycle)</option>
+                      <option value={24}>24 Months (Extended)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1 uppercase">Associated Organisation</label>
+                  <input
+                    type="text"
+                    value={organizationName}
+                    onChange={(e) => setOrganizationName(e.target.value)}
+                    placeholder="e.g. London Cricket Youth Academy"
+                    required
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder:text-[#c4c9ac]/50 focus:outline-none focus:border-[#4ade80]"
+                  />
+                </div>
+
+                {/* Permissions Selector Checkboxes */}
+                <div className="space-y-1.5 p-3 rounded-xl bg-black/30 border border-white/5">
+                  <label className="block text-xs font-bold text-[#c3f400] uppercase tracking-wider">
+                    Authorised Access Permissions
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <label className="flex items-center gap-2 text-xs text-[#c4c9ac] select-none cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={permViewVideos}
+                        onChange={(e) => setPermViewVideos(e.target.checked)}
+                        className="rounded bg-black/50 border-white/10 text-[#4ade80] focus:ring-0"
+                      />
+                      <span>View Videos</span>
+                    </label>
+                    <label className="flex items-center gap-2 text-xs text-[#c4c9ac] select-none cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={permSubmitReviews}
+                        onChange={(e) => setPermSubmitReviews(e.target.checked)}
+                        className="rounded bg-black/50 border-white/10 text-[#4ade80] focus:ring-0"
+                      />
+                      <span>Submit Reviews</span>
+                    </label>
+                    <label className="flex items-center gap-2 text-xs text-[#c4c9ac] select-none cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={permAssignDrills}
+                        onChange={(e) => setPermAssignDrills(e.target.checked)}
+                        className="rounded bg-black/50 border-white/10 text-[#4ade80] focus:ring-0"
+                      />
+                      <span>Assign Drills</span>
+                    </label>
+                    <label className="flex items-center gap-2 text-xs text-[#c4c9ac] select-none cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={permViewTelemetry}
+                        onChange={(e) => setPermViewTelemetry(e.target.checked)}
+                        className="rounded bg-black/50 border-white/10 text-[#4ade80] focus:ring-0"
+                      />
+                      <span>View Telemetry</span>
+                    </label>
+                  </div>
+                </div>
+
                 <div className="p-3 rounded-xl bg-black/40 border border-white/5 text-[11px] text-[#c4c9ac] space-y-1">
                   <div className="text-white font-bold flex items-center gap-1">
                     <span className="material-symbols-outlined text-[#4ade80] text-[14px]">verified</span>
@@ -634,6 +861,7 @@ export const GuardianSupervisionPortal: React.FC<GuardianSupervisionPortalProps>
                   </div>
                   <p>Coach must hold valid DBS/Safeguarding credential and will be bound by transparent 2-Way Guardian CC logging.</p>
                 </div>
+
 
                 <div className="flex gap-2 pt-2">
                   <button

@@ -753,3 +753,23 @@ export interface GoogleCricketVenueLocation {
   };
 }
 
+export type CoachRelationshipType = 'Head Coach' | 'Assistant Coach' | 'Specialist Bowling Consultant' | 'Batting Specialist' | 'Personal Trainer';
+export type CoachAuthorizationStatus = 'Active' | 'Pending Approval' | 'Expired' | 'Revoked';
+
+export interface CoachAuthorization {
+  coachId: string;
+  coachName: string;
+  playerId: string;
+  organizationId: string;
+  organizationName: string;
+  relationshipType: CoachRelationshipType;
+  authorizedDate: string;
+  expiryDate: string;
+  guardianApprovalRequired: boolean;
+  guardianApproved: boolean;
+  guardianApprovedBy?: string;
+  guardianApprovedDate?: string;
+  status: CoachAuthorizationStatus;
+  accessPermissions: ('view_videos' | 'submit_reviews' | 'assign_drills' | 'view_telemetry')[];
+}
+
