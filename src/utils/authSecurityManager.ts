@@ -232,3 +232,98 @@ export const registerPasskeyWebAuthn = async (
     }, 1000);
   });
 };
+
+// In-Memory Access Token Storage (Never persisted in localStorage/sessionStorage to mitigate XSS)
+let memoryAccessToken: string | null = null;
+let onSessionExpiredCallback: (() => void) | null = null;
+
+export const getAccessToken = (): string | null => memoryAccessToken;
+export const setAccessToken = (token: string | null): void => {
+  memoryAccessToken = token;
+};
+
+export const registerSessionExpiredHandler = (callback: () => void): void => {
+  onSessionExpiredCallback = callback;
+};
+
+// Silent Refresh: Automatically fetches a new short-lived access token using HttpOnly rotate cookie
+export const performSilentRefresh = async (): Promise<string | null> => {
+  try {
+    const res = await fetch('/api/auth/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        // Fallback if environment doesn't allow cookie-based transfer, but express cookie is primary
+        refreshToken: localStorage.getItem('pitch_precision_rf_fallback') || undefined
+      })
+    });
+
+    if (!res.ok) {
+      // Refresh token is expired or invalid
+      setAccessToken(null);
+      localStorage.removeItem('pitch_precision_rf_fallback');
+      localStorage.removeItem('pitch_precision_session_active');
+      if (onSessionExpiredCallback) {
+        onSessionExpiredCallback();
+      }
+      return null;
+    }
+
+    const data = await res.json();
+    if (data.success && data.accessToken) {
+      setAccessToken(data.accessToken);
+      localStorage.setItem('pitch_precision_session_active', 'true');
+      return data.accessToken;
+    }
+  } catch (err) {
+    console.error('Silent token refresh failed', err);
+  }
+  return null;
+};
+
+// secureFetch: Automatically attaches Authorization Bearer and handles automatic token renewal/rotation
+export const secureFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
+  let token = getAccessToken();
+
+  // If no token but a session is active, try a silent refresh first
+  if (!token && localStorage.getItem('pitch_precision_session_active') === 'true') {
+    token = await performSilentRefresh();
+  }
+
+  // Set authorization header
+  const headers = {
+    ...options.headers,
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+  } as Record<string, string>;
+
+  const mergedOptions = { ...options, headers };
+  let response = await fetch(url, mergedOptions);
+
+  // If 401 with ACCESS_TOKEN_EXPIRED error, attempt silent refresh once and retry
+  if (response.status === 401) {
+    try {
+      const clone = response.clone();
+      const body = await clone.json();
+      if (body.error === 'ACCESS_TOKEN_EXPIRED' || body.tokenExpired) {
+        console.log('[SECURITY] Access token expired, attempting transparent silent refresh rotation...');
+        const renewedToken = await performSilentRefresh();
+        if (renewedToken) {
+          headers['Authorization'] = `Bearer ${renewedToken}`;
+          response = await fetch(url, { ...options, headers });
+        }
+      } else if (body.error === 'SESSION_EXPIRED' || body.sessionExpired) {
+        console.warn('[SECURITY] Session expired or revoked. Logging out user.');
+        setAccessToken(null);
+        localStorage.removeItem('pitch_precision_session_active');
+        if (onSessionExpiredCallback) {
+          onSessionExpiredCallback();
+        }
+      }
+    } catch (e) {
+      // Not JSON or parsing failed
+    }
+  }
+
+  return response;
+};

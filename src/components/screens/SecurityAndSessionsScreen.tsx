@@ -11,6 +11,7 @@ import {
   SecurityEvent
 } from '../../utils/authSecurityManager';
 import { playBeep } from '../../utils/audioFeedback';
+import { ReauthModal } from '../ReauthModal';
 
 interface SecurityAndSessionsScreenProps {
   currentUser: UserProfile;
@@ -29,7 +30,7 @@ export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps>
   onOpenEncryption,
   onOpenMobileSecurity
 }) => {
-  const [activeTab, setActiveTab] = useState<'sessions' | 'mfa_passkeys' | 'audit_logs'>('sessions');
+  const [activeTab, setActiveTab] = useState<'sessions' | 'mfa_passkeys' | 'sensitive_actions' | 'audit_logs'>('sessions');
   const [sessions, setSessions] = useState<UserSession[]>(getStoredSessions());
   const [securityLogs, setSecurityLogs] = useState<SecurityEvent[]>(getSecurityLogs());
   const [isRegisteringPasskey, setIsRegisteringPasskey] = useState(false);
@@ -41,6 +42,20 @@ export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps>
   const [verificationCodeInput, setVerificationCodeInput] = useState('');
   const [isEnablingMfa, setIsEnablingMfa] = useState(false);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
+
+  // Step-Up Re-Authentication state
+  const [reauthOpen, setReauthOpen] = useState(false);
+  const [reauthAction, setReauthAction] = useState<string>('');
+  const [reauthCallback, setReauthCallback] = useState<() => void>(() => {});
+
+  // Inputs for sensitive actions
+  const [newPassword, setNewPassword] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [juniorName, setJuniorName] = useState('');
+  const [juniorEmail, setJuniorEmail] = useState('');
+  const [guardianRel, setGuardianRel] = useState('Parent');
+  const [adminTargetUser, setAdminTargetUser] = useState('usr-devang');
+  const [adminTargetRole, setAdminTargetRole] = useState('club_admin');
 
   const roleRequiresMfa = isMfaMandatory(currentUser.role);
 
@@ -111,6 +126,192 @@ export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps>
       showNotification('MFA successfully activated on your account.');
     } else {
       showNotification('Please enter the 6-digit TOTP verification code.');
+    }
+  };
+
+  const triggerSensitiveAction = (actionLabel: string, callback: () => void) => {
+    setReauthAction(actionLabel);
+    setReauthCallback(() => callback);
+    setReauthOpen(true);
+  };
+
+  const handleChangePassword = async () => {
+    if (!newPassword || newPassword.length < 10) {
+      showNotification('Error: New password must be at least 10 characters.');
+      return;
+    }
+    try {
+      const { secureFetch } = await import('../../utils/authSecurityManager');
+      const res = await secureFetch('/api/account/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newPassword })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showNotification(data.message);
+        setNewPassword('');
+        logSecurityEvent('password_reset_requested', 'User changed account password with recent MFA step-up.', 'Security Dashboard');
+        setSecurityLogs(getSecurityLogs());
+      } else {
+        showNotification(`Error: ${data.error}`);
+      }
+    } catch (e) {
+      showNotification('Network error during password update.');
+    }
+  };
+
+  const handleChangeEmail = async () => {
+    if (!newEmail || !newEmail.includes('@')) {
+      showNotification('Error: Please enter a valid email address.');
+      return;
+    }
+    try {
+      const { secureFetch } = await import('../../utils/authSecurityManager');
+      const res = await secureFetch('/api/account/change-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newEmail })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showNotification(data.message);
+        setNewEmail('');
+        if (onUpdateUser && currentUser) {
+          onUpdateUser({ ...currentUser, email: data.newEmail });
+        }
+        logSecurityEvent('password_reset_requested', `Primary email updated to ${data.newEmail} under recent step-up protection.`, 'Security Dashboard');
+        setSecurityLogs(getSecurityLogs());
+      } else {
+        showNotification(`Error: ${data.error}`);
+      }
+    } catch (e) {
+      showNotification('Network error during email update.');
+    }
+  };
+
+  const handleLinkJunior = async () => {
+    if (!juniorName || !juniorEmail) {
+      showNotification('Error: Junior name and email are required.');
+      return;
+    }
+    try {
+      const { secureFetch } = await import('../../utils/authSecurityManager');
+      const res = await secureFetch('/api/account/link-junior', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ juniorName, juniorEmail })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showNotification(data.message);
+        setJuniorName('');
+        setJuniorEmail('');
+        logSecurityEvent('mfa_challenge', `Linked new junior account (${juniorEmail}) with guardian approval.`, 'Guardianship Center');
+        setSecurityLogs(getSecurityLogs());
+      } else {
+        showNotification(`Error: ${data.error}`);
+      }
+    } catch (e) {
+      showNotification('Network error during junior linking.');
+    }
+  };
+
+  const handleChangeGuardianRelationship = async () => {
+    try {
+      const { secureFetch } = await import('../../utils/authSecurityManager');
+      const res = await secureFetch('/api/account/guardian-relationship', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ relationship: guardianRel })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showNotification(data.message);
+        logSecurityEvent('mfa_challenge', `Guardian relationship policy updated to '${guardianRel}' via step-up.`, 'Guardianship Center');
+        setSecurityLogs(getSecurityLogs());
+      } else {
+        showNotification(`Error: ${data.error}`);
+      }
+    } catch (e) {
+      showNotification('Network error during guardian relationship change.');
+    }
+  };
+
+  const handleExportDSAR = async () => {
+    try {
+      const { secureFetch } = await import('../../utils/authSecurityManager');
+      const res = await secureFetch('/api/privacy/dsar-export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUser.id, role: currentUser.role })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showNotification(`DSAR Export Packet generated successfully! Export ID: ${data.exportData.dsarId}`);
+        
+        // Trigger local JSON packet download
+        const blob = new Blob([JSON.stringify(data.exportData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Pitch_Precision_DSAR_${data.exportData.dsarId}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        logSecurityEvent('mfa_challenge', `Data Subject Access Request (DSAR) executed & export packet compiled.`, 'Privacy Office');
+        setSecurityLogs(getSecurityLogs());
+      } else {
+        showNotification(`Error: ${data.error}`);
+      }
+    } catch (e) {
+      showNotification('Network error during DSAR generation.');
+    }
+  };
+
+  const handleAdminChangePrivileges = async () => {
+    try {
+      const { secureFetch } = await import('../../utils/authSecurityManager');
+      const res = await secureFetch('/api/admin/change-role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: adminTargetUser, newRole: adminTargetRole })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showNotification(data.message);
+        logSecurityEvent('mfa_challenge', `Administrative privilege changed: ${adminTargetUser} set to ${adminTargetRole}.`, 'IAM Operations');
+        setSecurityLogs(getSecurityLogs());
+      } else {
+        showNotification(`Error: ${data.error}`);
+      }
+    } catch (e) {
+      showNotification('Network error during privilege modification.');
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      const { secureFetch } = await import('../../utils/authSecurityManager');
+      const res = await secureFetch('/api/account/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await res.json();
+      if (data.success) {
+        showNotification(data.message);
+        logSecurityEvent('session_terminated', 'Account marked for permanent deletion. Purging data.', 'Global Sign-Out');
+        setSecurityLogs(getSecurityLogs());
+        setTimeout(() => {
+          window.location.reload();
+        }, 3000);
+      } else {
+        showNotification(`Error: ${data.error}`);
+      }
+    } catch (e) {
+      showNotification('Network error during account deletion.');
     }
   };
 
@@ -248,6 +449,7 @@ export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps>
         {[
           { id: 'sessions' as const, label: 'Active Sessions & Devices', icon: 'devices' },
           { id: 'mfa_passkeys' as const, label: 'Passkeys & 2FA Setup', icon: 'key' },
+          { id: 'sensitive_actions' as const, label: 'Sensitive Actions (Step-Up)', icon: 'lock_open' },
           { id: 'audit_logs' as const, label: 'Security Audit Stream', icon: 'security' }
         ].map(tab => (
           <button
@@ -471,6 +673,211 @@ export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps>
         </div>
       )}
 
+      {/* TAB 3: SENSITIVE ACTIONS WITH STEP-UP */}
+      {activeTab === 'sensitive_actions' && (
+        <div className="space-y-6">
+          <div className="p-4 rounded-2xl bg-[#1c1b1b] border border-red-500/20">
+            <h3 className="font-headline font-bold text-sm text-white flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px] text-red-400">lock_open</span>
+              Recent Privileged Session Requirements
+            </h3>
+            <p className="text-xs text-[#c4c9ac] mt-1">
+              Actions marked with step-up protection require dynamic re-authentication if your elevated session has exceeded 5 minutes.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Action 1: Change Password */}
+            <div className="p-5 rounded-2xl bg-[#181818] border border-white/5 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px] text-[#c3f400]">password</span>
+                <h4 className="font-headline font-bold text-xs uppercase tracking-wider text-white">Change Account Password</h4>
+              </div>
+              <p className="text-[11px] text-[#c4c9ac]">
+                Update your primary password. Strong passwords must be 10+ characters with symbols.
+              </p>
+              <div className="space-y-2">
+                <input
+                  type="password"
+                  placeholder="Enter new strong password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                />
+                <button
+                  onClick={() => triggerSensitiveAction('Changing Password', handleChangePassword)}
+                  className="w-full px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-headline font-bold text-xs rounded-xl transition-all cursor-pointer"
+                >
+                  Update Password (Step-Up)
+                </button>
+              </div>
+            </div>
+
+            {/* Action 2: Change Email */}
+            <div className="p-5 rounded-2xl bg-[#181818] border border-white/5 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px] text-[#c3f400]">mail</span>
+                <h4 className="font-headline font-bold text-xs uppercase tracking-wider text-white">Change Primary Email</h4>
+              </div>
+              <p className="text-[11px] text-[#c4c9ac]">
+                Update your contact email address. A validation link will be dispatched.
+              </p>
+              <div className="space-y-2">
+                <input
+                  type="email"
+                  placeholder="new.email@example.com"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  className="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                />
+                <button
+                  onClick={() => triggerSensitiveAction('Changing Primary Email', handleChangeEmail)}
+                  className="w-full px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-headline font-bold text-xs rounded-xl transition-all cursor-pointer"
+                >
+                  Update Email (Step-Up)
+                </button>
+              </div>
+            </div>
+
+            {/* Action 3: Link Junior Account */}
+            <div className="p-5 rounded-2xl bg-[#181818] border border-white/5 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px] text-[#c3f400]">family_restroom</span>
+                <h4 className="font-headline font-bold text-xs uppercase tracking-wider text-white">Link Junior Account</h4>
+              </div>
+              <p className="text-[11px] text-[#c4c9ac]">
+                Link a minor athlete account for child-safety monitoring and guardian supervision.
+              </p>
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  placeholder="Junior Full Name"
+                  value={juniorName}
+                  onChange={(e) => setJuniorName(e.target.value)}
+                  className="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white mb-1"
+                />
+                <input
+                  type="email"
+                  placeholder="junior.email@example.com"
+                  value={juniorEmail}
+                  onChange={(e) => setJuniorEmail(e.target.value)}
+                  className="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                />
+                <button
+                  onClick={() => triggerSensitiveAction('Linking Junior Account', handleLinkJunior)}
+                  className="w-full px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-headline font-bold text-xs rounded-xl transition-all cursor-pointer"
+                >
+                  Link Junior Account (Step-Up)
+                </button>
+              </div>
+            </div>
+
+            {/* Action 4: Change Guardian Relationship */}
+            <div className="p-5 rounded-2xl bg-[#181818] border border-white/5 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px] text-[#c3f400]">supervised_user_circle</span>
+                <h4 className="font-headline font-bold text-xs uppercase tracking-wider text-white">Guardian Relationship</h4>
+              </div>
+              <p className="text-[11px] text-[#c4c9ac]">
+                Change the supervising guardian status relationship to verify legal authority levels.
+              </p>
+              <div className="space-y-2">
+                <select
+                  value={guardianRel}
+                  onChange={(e) => setGuardianRel(e.target.value)}
+                  className="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                >
+                  <option value="Parent">Legal Parent / Mother / Father</option>
+                  <option value="Legal Guardian">Court-Appointed Guardian</option>
+                  <option value="Temporary Supervisor">Temporary Supervisor (Delegated)</option>
+                </select>
+                <button
+                  onClick={() => triggerSensitiveAction('Changing Guardian Relationship', handleChangeGuardianRelationship)}
+                  className="w-full px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-headline font-bold text-xs rounded-xl transition-all cursor-pointer"
+                >
+                  Confirm Relationship (Step-Up)
+                </button>
+              </div>
+            </div>
+
+            {/* Action 5: Export Personal Info (DSAR) */}
+            <div className="p-5 rounded-2xl bg-[#181818] border border-white/5 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px] text-[#c3f400]">download_for_offline</span>
+                <h4 className="font-headline font-bold text-xs uppercase tracking-wider text-white">Export Personal Info (DSAR)</h4>
+              </div>
+              <p className="text-[11px] text-[#c4c9ac]">
+                Trigger a complete Data Subject Access Request export of your stored telemetry, identity, and security keys.
+              </p>
+              <button
+                onClick={() => triggerSensitiveAction('Exporting Personal Information (DSAR)', handleExportDSAR)}
+                className="w-full px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-headline font-bold text-xs rounded-xl transition-all cursor-pointer"
+              >
+                Compile and Export Archive (Step-Up)
+              </button>
+            </div>
+
+            {/* Action 6: Change Administrative Privileges */}
+            <div className="p-5 rounded-2xl bg-[#181818] border border-white/5 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px] text-[#c3f400]">shield_person</span>
+                <h4 className="font-headline font-bold text-xs uppercase tracking-wider text-white">Administrative Privileges</h4>
+              </div>
+              <p className="text-[11px] text-[#c4c9ac]">
+                Promote/demote members of the organization. Only authorized users can execute.
+              </p>
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <select
+                    value={adminTargetUser}
+                    onChange={(e) => setAdminTargetUser(e.target.value)}
+                    className="flex-1 bg-black/60 border border-white/10 rounded-xl px-2 py-2 text-[11px] text-white"
+                  >
+                    <option value="usr-devang">Devang Dalvi (Player)</option>
+                    <option value="usr-arin">Arin Mishra (Coach)</option>
+                    <option value="usr-roshan">Roshan Srilanka (Coach)</option>
+                  </select>
+                  <select
+                    value={adminTargetRole}
+                    onChange={(e) => setAdminTargetRole(e.target.value)}
+                    className="flex-1 bg-black/60 border border-white/10 rounded-xl px-2 py-2 text-[11px] text-white"
+                  >
+                    <option value="player">Player (Roster)</option>
+                    <option value="coach">Coach (Verified)</option>
+                    <option value="club_admin">Club Admin</option>
+                  </select>
+                </div>
+                <button
+                  onClick={() => triggerSensitiveAction('Changing Administrative Privileges', handleAdminChangePrivileges)}
+                  className="w-full px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-headline font-bold text-xs rounded-xl transition-all cursor-pointer"
+                >
+                  Commit Privileges (Step-Up)
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Action 7: Delete Account */}
+          <div className="p-5 rounded-2xl bg-red-950/20 border border-red-500/20 space-y-4">
+            <div className="flex items-start gap-3">
+              <span className="material-symbols-outlined text-red-400 text-[24px]">delete_forever</span>
+              <div>
+                <h4 className="font-headline font-bold text-sm text-white">Permanently Delete Account</h4>
+                <p className="text-xs text-[#c4c9ac] mt-1">
+                  This will queue your profile, video files, analytics telemetry, and child-safeguarding associations for immediate compliance destruction.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => triggerSensitiveAction('Deleting Account', handleDeleteAccount)}
+              className="w-full sm:w-auto px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white font-headline font-bold text-xs rounded-xl transition-all cursor-pointer shadow-md"
+            >
+              Permanently Delete Account (Step-Up)
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* TAB 3: AUDIT STREAM */}
       {activeTab === 'audit_logs' && (
         <div className="space-y-4">
@@ -529,6 +936,13 @@ export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps>
           </div>
         </div>
       )}
+
+      <ReauthModal
+        isOpen={reauthOpen}
+        onClose={() => setReauthOpen(false)}
+        actionLabel={reauthAction}
+        onSuccess={reauthCallback}
+      />
     </div>
   );
 };

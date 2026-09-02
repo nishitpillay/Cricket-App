@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ScreenType } from '../../types';
 import { playBeep, playBallImpact } from '../../utils/audioFeedback';
+import { SecureMediaVault } from './SecureMediaVault';
 
 interface VideoAnalysisToolProps {
   onNavigate: (screen: ScreenType) => void;
@@ -634,6 +635,9 @@ export const VideoAnalysisTool: React.FC<VideoAnalysisToolProps> = ({ onNavigate
           <span>Save Clip Telemetry</span>
         </button>
       </div>
+
+      {/* Secure Media and Video Security Vault */}
+      <SecureMediaVault />
     </div>
   );
 };
