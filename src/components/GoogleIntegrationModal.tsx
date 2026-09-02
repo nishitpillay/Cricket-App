@@ -603,6 +603,25 @@ export const GoogleIntegrationModal: React.FC<GoogleIntegrationModalProps> = ({
         {/* TAB 3: GOOGLE LOCATION & CRICKET PITCH AERODYNAMICS */}
         {activeTab === 'location' && (
           <div className="flex flex-col gap-4 overflow-y-auto pr-1">
+            {/* Strict Location Privacy Disclosure Policy Statement */}
+            <div className="p-4 rounded-2xl bg-blue-950/20 border border-blue-500/20 space-y-2">
+              <h5 className="text-xs font-bold text-blue-400 flex items-center gap-1.5 uppercase tracking-wider">
+                <span className="material-symbols-outlined text-[16px]">privacy_tip</span>
+                Strict Location Privacy Guarantee
+              </h5>
+              <div className="text-[11px] text-[#c4c9ac] space-y-1">
+                <p>
+                  • <strong>Consent-First</strong>: Continuous background GPS tracking is disabled. Location coordinate calibration occurs only when you explicitly select "Detect My Location".
+                </p>
+                <p>
+                  • <strong>Aerodynamic Purpose Only</strong>: Coordinates are queried strictly to detect venue altitude, air density, and wind drag indices to align the ball flight slow-mo engine.
+                </p>
+                <p>
+                  • <strong>Junior Shielding</strong>: Real-time precise locations of youth or junior athletes are never recorded, never exposed to other players or coaches, and never publicly displayed on profiles.
+                </p>
+              </div>
+            </div>
+
             <div className="p-4 rounded-2xl bg-black/30 border border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
               <div>
                 <h4 className="font-headline font-bold text-sm text-white flex items-center gap-2">
