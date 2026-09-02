@@ -275,6 +275,19 @@ export const RoleSwitcherModal: React.FC<RoleSwitcherModalProps> = ({
               <span>Crypto</span>
             </button>
           )}
+
+          {onNavigate && (
+            <button
+              onClick={() => {
+                onClose();
+                onNavigate('mobile-security');
+              }}
+              className="p-2 rounded-xl bg-[#83ea00]/15 border border-[#83ea00]/30 hover:bg-[#83ea00]/25 text-[10px] font-bold text-[#83ea00] flex flex-col items-center justify-center gap-1 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[16px]">smartphone</span>
+              <span>Mobile</span>
+            </button>
+          )}
         </div>
 
         {/* Auth Screens Preview Shortcuts */}

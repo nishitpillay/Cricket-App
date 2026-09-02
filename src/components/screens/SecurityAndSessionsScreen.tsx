@@ -18,6 +18,7 @@ interface SecurityAndSessionsScreenProps {
   onNavigateBack: () => void;
   onOpenPrivacy?: () => void;
   onOpenEncryption?: () => void;
+  onOpenMobileSecurity?: () => void;
 }
 
 export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps> = ({
@@ -25,7 +26,8 @@ export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps>
   onUpdateUser,
   onNavigateBack,
   onOpenPrivacy,
-  onOpenEncryption
+  onOpenEncryption,
+  onOpenMobileSecurity
 }) => {
   const [activeTab, setActiveTab] = useState<'sessions' | 'mfa_passkeys' | 'audit_logs'>('sessions');
   const [sessions, setSessions] = useState<UserSession[]>(getStoredSessions());
@@ -173,7 +175,7 @@ export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps>
 
       {/* Data Encryption & Key Management Banner */}
       {onOpenEncryption && (
-        <div className="mb-4 p-4 rounded-2xl bg-[#1c1b1b] border border-[#9cf0ff]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+        <div className="mb-3 p-4 rounded-2xl bg-[#1c1b1b] border border-[#9cf0ff]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-[#9cf0ff]/10 border border-[#9cf0ff]/30 flex items-center justify-center text-[#9cf0ff]">
               <span className="material-symbols-outlined text-[20px]">lock</span>
@@ -192,6 +194,32 @@ export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps>
             className="px-3.5 py-2 rounded-xl bg-[#9cf0ff] hover:bg-[#80e5f7] text-black text-xs font-bold flex items-center justify-center gap-1.5 whitespace-nowrap transition cursor-pointer"
           >
             <span>Open Encryption Center</span>
+            <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+          </button>
+        </div>
+      )}
+
+      {/* Mobile Application Security (OWASP MASVS) Banner */}
+      {onOpenMobileSecurity && (
+        <div className="mb-4 p-4 rounded-2xl bg-[#1c1b1b] border border-[#83ea00]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#83ea00]/10 border border-[#83ea00]/30 flex items-center justify-center text-[#83ea00]">
+              <span className="material-symbols-outlined text-[20px]">smartphone</span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                Mobile Security (OWASP MASVS & Hardware Keystore)
+              </h4>
+              <p className="text-[11px] text-[#8e9285] mt-0.5">
+                iOS Keychain / Android Keystore encrypted storage, FLAG_SECURE screen protection, deep link validation, and root attestation.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onOpenMobileSecurity}
+            className="px-3.5 py-2 rounded-xl bg-[#83ea00] hover:bg-[#97f814] text-black text-xs font-bold flex items-center justify-center gap-1.5 whitespace-nowrap transition cursor-pointer"
+          >
+            <span>Open Mobile Security</span>
             <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
           </button>
         </div>

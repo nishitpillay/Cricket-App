@@ -242,6 +242,13 @@ export const APP_CONFIG = {
 
           <div className="flex items-center gap-2">
             <button
+              onClick={() => onNavigate('mobile-security')}
+              className="px-3.5 py-2 rounded-xl bg-[#83ea00]/15 hover:bg-[#83ea00]/25 border border-[#83ea00]/30 text-xs font-bold text-[#83ea00] flex items-center gap-1.5 transition cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[16px] text-[#83ea00]">smartphone</span>
+              <span>Mobile Security (MASVS)</span>
+            </button>
+            <button
               onClick={() => onNavigate('privacy-governance')}
               className="px-3.5 py-2 rounded-xl bg-[#1c1b1b] hover:bg-[#252424] border border-[#252424] text-xs font-bold text-white flex items-center gap-1.5 transition cursor-pointer"
             >

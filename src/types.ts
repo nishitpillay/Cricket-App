@@ -18,7 +18,71 @@ export type ScreenType =
   | 'auth-admin'
   | 'security-settings'
   | 'privacy-governance'
-  | 'encryption-governance';
+  | 'encryption-governance'
+  | 'mobile-security';
+
+export type MASVSDomain = 
+  | 'MASVS-STORAGE'
+  | 'MASVS-CRYPTO'
+  | 'MASVS-AUTH'
+  | 'MASVS-NETWORK'
+  | 'MASVS-PLATFORM'
+  | 'MASVS-CODE'
+  | 'MASVS-RESILIENCE'
+  | 'MASVS-DATA-INGESTION';
+
+export interface MASVSCheckItem {
+  id: string;
+  domain: MASVSDomain;
+  title: string;
+  threatTarget: string;
+  status: 'COMPLIANT' | 'ACTIVE_SHIELD' | 'WARNING' | 'CRITICAL';
+  verificationLevel: 'MASVS-L1' | 'MASVS-L2' | 'MASVS-R';
+  mitigationEngine: string;
+  technicalEvidence: string;
+  targetPlatform: 'iOS & Android' | 'iOS (Keychain/Secure Enclave)' | 'Android (Keystore/EncryptedSP)';
+}
+
+export interface SecureStorageEntry {
+  key: string;
+  storageTarget: 'iOS_KEYCHAIN' | 'ANDROID_KEYSTORE_ENCRYPTED_SP' | 'BLOCKED_PLAINTEXT_PREFS';
+  accessControl: string;
+  hardwareBacked: boolean;
+  biometricBound: boolean;
+  encryptedDataB64: string;
+  updatedAt: string;
+  classification: DataClassificationLevel;
+}
+
+export interface DeepLinkValidationResult {
+  url: string;
+  isValid: boolean;
+  scheme: string;
+  host: string;
+  path: string;
+  intentAction?: string;
+  securityVerdict: 'AUTHORIZED_UNIVERSAL_LINK' | 'BLOCKED_UNVALIDATED_SCHEME' | 'MALICIOUS_PARAM_INJECTION';
+  details: string;
+}
+
+export interface DeviceIntegrityCheck {
+  checkName: string;
+  category: 'ROOT_DETECTION' | 'JAILBREAK_DETECTION' | 'HOOKING_FRAMEWORK' | 'DEBUGGER_DETECTION' | 'SYSTEM_TAMPER';
+  passed: boolean;
+  threatIndicator: string;
+  remediationAction: string;
+}
+
+export interface FileUploadScanResult {
+  fileName: string;
+  fileSizeBytes: number;
+  detectedMimeType: string;
+  declaredMimeType: string;
+  magicBytesHex: string;
+  status: 'CLEAN_VERIFIED' | 'REJECTED_POLYGLOT' | 'BLOCKED_MALICIOUS_EXTENSION' | 'CORRUPTED_STREAM';
+  exifScrubbed: boolean;
+  details: string;
+}
 
 export type DataClassificationLevel = 
   | 'PUBLIC'

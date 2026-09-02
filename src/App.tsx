@@ -22,6 +22,7 @@ import { AuthScreens } from './components/screens/AuthScreens';
 import { SecurityAndSessionsScreen } from './components/screens/SecurityAndSessionsScreen';
 import { DataPrivacyGovernanceScreen } from './components/privacy/DataPrivacyGovernanceScreen';
 import { DataEncryptionGovernanceScreen } from './components/encryption/DataEncryptionGovernanceScreen';
+import { MobileSecurityGovernanceScreen } from './components/screens/MobileSecurityGovernanceScreen';
 import { VideoAnalysisTool } from './components/videoAnalysis/VideoAnalysisTool';
 import { TacticalMasterclasses } from './components/tactics/TacticalMasterclasses';
 import { ScenarioTraining } from './components/tactics/ScenarioTraining';
@@ -146,6 +147,11 @@ export default function App() {
       showBack = true;
       onBack = () => handleNavigate('home');
       break;
+    case 'mobile-security':
+      headerTitle = 'Mobile App Security';
+      showBack = true;
+      onBack = () => handleNavigate('home');
+      break;
     case 'auth-player':
     case 'auth-coach':
     case 'auth-admin':
@@ -174,6 +180,7 @@ export default function App() {
         onSecurityClick={() => handleNavigate('security-settings')}
         onPrivacyClick={() => handleNavigate('privacy-governance')}
         onEncryptionClick={() => handleNavigate('encryption-governance')}
+        onMobileSecurityClick={() => handleNavigate('mobile-security')}
       />
 
       {/* Main Screen Content View */}
@@ -291,6 +298,7 @@ export default function App() {
             onNavigateBack={() => handleNavigate('home')}
             onOpenPrivacy={() => handleNavigate('privacy-governance')}
             onOpenEncryption={() => handleNavigate('encryption-governance')}
+            onOpenMobileSecurity={() => handleNavigate('mobile-security')}
           />
         )}
 
@@ -303,6 +311,13 @@ export default function App() {
 
         {currentScreen === 'encryption-governance' && (
           <DataEncryptionGovernanceScreen
+            currentUser={currentUser}
+            onNavigate={handleNavigate}
+          />
+        )}
+
+        {currentScreen === 'mobile-security' && (
+          <MobileSecurityGovernanceScreen
             currentUser={currentUser}
             onNavigate={handleNavigate}
           />
