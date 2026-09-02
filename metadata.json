@@ -1,0 +1,6 @@
+{
+  "name": "Pitch Precision",
+  "description": "High-stakes cricket performance analytics, AI telemetry recording, biomechanical radar charts, and masterclass drills.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

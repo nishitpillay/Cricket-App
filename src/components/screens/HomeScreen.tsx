@@ -1,0 +1,517 @@
+import React, { useState } from 'react';
+import { UserProfile, SessionRecord, ScreenType, DrillItem } from '../../types';
+import { mockRecentSessions, mockUsers } from '../../data/mockData';
+import { playBeep } from '../../utils/audioFeedback';
+
+interface HomeScreenProps {
+  currentUser?: UserProfile;
+  user?: UserProfile;
+  onNavigate: (screen: ScreenType) => void;
+  onSelectSession?: (session: SessionRecord) => void;
+  onSelectDrill?: (drill: DrillItem) => void;
+}
+
+export const HomeScreen: React.FC<HomeScreenProps> = ({
+  currentUser,
+  user,
+  onNavigate,
+  onSelectSession,
+  onSelectDrill
+}) => {
+  const activeUser = currentUser || user || mockUsers.player;
+  const [activeSpeedTab, setActiveSpeedTab] = useState<'week' | 'month'>('week');
+  const [sessions, setSessions] = useState<SessionRecord[]>(mockRecentSessions);
+
+  return (
+    <div className="flex flex-col w-full px-4 sm:px-6 max-w-4xl mx-auto gap-6 pt-3 pb-28">
+      {/* Welcome / Progress Overview */}
+      <section className="flex flex-col gap-4">
+        <div className="flex justify-between items-end">
+          <div>
+            <h2 className="font-headline font-semibold text-lg sm:text-xl text-[#c4c9ac]">
+              Welcome back,
+            </h2>
+            <h1 className="font-headline font-extrabold text-2xl sm:text-3xl text-white tracking-tight">
+              {activeUser.name}
+            </h1>
+          </div>
+          <div className="flex flex-col items-end">
+            <span className="font-headline font-bold text-xs uppercase tracking-wider text-[#e9c400] mb-1.5 flex items-center gap-1">
+              <span className="material-symbols-outlined text-[14px]">military_tech</span>
+              LEVEL {activeUser.level}
+            </span>
+            <div className="h-1.5 w-20 bg-[#353534] rounded-full overflow-hidden shadow-inner">
+              <div
+                className="h-full bg-gradient-to-r from-[#e9c400] to-[#ffdb3c] rounded-full shadow-[0_0_8px_#ffdb3c]"
+                style={{ width: `${activeUser.xpProgress}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Main Action Button: Start Live Recording */}
+        <button
+          onClick={() => {
+            playBeep(880, 0.1);
+            onNavigate('record');
+          }}
+          className="w-full relative overflow-hidden rounded-2xl bg-[#c3f400] text-[#161e00] shadow-[0_0_24px_rgba(195,244,0,0.35)] active:scale-[0.98] transition-all duration-200 group cursor-pointer border border-[#c3f400]"
+        >
+          {/* Shimmer sweep effect */}
+          <div className="absolute inset-0 bg-white/25 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out" />
+          
+          <div className="py-4 px-5 flex items-center justify-between relative z-10">
+            <div className="flex flex-col items-start gap-0.5">
+              <span className="font-headline font-bold text-lg sm:text-xl tracking-tight leading-tight">
+                Start Live Recording
+              </span>
+              <span className="text-xs sm:text-sm font-medium opacity-85">
+                AI Camera Tracking & Telemetry
+              </span>
+            </div>
+            <div className="w-12 h-12 rounded-full bg-[#161e00]/12 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
+              <span className="material-symbols-outlined text-[28px] text-[#161e00]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                videocam
+              </span>
+            </div>
+          </div>
+        </button>
+      </section>
+
+      {/* Weekly Progress Chart Widget */}
+      <section className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <h3 className="font-headline font-bold text-lg text-white">Weekly Progress</h3>
+          <div className="flex items-center gap-1 bg-[#201f1f] p-1 rounded-lg border border-white/5 text-[11px]">
+            <button
+              onClick={() => setActiveSpeedTab('week')}
+              className={`px-2 py-0.5 rounded font-bold transition-colors ${
+                activeSpeedTab === 'week' ? 'bg-[#c3f400] text-[#161e00]' : 'text-[#c4c9ac] hover:text-white'
+              }`}
+            >
+              7D
+            </button>
+            <button
+              onClick={() => setActiveSpeedTab('month')}
+              className={`px-2 py-0.5 rounded font-bold transition-colors ${
+                activeSpeedTab === 'month' ? 'bg-[#c3f400] text-[#161e00]' : 'text-[#c4c9ac] hover:text-white'
+              }`}
+            >
+              30D
+            </button>
+          </div>
+        </div>
+
+        <div className="glass rounded-2xl p-5 flex flex-col gap-4 relative overflow-hidden shadow-xl border border-white/10">
+          {/* Ambient Glow */}
+          <div className="absolute top-0 right-0 w-36 h-36 bg-[#c3f400]/10 rounded-full blur-[35px] -mt-10 -mr-10 pointer-events-none" />
+
+          <div className="flex justify-between items-center z-10">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-[#c3f400]/10 flex items-center justify-center">
+                <span className="material-symbols-outlined text-[#c3f400] text-[18px]">speed</span>
+              </div>
+              <span className="font-bold text-sm text-[#e5e2e1]">Avg Bowling Speed</span>
+            </div>
+            <div className="flex items-baseline gap-1">
+              <span className="font-headline font-extrabold text-2xl text-[#c3f400] drop-shadow-[0_0_8px_rgba(195,244,0,0.5)]">
+                {activeSpeedTab === 'week' ? '138' : '136.4'}
+              </span>
+              <span className="text-xs text-[#c4c9ac] font-medium">km/h</span>
+            </div>
+          </div>
+
+          {/* Glowing Vector Trajectory Chart */}
+          <div className="h-28 w-full flex items-end justify-between gap-1 mt-1 z-10 relative">
+            <svg className="absolute inset-0 w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 100 100">
+              {/* Area gradient under curve */}
+              <defs>
+                <linearGradient id="speedArea" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#c3f400" stopOpacity="0.25" />
+                  <stop offset="100%" stopColor="#c3f400" stopOpacity="0.0" />
+                </linearGradient>
+              </defs>
+              <path
+                d={
+                  activeSpeedTab === 'week'
+                    ? 'M0,80 Q20,60 40,70 T80,40 T100,20 L100,100 L0,100 Z'
+                    : 'M0,75 Q25,70 45,55 T80,50 T100,25 L100,100 L0,100 Z'
+                }
+                fill="url(#speedArea)"
+              />
+              <path
+                d={
+                  activeSpeedTab === 'week'
+                    ? 'M0,80 Q20,60 40,70 T80,40 T100,20'
+                    : 'M0,75 Q25,70 45,55 T80,50 T100,25'
+                }
+                fill="none"
+                stroke="#c3f400"
+                strokeWidth="3.5"
+                strokeLinecap="round"
+                className="drop-shadow-[0_0_8px_rgba(195,244,0,0.7)] transition-all duration-500"
+              />
+              {/* Data points */}
+              <circle cx="40" cy={activeSpeedTab === 'week' ? "70" : "55"} r="4.5" fill="#131313" stroke="#c3f400" strokeWidth="2.5" className="animate-pulse" />
+              <circle cx="80" cy={activeSpeedTab === 'week' ? "40" : "50"} r="4.5" fill="#131313" stroke="#c3f400" strokeWidth="2.5" className="animate-pulse" />
+              <circle cx="100" cy={activeSpeedTab === 'week' ? "20" : "25"} r="5" fill="#c3f400" stroke="#131313" strokeWidth="2" className="animate-ping" />
+            </svg>
+
+            {/* Vertical grid lines */}
+            <div className="h-full w-px bg-white/5" />
+            <div className="h-full w-px bg-white/5" />
+            <div className="h-full w-px bg-white/5" />
+            <div className="h-full w-px bg-white/5" />
+            <div className="h-full w-px bg-white/5" />
+          </div>
+
+          <div className="flex justify-between text-[#c4c9ac] text-xs font-semibold z-10 px-1">
+            <span>Mon (134)</span>
+            <span>Wed (136)</span>
+            <span>Fri (139)</span>
+            <span>Sun (142)</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Recent Matches Scroll */}
+      <section className="flex flex-col gap-3 -mx-4 sm:-mx-6">
+        <div className="px-4 sm:px-6 flex justify-between items-center">
+          <h3 className="font-headline font-bold text-lg text-white">Recent Sessions</h3>
+          <button
+            onClick={() => onNavigate('stats')}
+            className="text-xs font-bold text-[#c3f400] flex items-center gap-1 hover:underline underline-offset-4"
+          >
+            View All <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+          </button>
+        </div>
+
+        <div className="flex overflow-x-auto gap-4 px-4 sm:px-6 pb-2 snap-x snap-mandatory hide-scrollbar">
+          {sessions.map((sess, idx) => (
+            <div
+              key={sess.id}
+              onClick={() => {
+                if (onSelectSession) onSelectSession(sess);
+                if (sess.title.includes('Batting')) {
+                  onNavigate('feedback');
+                } else {
+                  onNavigate('stats');
+                }
+              }}
+              className="snap-center shrink-0 w-[290px] glass rounded-2xl overflow-hidden flex flex-col relative group cursor-pointer hover:border-[#c3f400]/40 transition-all border border-white/10 shadow-lg"
+            >
+              {/* Highlight bar */}
+              <div
+                className={`absolute left-0 top-0 bottom-0 w-1 ${
+                  idx === 0 ? 'bg-[#c3f400]' : 'bg-[#c4c9ac]/40'
+                }`}
+              />
+
+              <div className="p-4 flex flex-col gap-3 pl-5">
+                <div className="flex justify-between items-start">
+                  <span className="text-[10px] font-bold text-[#c4c9ac] uppercase tracking-wider bg-white/5 px-2 py-0.5 rounded border border-white/10">
+                    {sess.type}
+                  </span>
+                  <span className="text-xs text-[#c4c9ac]">{sess.date}</span>
+                </div>
+
+                <div className="flex justify-between items-end">
+                  <div>
+                    <h4 className="font-headline font-bold text-base text-white mb-0.5 group-hover:text-[#c3f400] transition-colors">
+                      {sess.title}
+                    </h4>
+                    <p className="text-xs text-[#c4c9ac]">
+                      {sess.deliveriesCount ? `${sess.deliveriesCount} deliveries` : sess.duration}
+                    </p>
+                  </div>
+
+                  {/* Circular Score Gauge */}
+                  <div className="w-11 h-11 rounded-full bg-[#201f1f] flex items-center justify-center shadow-[inset_0_0_10px_rgba(0,0,0,0.5)] border border-[#c3f400]/20 relative">
+                    <svg className="absolute inset-0 w-full h-full -rotate-90 p-0.5" viewBox="0 0 36 36">
+                      <path
+                        className="text-[#353534]"
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeDasharray="100, 100"
+                        strokeWidth="2.5"
+                      />
+                      <path
+                        className={idx === 0 ? "text-[#c3f400] drop-shadow-[0_0_4px_rgba(195,244,0,0.8)]" : "text-white"}
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeDasharray={`${sess.score}, 100`}
+                        strokeLinecap="round"
+                        strokeWidth="3"
+                      />
+                    </svg>
+                    <span className={`font-headline font-bold text-xs ${idx === 0 ? 'text-[#c3f400]' : 'text-white'}`}>
+                      {sess.score}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom footer strip */}
+              <div className="bg-black/30 px-5 py-2 border-t border-white/5 flex justify-between items-center text-xs">
+                <span className="text-[#c4c9ac] font-medium">
+                  {sess.topSpeed ? `Top Speed: ${sess.topSpeed} km/h` : sess.timing}
+                </span>
+                {sess.insight && (
+                  <span className="text-[#e9c400] font-bold flex items-center gap-0.5">
+                    {sess.insight}
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Pro Match Lab & Tactics Hub */}
+      <section className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-[#c3f400] text-[20px]">psychology</span>
+            <h3 className="font-headline font-bold text-lg text-white">Tactics & Motion Lab</h3>
+          </div>
+          <span className="text-[10px] font-mono text-[#ffdb3c] bg-[#ffdb3c]/10 px-2 py-0.5 rounded font-bold">
+            PRO SUITE
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {/* 1. Video Analysis Tools */}
+          <button
+            onClick={() => {
+              playBeep(700, 0.05);
+              onNavigate('video-analysis');
+            }}
+            className="p-4 rounded-2xl bg-[#202020] border border-white/10 hover:border-[#c3f400]/40 transition-all text-left flex flex-col justify-between gap-3 group cursor-pointer shadow-lg hover:-translate-y-0.5"
+          >
+            <div className="w-9 h-9 rounded-xl bg-[#c3f400]/10 flex items-center justify-center text-[#c3f400] group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined text-[22px]">slow_motion_video</span>
+            </div>
+            <div>
+              <h4 className="font-headline font-bold text-xs sm:text-sm text-white group-hover:text-[#c3f400] transition-colors">
+                Slow-Mo Analysis
+              </h4>
+              <p className="text-[10px] text-[#c4c9ac] line-clamp-1">Ghost Overlays & Ball Arc</p>
+            </div>
+          </button>
+
+          {/* 2. Tactical Masterclasses */}
+          <button
+            onClick={() => {
+              playBeep(700, 0.05);
+              onNavigate('masterclasses');
+            }}
+            className="p-4 rounded-2xl bg-[#202020] border border-white/10 hover:border-[#c3f400]/40 transition-all text-left flex flex-col justify-between gap-3 group cursor-pointer shadow-lg hover:-translate-y-0.5"
+          >
+            <div className="w-9 h-9 rounded-xl bg-[#ffdb3c]/10 flex items-center justify-center text-[#ffdb3c] group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined text-[22px]">smart_display</span>
+            </div>
+            <div>
+              <h4 className="font-headline font-bold text-xs sm:text-sm text-white group-hover:text-[#ffdb3c] transition-colors">
+                Masterclasses
+              </h4>
+              <p className="text-[10px] text-[#c4c9ac] line-clamp-1">Elite Coach Whiteboards</p>
+            </div>
+          </button>
+
+          {/* 3. Scenario-Based Training */}
+          <button
+            onClick={() => {
+              playBeep(700, 0.05);
+              onNavigate('scenarios');
+            }}
+            className="p-4 rounded-2xl bg-[#202020] border border-white/10 hover:border-[#c3f400]/40 transition-all text-left flex flex-col justify-between gap-3 group cursor-pointer shadow-lg hover:-translate-y-0.5"
+          >
+            <div className="w-9 h-9 rounded-xl bg-[#9cf0ff]/10 flex items-center justify-center text-[#9cf0ff] group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined text-[22px]">psychology</span>
+            </div>
+            <div>
+              <h4 className="font-headline font-bold text-xs sm:text-sm text-white group-hover:text-[#9cf0ff] transition-colors">
+                Match Scenarios
+              </h4>
+              <p className="text-[10px] text-[#c4c9ac] line-clamp-1">Death Overs & Pitch Traps</p>
+            </div>
+          </button>
+
+          {/* 4. Training Planner */}
+          <button
+            onClick={() => {
+              playBeep(700, 0.05);
+              onNavigate('planner');
+            }}
+            className="p-4 rounded-2xl bg-[#202020] border border-white/10 hover:border-[#c3f400]/40 transition-all text-left flex flex-col justify-between gap-3 group cursor-pointer shadow-lg hover:-translate-y-0.5"
+          >
+            <div className="w-9 h-9 rounded-xl bg-[#c3f400]/10 flex items-center justify-center text-[#c3f400] group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined text-[22px]">timer</span>
+            </div>
+            <div>
+              <h4 className="font-headline font-bold text-xs sm:text-sm text-white group-hover:text-[#c3f400] transition-colors">
+                Practice Planner
+              </h4>
+              <p className="text-[10px] text-[#c4c9ac] line-clamp-1">30 & 60-Min Protocols</p>
+            </div>
+          </button>
+
+          {/* 5. Smart Drills Vault */}
+          <button
+            onClick={() => {
+              playBeep(700, 0.05);
+              onNavigate('drills-vault');
+            }}
+            className="p-4 rounded-2xl bg-[#202020] border border-white/10 hover:border-[#c3f400]/40 transition-all text-left flex flex-col justify-between gap-3 group cursor-pointer shadow-lg hover:-translate-y-0.5"
+          >
+            <div className="w-9 h-9 rounded-xl bg-[#c3f400]/10 flex items-center justify-center text-[#c3f400] group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined text-[22px]">fitness_center</span>
+            </div>
+            <div>
+              <h4 className="font-headline font-bold text-xs sm:text-sm text-white group-hover:text-[#c3f400] transition-colors">
+                Drills Vault
+              </h4>
+              <p className="text-[10px] text-[#c4c9ac] line-clamp-1">Search & Filter on Pitch</p>
+            </div>
+          </button>
+
+          {/* 6. Digital Chalkboard */}
+          <button
+            onClick={() => {
+              playBeep(700, 0.05);
+              onNavigate('chalkboard');
+            }}
+            className="p-4 rounded-2xl bg-[#202020] border border-white/10 hover:border-[#c3f400]/40 transition-all text-left flex flex-col justify-between gap-3 group cursor-pointer shadow-lg hover:-translate-y-0.5"
+          >
+            <div className="w-9 h-9 rounded-xl bg-[#ffb4ab]/10 flex items-center justify-center text-[#ffb4ab] group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined text-[22px]">draw</span>
+            </div>
+            <div>
+              <h4 className="font-headline font-bold text-xs sm:text-sm text-white group-hover:text-[#ffb4ab] transition-colors">
+                Chalkboard
+              </h4>
+              <p className="text-[10px] text-[#c4c9ac] line-clamp-1">Drag Fielders & Tactics</p>
+            </div>
+          </button>
+        </div>
+      </section>
+
+      {/* Academy & Rules Quick Access Showcase */}
+      <section className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-[#c3f400] text-[20px]">school</span>
+            <h3 className="font-headline font-bold text-lg text-white">Academy & Guides</h3>
+          </div>
+          <button
+            onClick={() => onNavigate('academy')}
+            className="text-xs font-bold text-[#c3f400] hover:underline flex items-center gap-0.5"
+          >
+            <span>Explore All</span>
+            <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <button
+            onClick={() => {
+              playBeep(700, 0.05);
+              onNavigate('academy');
+            }}
+            className="p-3.5 rounded-2xl bg-[#202020] border border-white/10 hover:border-[#c3f400]/40 transition-all text-left flex flex-col justify-between gap-2 group cursor-pointer"
+          >
+            <div className="w-8 h-8 rounded-xl bg-[#c3f400]/10 flex items-center justify-center text-[#c3f400] group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined text-[20px]">gavel</span>
+            </div>
+            <div>
+              <h4 className="font-headline font-bold text-xs sm:text-sm text-white group-hover:text-[#c3f400] transition-colors">
+                Rule Breakdowns
+              </h4>
+              <p className="text-[10px] text-[#c4c9ac] line-clamp-1">LBW, Powerplay, DLS</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => {
+              playBeep(700, 0.05);
+              onNavigate('academy');
+            }}
+            className="p-3.5 rounded-2xl bg-[#202020] border border-white/10 hover:border-[#c3f400]/40 transition-all text-left flex flex-col justify-between gap-2 group cursor-pointer"
+          >
+            <div className="w-8 h-8 rounded-xl bg-[#c3f400]/10 flex items-center justify-center text-[#c3f400] group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined text-[20px]">translate</span>
+            </div>
+            <div>
+              <h4 className="font-headline font-bold text-xs sm:text-sm text-white group-hover:text-[#c3f400] transition-colors">
+                Jargon Translator
+              </h4>
+              <p className="text-[10px] text-[#c4c9ac] line-clamp-1">360° Field & Terms</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => {
+              playBeep(700, 0.05);
+              onNavigate('academy');
+            }}
+            className="p-3.5 rounded-2xl bg-[#202020] border border-white/10 hover:border-[#c3f400]/40 transition-all text-left flex flex-col justify-between gap-2 group cursor-pointer"
+          >
+            <div className="w-8 h-8 rounded-xl bg-[#c3f400]/10 flex items-center justify-center text-[#c3f400] group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined text-[20px]">sports_cricket</span>
+            </div>
+            <div>
+              <h4 className="font-headline font-bold text-xs sm:text-sm text-white group-hover:text-[#c3f400] transition-colors">
+                Basic Drills
+              </h4>
+              <p className="text-[10px] text-[#c4c9ac] line-clamp-1">Still Head Mechanics</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => {
+              playBeep(700, 0.05);
+              onNavigate('academy');
+            }}
+            className="p-3.5 rounded-2xl bg-[#202020] border border-white/10 hover:border-[#c3f400]/40 transition-all text-left flex flex-col justify-between gap-2 group cursor-pointer"
+          >
+            <div className="w-8 h-8 rounded-xl bg-[#c3f400]/10 flex items-center justify-center text-[#c3f400] group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined text-[20px]">shield</span>
+            </div>
+            <div>
+              <h4 className="font-headline font-bold text-xs sm:text-sm text-white group-hover:text-[#c3f400] transition-colors">
+                Gear Guides
+              </h4>
+              <p className="text-[10px] text-[#c4c9ac] line-clamp-1">Bat Sizer & Helmets</p>
+            </div>
+          </button>
+        </div>
+      </section>
+
+      {/* Detailed Stats Prompt */}
+      <section>
+        <button
+          onClick={() => onNavigate('stats')}
+          className="w-full glass rounded-2xl p-4 flex items-center justify-between group cursor-pointer relative overflow-hidden bg-gradient-to-r from-[#201f1f]/80 to-[#201f1f] border border-white/10 hover:border-[#c3f400]/40 transition-all text-left"
+        >
+          <div className="absolute inset-0 bg-[#c3f400]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+          
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="w-12 h-12 rounded-xl bg-[#353534] flex items-center justify-center group-hover:bg-[#c3f400]/20 transition-colors">
+              <span className="material-symbols-outlined text-[24px] text-[#c3f400]">analytics</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="font-headline font-bold text-base text-white">View Detailed Stats</span>
+              <span className="text-xs text-[#c4c9ac]">Analyze biomechanics & zones</span>
+            </div>
+          </div>
+
+          <span className="material-symbols-outlined text-[#c4c9ac] group-hover:text-[#c3f400] group-hover:translate-x-1 transition-all relative z-10">
+            chevron_right
+          </span>
+        </button>
+      </section>
+    </div>
+  );
+};

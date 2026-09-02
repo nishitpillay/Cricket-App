@@ -1,0 +1,86 @@
+import React from 'react';
+import { Logo } from './Logo';
+import { UserProfile, ScreenType } from '../types';
+
+interface HeaderProps {
+  title: string;
+  currentUser?: UserProfile;
+  user?: UserProfile;
+  currentScreen?: ScreenType;
+  onProfileClick?: () => void;
+  onOpenProfile?: () => void;
+  onBack?: () => void;
+  showBack?: boolean;
+}
+
+export const Header: React.FC<HeaderProps> = ({
+  title,
+  currentUser,
+  user,
+  currentScreen,
+  onProfileClick,
+  onOpenProfile,
+  onBack,
+  showBack = false
+}) => {
+  const activeUser = currentUser || user;
+  const handleProfile = onProfileClick || onOpenProfile || (() => {});
+
+  return (
+    <header className="fixed top-0 w-full z-50 glass shadow-[0_1px_8px_rgba(0,0,0,0.3)] backdrop-blur-xl border-b border-white/5">
+      <div className="h-16 px-4 max-w-7xl mx-auto flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {showBack && onBack ? (
+            <button
+              onClick={onBack}
+              aria-label="Back button"
+              className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 active:scale-95 flex items-center justify-center text-white transition-colors border border-white/10"
+            >
+              <span className="material-symbols-outlined text-[22px]">arrow_back</span>
+            </button>
+          ) : (
+            <Logo size="sm" />
+          )}
+
+          <h1 className="font-headline font-semibold text-lg sm:text-xl text-[#e5e2e1] tracking-tight">
+            {title}
+          </h1>
+        </div>
+
+        {/* Right action: Role Pill + Avatar Trigger */}
+        <div className="flex items-center gap-2">
+          {activeUser?.role === 'coach' && (
+            <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#ffdb3c]/15 text-[#ffdb3c] border border-[#ffdb3c]/30">
+              COACH MODE
+            </span>
+          )}
+          {activeUser?.role === 'admin' && (
+            <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#c3f400]/15 text-[#c3f400] border border-[#c3f400]/30">
+              ADMIN
+            </span>
+          )}
+
+          <button
+            onClick={handleProfile}
+            title="Profile & Role Switcher"
+            className="relative p-0.5 rounded-full bg-[#c3f400] hover:ring-2 hover:ring-[#c3f400]/50 transition-all active:scale-95 cursor-pointer"
+          >
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-[#201f1f] flex items-center justify-center">
+              {activeUser?.avatar ? (
+                <img
+                  src={activeUser.avatar}
+                  alt={activeUser.name || 'User'}
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <span className="material-symbols-outlined text-[#161e00] text-[18px]">person</span>
+              )}
+            </div>
+            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#c3f400] ring-2 ring-[#131313]" />
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+};

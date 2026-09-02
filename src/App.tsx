@@ -1,0 +1,276 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState } from 'react';
+import { ScreenType, UserProfile, DrillItem } from './types';
+import { mockUsers, mockDrills } from './data/mockData';
+import { Header } from './components/Header';
+import { Navbar } from './components/Navbar';
+import { OfflineBanner } from './components/OfflineBanner';
+import { RoleSwitcherModal } from './components/RoleSwitcherModal';
+import { HomeScreen } from './components/screens/HomeScreen';
+import { RecordScreen } from './components/screens/RecordScreen';
+import { StatsScreen } from './components/screens/StatsScreen';
+import { DrillsScreen } from './components/screens/DrillsScreen';
+import { DrillDetailsScreen } from './components/screens/DrillDetailsScreen';
+import { DrillPracticeScreen } from './components/screens/DrillPracticeScreen';
+import { FeedbackScreen } from './components/screens/FeedbackScreen';
+import { AcademyScreen } from './components/screens/AcademyScreen';
+import { AuthScreens } from './components/screens/AuthScreens';
+import { VideoAnalysisTool } from './components/videoAnalysis/VideoAnalysisTool';
+import { TacticalMasterclasses } from './components/tactics/TacticalMasterclasses';
+import { ScenarioTraining } from './components/tactics/ScenarioTraining';
+import { TrainingPlanner } from './components/planner/TrainingPlanner';
+import { DigitalChalkboard } from './components/chalkboard/DigitalChalkboard';
+import { SmartDrillsVault } from './components/drills/SmartDrillsVault';
+import { playBeep } from './utils/audioFeedback';
+
+export default function App() {
+  const [currentScreen, setCurrentScreen] = useState<ScreenType>('home');
+  const [currentUser, setCurrentUser] = useState<UserProfile>(mockUsers.player);
+  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+  const [selectedDrill, setSelectedDrill] = useState<DrillItem>(mockDrills[0]);
+  const [authMode, setAuthMode] = useState<'player' | 'coach' | 'admin'>('player');
+
+  const handleNavigate = (screen: ScreenType) => {
+    playBeep(650, 0.06);
+    setCurrentScreen(screen);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSelectRole = (role: 'player' | 'coach' | 'admin') => {
+    setCurrentUser(mockUsers[role]);
+    setIsRoleModalOpen(false);
+  };
+
+  // Compute header title and back button
+  let headerTitle = '';
+  let showBack = false;
+  let onBack: (() => void) | undefined = undefined;
+
+  switch (currentScreen) {
+    case 'home':
+      headerTitle = '';
+      break;
+    case 'record':
+      headerTitle = 'Live Camera Record';
+      showBack = true;
+      onBack = () => handleNavigate('home');
+      break;
+    case 'video-analysis':
+      headerTitle = 'Video Analysis & Slow-Mo';
+      showBack = true;
+      onBack = () => handleNavigate('home');
+      break;
+    case 'stats':
+      headerTitle = 'Data & Wagon Wheels';
+      break;
+    case 'drills':
+      headerTitle = 'Drills Library';
+      break;
+    case 'drills-vault':
+      headerTitle = 'Smart Drills Vault';
+      showBack = true;
+      onBack = () => handleNavigate('home');
+      break;
+    case 'scenarios':
+      headerTitle = 'Scenario-Based Training';
+      showBack = true;
+      onBack = () => handleNavigate('home');
+      break;
+    case 'masterclasses':
+      headerTitle = 'Tactical Masterclasses';
+      showBack = true;
+      onBack = () => handleNavigate('home');
+      break;
+    case 'planner':
+      headerTitle = 'Training Planner';
+      showBack = true;
+      onBack = () => handleNavigate('home');
+      break;
+    case 'chalkboard':
+      headerTitle = 'Digital Chalkboard';
+      showBack = true;
+      onBack = () => handleNavigate('home');
+      break;
+    case 'academy':
+      headerTitle = 'Academy & Rules Breakdown';
+      break;
+    case 'drill-details':
+      headerTitle = 'Drill Details';
+      showBack = true;
+      onBack = () => handleNavigate('drills-vault');
+      break;
+    case 'drill-practice':
+      headerTitle = 'Live Practice';
+      showBack = true;
+      onBack = () => handleNavigate('drill-details');
+      break;
+    case 'feedback':
+      headerTitle = 'Session Feedback';
+      break;
+    case 'auth-player':
+    case 'auth-coach':
+    case 'auth-admin':
+      headerTitle = 'Sign In';
+      showBack = true;
+      onBack = () => handleNavigate('home');
+      break;
+    default:
+      headerTitle = '';
+  }
+
+  const isAuthScreen = currentScreen.startsWith('auth');
+  const hideNavbar = currentScreen === 'record' || currentScreen === 'drill-practice' || isAuthScreen;
+
+  return (
+    <div className="min-h-screen bg-[#131313] text-[#e5e2e1] font-body antialiased flex flex-col selection:bg-[#c3f400] selection:text-[#161e00]">
+      {/* Top Persistent Header */}
+      <Header
+        title={headerTitle}
+        showBack={showBack}
+        onBack={onBack}
+        currentUser={currentUser}
+        onProfileClick={() => setIsRoleModalOpen(true)}
+      />
+
+      {/* Main Screen Content View */}
+      <main className="flex-1 w-full flex flex-col relative pt-16">
+        {/* Offline Ground Banner */}
+        <OfflineBanner />
+
+        {currentScreen === 'home' && (
+          <HomeScreen
+            currentUser={currentUser}
+            onNavigate={handleNavigate}
+            onSelectDrill={(drill) => {
+              setSelectedDrill(drill);
+              handleNavigate('drill-details');
+            }}
+          />
+        )}
+
+        {currentScreen === 'video-analysis' && (
+          <VideoAnalysisTool onNavigate={handleNavigate} />
+        )}
+
+        {currentScreen === 'scenarios' && (
+          <ScenarioTraining
+            onNavigate={handleNavigate}
+            onOpenChalkboard={() => handleNavigate('chalkboard')}
+          />
+        )}
+
+        {currentScreen === 'masterclasses' && (
+          <TacticalMasterclasses
+            onNavigate={handleNavigate}
+            onOpenScenario={() => handleNavigate('scenarios')}
+          />
+        )}
+
+        {currentScreen === 'planner' && (
+          <TrainingPlanner onNavigate={handleNavigate} />
+        )}
+
+        {currentScreen === 'chalkboard' && (
+          <DigitalChalkboard onNavigate={handleNavigate} />
+        )}
+
+        {currentScreen === 'drills-vault' && (
+          <SmartDrillsVault
+            onNavigate={handleNavigate}
+            onSelectDrill={(drill) => {
+              setSelectedDrill(drill);
+            }}
+          />
+        )}
+
+        {currentScreen === 'record' && (
+          <RecordScreen onNavigate={handleNavigate} />
+        )}
+
+        {currentScreen === 'stats' && (
+          <StatsScreen onNavigate={handleNavigate} />
+        )}
+
+        {currentScreen === 'drills' && (
+          <DrillsScreen
+            onSelectDrill={(drill) => setSelectedDrill(drill)}
+            onNavigate={handleNavigate}
+          />
+        )}
+
+        {currentScreen === 'academy' && (
+          <AcademyScreen
+            currentUser={currentUser}
+            onNavigate={handleNavigate}
+          />
+        )}
+
+        {currentScreen === 'drill-details' && (
+          <DrillDetailsScreen
+            drill={selectedDrill}
+            onBack={() => handleNavigate('drills-vault')}
+            onStartPractice={() => handleNavigate('drill-practice')}
+          />
+        )}
+
+        {currentScreen === 'drill-practice' && (
+          <DrillPracticeScreen
+            drill={selectedDrill}
+            onBack={() => handleNavigate('drill-details')}
+            onFinish={() => handleNavigate('feedback')}
+          />
+        )}
+
+        {currentScreen === 'feedback' && (
+          <FeedbackScreen
+            onNavigate={handleNavigate}
+            currentUser={currentUser}
+            drill={selectedDrill}
+          />
+        )}
+
+        {isAuthScreen && (
+          <AuthScreens
+            authMode={authMode}
+            onLoginSuccess={(user) => {
+              setCurrentUser(user);
+            }}
+            onSwitchAuthMode={(mode) => {
+              setAuthMode(mode);
+              if (mode === 'player') handleNavigate('auth-player');
+              if (mode === 'coach') handleNavigate('auth-coach');
+              if (mode === 'admin') handleNavigate('auth-admin');
+            }}
+            onNavigate={handleNavigate}
+          />
+        )}
+      </main>
+
+      {/* Bottom Floating Navigation Bar */}
+      {!hideNavbar && (
+        <Navbar
+          currentScreen={currentScreen}
+          onNavigate={handleNavigate}
+        />
+      )}
+
+      {/* Persona / Role Switcher Modal */}
+      <RoleSwitcherModal
+        isOpen={isRoleModalOpen}
+        onClose={() => setIsRoleModalOpen(false)}
+        currentUser={currentUser}
+        onSelectRole={handleSelectRole}
+        onOpenAuth={(mode) => {
+          setAuthMode(mode);
+          if (mode === 'player') handleNavigate('auth-player');
+          if (mode === 'coach') handleNavigate('auth-coach');
+          if (mode === 'admin') handleNavigate('auth-admin');
+        }}
+      />
+    </div>
+  );
+}
