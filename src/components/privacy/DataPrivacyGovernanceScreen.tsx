@@ -892,6 +892,55 @@ export const DataPrivacyGovernanceScreen: React.FC<DataPrivacyGovernanceScreenPr
                 </button>
               </div>
             </div>
+
+            {/* Advertising & Third-Party Tracking Block List Guardrails */}
+            <div className="bg-[#181717] border border-[#282727] rounded-2xl p-5 space-y-4">
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider text-amber-400 flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px]">no_meeting_room</span>
+                Ad & Third-Party Tracker Guardrails (COPPA / GDPR Compliance)
+              </h3>
+              <p className="text-xs text-[#a6ab9d] leading-relaxed">
+                To guarantee zero leakage of student or youth training habits, Pitch Precision enforces a hard block list against behavioral marketing engines, ad networks, and client-side profiling pixels.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="p-3 bg-[#111] rounded-xl border border-white/5 space-y-1">
+                  <strong className="text-white flex items-center gap-1.5 text-[11px]">
+                    <span className="material-symbols-outlined text-red-400 text-[16px]">block</span>
+                    No Behavioral Targeting
+                  </strong>
+                  <p className="text-[#a6ab9d] text-[10px] leading-snug">
+                    Behavioral advertising targeting children and junior players is strictly disabled. No pixel or cookie networks are loaded for users under 18.
+                  </p>
+                </div>
+                <div className="p-3 bg-[#111] rounded-xl border border-white/5 space-y-1">
+                  <strong className="text-white flex items-center gap-1.5 text-[11px]">
+                    <span className="material-symbols-outlined text-red-400 text-[16px]">vpn_lock</span>
+                    Ad Platform Profile Isolation
+                  </strong>
+                  <p className="text-[#a6ab9d] text-[10px] leading-snug">
+                    Junior profiles are completely blacklisted from external marketing systems. No demographic data or drill tracking is exported.
+                  </p>
+                </div>
+                <div className="p-3 bg-[#111] rounded-xl border border-white/5 space-y-1">
+                  <strong className="text-white flex items-center gap-1.5 text-[11px]">
+                    <span className="material-symbols-outlined text-emerald-400 text-[16px]">shield</span>
+                    Anonymized Analytics
+                  </strong>
+                  <p className="text-[#a6ab9d] text-[10px] leading-snug">
+                    Crash reports and engine telemetry utilize strictly hashed pseudonymised keys (such as synthetic IDs like USER-DEV-42).
+                  </p>
+                </div>
+                <div className="p-3 bg-[#111] rounded-xl border border-white/5 space-y-1">
+                  <strong className="text-white flex items-center gap-1.5 text-[11px]">
+                    <span className="material-symbols-outlined text-emerald-400 text-[16px]">gavel</span>
+                    Data Minimization Rule
+                  </strong>
+                  <p className="text-[#a6ab9d] text-[10px] leading-snug">
+                    Zero unnecessary player attributes (e.g., precise GPS, phone numbers, technique notes) are shared with analytics endpoints.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 

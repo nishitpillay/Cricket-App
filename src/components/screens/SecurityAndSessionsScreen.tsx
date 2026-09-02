@@ -12,6 +12,15 @@ import {
 } from '../../utils/authSecurityManager';
 import { playBeep } from '../../utils/audioFeedback';
 import { ReauthModal } from '../ReauthModal';
+import {
+  getIncidentRecords,
+  logIncidentEvent,
+  verifyChainIntegrity,
+  IncidentRecord,
+  IncidentCategory,
+  IncidentSeverity,
+  CONTAINMENT_PROTOCOLS
+} from '../../utils/incidentResponseManager';
 
 interface SecurityAndSessionsScreenProps {
   currentUser: UserProfile;
@@ -30,7 +39,7 @@ export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps>
   onOpenEncryption,
   onOpenMobileSecurity
 }) => {
-  const [activeTab, setActiveTab] = useState<'sessions' | 'mfa_passkeys' | 'sensitive_actions' | 'audit_logs'>('sessions');
+  const [activeTab, setActiveTab] = useState<'sessions' | 'mfa_passkeys' | 'sensitive_actions' | 'audit_logs' | 'incident_response'>('sessions');
   const [sessions, setSessions] = useState<UserSession[]>(getStoredSessions());
   const [securityLogs, setSecurityLogs] = useState<SecurityEvent[]>(getSecurityLogs());
   const [isRegisteringPasskey, setIsRegisteringPasskey] = useState(false);
@@ -56,6 +65,17 @@ export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps>
   const [guardianRel, setGuardianRel] = useState('Parent');
   const [adminTargetUser, setAdminTargetUser] = useState('usr-devang');
   const [adminTargetRole, setAdminTargetRole] = useState('club_admin');
+
+  // Incident Response States
+  const [incidents, setIncidents] = useState<IncidentRecord[]>(getIncidentRecords());
+  const [chainValid, setChainValid] = useState(verifyChainIntegrity().isValid);
+  const [brokenAtId, setBrokenAtId] = useState<string | undefined>(verifyChainIntegrity().brokenAt);
+
+  const [incCategory, setIncCategory] = useState<IncidentCategory>('security_breach');
+  const [incSeverity, setIncSeverity] = useState<IncidentSeverity>('MEDIUM');
+  const [incReporter, setIncReporter] = useState(currentUser.name || 'Anonymous User');
+  const [incDesc, setIncDesc] = useState('');
+  const [incAction, setIncAction] = useState('');
 
   const roleRequiresMfa = isMfaMandatory(currentUser.role);
 
@@ -450,7 +470,8 @@ export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps>
           { id: 'sessions' as const, label: 'Active Sessions & Devices', icon: 'devices' },
           { id: 'mfa_passkeys' as const, label: 'Passkeys & 2FA Setup', icon: 'key' },
           { id: 'sensitive_actions' as const, label: 'Sensitive Actions (Step-Up)', icon: 'lock_open' },
-          { id: 'audit_logs' as const, label: 'Security Audit Stream', icon: 'security' }
+          { id: 'audit_logs' as const, label: 'Security Audit Stream', icon: 'security' },
+          { id: 'incident_response' as const, label: 'Incident Response Center', icon: 'campaign' }
         ].map(tab => (
           <button
             key={tab.id}
@@ -933,6 +954,238 @@ export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps>
                 </span>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 4: INCIDENT RESPONSE CENTER */}
+      {activeTab === 'incident_response' && (
+        <div className="space-y-6">
+          {/* Audit Chain Verification Header */}
+          <div className="p-4 rounded-2xl bg-[#1c1b1b] border border-white/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h3 className="font-headline font-bold text-sm text-white flex items-center gap-2">
+                <span className="material-symbols-outlined text-amber-500 text-[20px]">emergency</span>
+                Incident Response Command Center
+              </h3>
+              <p className="text-xs text-[#c4c9ac] mt-0.5">
+                Official protocol triggers and auditable, cryptographically-chained incident logging for security administrators.
+              </p>
+            </div>
+
+            {chainValid ? (
+              <div className="px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 text-[10px] font-mono tracking-wider uppercase font-bold shadow-[0_0_12px_rgba(16,185,129,0.15)]">
+                <span className="material-symbols-outlined text-[14px]">verified_user</span>
+                Audit Chain Signature Verified (Untampered)
+              </div>
+            ) : (
+              <div className="px-3 py-1.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/30 flex items-center gap-1.5 text-[10px] font-mono tracking-wider uppercase font-bold animate-pulse">
+                <span className="material-symbols-outlined text-[14px]">gpp_bad</span>
+                Warning: Audit Chain Broken at {brokenAtId}!
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left Column: Create Incident Form */}
+            <div className="lg:col-span-5 p-5 rounded-2xl bg-[#181818] border border-white/5 space-y-4">
+              <h4 className="font-headline font-bold text-xs uppercase tracking-wider text-[#c3f400]">
+                Sign Security Incident Record
+              </h4>
+
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase text-[#8e918f] font-bold">Incident Category</label>
+                <select
+                  value={incCategory}
+                  onChange={(e) => setIncCategory(e.target.value as IncidentCategory)}
+                  className="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#c3f400]"
+                >
+                  <option value="security_breach">Security Breach (Server/DB Infiltration)</option>
+                  <option value="compromised_user_account">Compromised User Account (Athlete Profile)</option>
+                  <option value="compromised_admin_account">Compromised Admin Account (Privilege Leak)</option>
+                  <option value="data_leakage">Data Leakage (GDPR / PII Exposure)</option>
+                  <option value="malicious_upload">Malicious Upload (Antivirus / Magic Bytes Check)</option>
+                  <option value="ai_safety_event">AI Safety Event (LLM Jailbreak / Injection)</option>
+                  <option value="child_safety_report">Child-Safety Report (Unsupervised Contact)</option>
+                  <option value="lost_mobile_device">Lost Mobile Device (Local Keychain Remote Wipe)</option>
+                  <option value="compromised_api_credential">Compromised API Credential (KMS Keys Leak)</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase text-[#8e918f] font-bold">Severity Level</label>
+                  <select
+                    value={incSeverity}
+                    onChange={(e) => setIncSeverity(e.target.value as IncidentSeverity)}
+                    className="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#c3f400]"
+                  >
+                    <option value="LOW">LOW</option>
+                    <option value="MEDIUM">MEDIUM</option>
+                    <option value="HIGH">HIGH</option>
+                    <option value="CRITICAL">CRITICAL</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase text-[#8e918f] font-bold">Reporter Name</label>
+                  <input
+                    type="text"
+                    value={incReporter}
+                    onChange={(e) => setIncReporter(e.target.value)}
+                    className="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#c3f400]"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase text-[#8e918f] font-bold">Incident Description & Context</label>
+                <textarea
+                  value={incDesc}
+                  onChange={(e) => setIncDesc(e.target.value)}
+                  placeholder="Detail exactly what was breached, who is involved, and what vectors are suspected..."
+                  className="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#c3f400] h-20 resize-none"
+                  required
+                />
+              </div>
+
+              {/* Live Recommended Containment checklist */}
+              <div className="p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/20 space-y-1.5">
+                <span className="text-[9px] font-mono tracking-wider text-amber-400 font-bold uppercase block">
+                  Mandatory containment protocols for this category:
+                </span>
+                <ul className="text-[10px] text-[#c4c9ac] space-y-1 list-disc list-inside">
+                  {CONTAINMENT_PROTOCOLS[incCategory].map((step, idx) => (
+                    <li key={idx} className="leading-snug">{step}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase text-[#8e918f] font-bold">Action Taken / Containment Executed</label>
+                <input
+                  type="text"
+                  value={incAction}
+                  onChange={(e) => setIncAction(e.target.value)}
+                  placeholder="e.g. Terminated session sess-ipad-03, rotating KMS secret"
+                  className="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#c3f400]"
+                  required
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (!incDesc.trim() || !incAction.trim()) {
+                    showNotification('Error: Please fill in description and action taken.');
+                    return;
+                  }
+                  playBeep(800, 0.1);
+                  const newRecord = logIncidentEvent(
+                    incCategory,
+                    incSeverity,
+                    incReporter,
+                    incDesc,
+                    incAction,
+                    'CONTAINED'
+                  );
+                  const updatedIncidents = getIncidentRecords();
+                  setIncidents(updatedIncidents);
+                  const verification = verifyChainIntegrity();
+                  setChainValid(verification.isValid);
+                  setBrokenAtId(verification.brokenAt);
+                  setIncDesc('');
+                  setIncAction('');
+                  showNotification(`Incident ${newRecord.id} securely registered and signed.`);
+                }}
+                className="w-full py-2.5 rounded-xl bg-[#c3f400] text-[#161e00] text-xs font-bold font-headline hover:bg-[#d6ff38] transition cursor-pointer shadow-md flex items-center justify-center gap-1.5"
+              >
+                <span className="material-symbols-outlined text-[16px]">draw</span>
+                <span>Sign & Commit Incident (Crypto Signoff)</span>
+              </button>
+            </div>
+
+            {/* Right Column: Signed Audit Trail */}
+            <div className="lg:col-span-7 space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-headline font-bold text-xs uppercase tracking-wider text-[#83ea00]">
+                  Cryptographic Audit Trail (Chain Register)
+                </h4>
+                <span className="text-[10px] font-mono text-[#8e918f]">{incidents.length} Records Chain</span>
+              </div>
+
+              <div className="space-y-3 max-h-[580px] overflow-y-auto pr-1">
+                {incidents.slice().reverse().map((inc) => {
+                  const isCritical = inc.severity === 'CRITICAL' || inc.severity === 'HIGH';
+                  return (
+                    <div
+                      key={inc.id}
+                      className="p-4 rounded-xl bg-[#131313] border border-white/10 hover:border-white/15 transition-all space-y-3"
+                    >
+                      {/* Incident Header */}
+                      <div className="flex justify-between items-start gap-3 border-b border-white/5 pb-2">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs font-bold text-white">{inc.id}</span>
+                            <span className={`px-2 py-0.5 rounded text-[8px] font-mono font-bold tracking-wider uppercase ${
+                              isCritical ? 'bg-red-500/20 text-red-300' : 'bg-blue-500/10 text-blue-300'
+                            }`}>
+                              {inc.severity}
+                            </span>
+                          </div>
+                          <span className="text-[11px] font-headline font-bold text-white uppercase tracking-wider mt-1 block">
+                            {inc.category.replace(/_/g, ' ')}
+                          </span>
+                        </div>
+
+                        <span className="text-[9px] font-mono text-[#8e918f]">
+                          {new Date(inc.timestamp).toLocaleString()}
+                        </span>
+                      </div>
+
+                      {/* Description */}
+                      <div className="space-y-1">
+                        <span className="text-[9px] text-[#8e918f] font-bold uppercase">Reporter: {inc.reporter}</span>
+                        <p className="text-xs text-[#c4c9ac] leading-relaxed">{inc.description}</p>
+                      </div>
+
+                      {/* Containment step-by-step checklist */}
+                      <div className="p-3 bg-black/40 rounded-xl border border-white/5 space-y-1">
+                        <span className="text-[9px] font-bold uppercase text-amber-400">Containment Verification Log:</span>
+                        <div className="space-y-1 text-[10px] text-[#8e918f]">
+                          {inc.containmentProtocol.map((protocol, pIdx) => (
+                            <div key={pIdx} className="flex items-center gap-2">
+                              <span className="material-symbols-outlined text-emerald-400 text-[14px]">check_circle</span>
+                              <span className="line-through text-[#8e918f]">{protocol}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Action taken / resolution */}
+                      <div className="text-xs text-[#c4c9ac] flex items-start gap-1.5">
+                        <span className="material-symbols-outlined text-emerald-400 text-[16px] shrink-0 mt-0.5">verified</span>
+                        <div>
+                          <strong className="text-white">Active Mitigation Taken:</strong> {inc.actionTaken}
+                        </div>
+                      </div>
+
+                      {/* Cryptographic chain signature */}
+                      <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[9px] font-mono text-[#8e918f]">
+                        <span className="flex items-center gap-1">
+                          <span className="material-symbols-outlined text-[12px] text-emerald-400">key_visualizer</span>
+                          Immutable Chain ID:
+                        </span>
+                        <span className="bg-black/80 px-2 py-0.5 rounded border border-white/5 text-white">
+                          {inc.auditSignature}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       )}
