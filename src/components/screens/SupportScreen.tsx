@@ -7,6 +7,7 @@ interface SupportScreenProps {
 
 export const SupportScreen: React.FC<SupportScreenProps> = ({ onNavigate }) => {
   const supportItems = [
+    { id: 'testflight-internal-testing', label: 'Step 5: TestFlight & Play Internal Testing', icon: 'cell_tower', desc: '11 controlled testers, Junior → Parent → Coach E2E workflow & Fastlane build' },
     { id: 'store-assets-privacy', label: 'Step 4: Store Assets & Privacy Center', icon: 'app_shortcut', desc: '1024px icon, adaptive layers, splash, screenshots, COPPA policy & nutrition labels' },
     { id: 'security-gate-2', label: 'Security Gate 2 (App Store Test Proof)', icon: 'verified_user', desc: '12 automated E2E tests: IDOR, ReBAC, COPPA, TTL, and zero secrets' },
     { id: 'cloud-infrastructure', label: 'Cloud Infra & Video Pipeline', icon: 'cloud_sync', desc: 'Cloud Run, Cloud SQL pooling, private buckets & signed URL gate' },

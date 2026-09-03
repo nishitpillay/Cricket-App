@@ -30,6 +30,7 @@ import { SecurityGateOneScreen } from './components/screens/SecurityGateOneScree
 import { CloudInfrastructureScreen } from './components/screens/CloudInfrastructureScreen';
 import { SecurityGateTwoScreen } from './components/screens/SecurityGateTwoScreen';
 import { StoreAssetsPrivacyScreen } from './components/screens/StoreAssetsPrivacyScreen';
+import { TestFlightInternalTestingScreen } from './components/screens/TestFlightInternalTestingScreen';
 import { WorkScreen } from './components/screens/WorkScreen';
 import { MoreScreen } from './components/screens/MoreScreen';
 import { SupportScreen } from './components/screens/SupportScreen';
@@ -80,6 +81,7 @@ const PARENT_SCREEN_MAP: Partial<Record<ScreenType, ScreenType>> = {
   'cloud-infrastructure': 'support',
   'security-gate-2': 'support',
   'store-assets-privacy': 'support',
+  'testflight-internal-testing': 'support',
 
   'auth-player': 'home',
   'auth-coach': 'home',
@@ -468,6 +470,13 @@ export default function App() {
 
         {currentScreen === 'store-assets-privacy' && (
           <StoreAssetsPrivacyScreen
+            onNavigate={handleNavigate}
+            onBack={handleBack}
+          />
+        )}
+
+        {currentScreen === 'testflight-internal-testing' && (
+          <TestFlightInternalTestingScreen
             onNavigate={handleNavigate}
             onBack={handleBack}
           />

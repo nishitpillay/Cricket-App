@@ -26,6 +26,7 @@ export type ScreenType =
   | 'cloud-infrastructure'
   | 'security-gate-2'
   | 'store-assets-privacy'
+  | 'testflight-internal-testing'
   | 'work'
   | 'more'
   | 'support'

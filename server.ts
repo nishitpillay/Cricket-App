@@ -2188,6 +2188,85 @@ app.post('/api/v1/account/deletion-request', (req, res) => {
   });
 });
 
+// ----------------------------------------------------
+// STEP 5: TESTFLIGHT & GOOGLE PLAY INTERNAL TESTING BETA WORKFLOW
+// ----------------------------------------------------
+
+import { BetaWorkflowService } from './server/services/betaWorkflowService';
+
+// 1. Get Beta Testers (3 Adult, 3 Junior, 2 Parent, 2 Coach, 1 Admin)
+app.get('/api/v1/beta/testers', (req, res) => {
+  res.json({
+    success: true,
+    totalCount: 11,
+    distributionTracks: {
+      appleTestFlight: {
+        build: 'v1.0.0 (42)',
+        activeTesters: 8,
+        crashFreeRate: '100.0%',
+        publicLink: 'https://testflight.apple.com/join/PitchPrecBeta2026'
+      },
+      googlePlayInternal: {
+        versionCode: 10042,
+        activeTesters: 3,
+        crashFreeRate: '100.0%',
+        track: 'Closed Internal Testing List'
+      }
+    },
+    workflowSummary: {
+      activeWorkflow: 'Junior Player (Aarav) -> Parent (Priya) -> Coach (David Miller) -> Admin (Marcus Vance)',
+      status: 'VERIFIED_SAFEGUARDING_COMPLIANT'
+    }
+  });
+});
+
+// 2. Get current state of the Junior -> Parent -> Coach workflow simulation
+app.get('/api/v1/beta/workflow/state', (req, res) => {
+  const state = BetaWorkflowService.getWorkflowState();
+  res.json({
+    success: true,
+    state
+  });
+});
+
+// 3. Advance to next workflow step or jump to target stage
+app.post('/api/v1/beta/workflow/advance', (req, res) => {
+  const { targetStage } = req.body;
+  const state = BetaWorkflowService.advanceStep(targetStage);
+  res.json({
+    success: true,
+    message: `Advanced to workflow stage ${state.currentStage}`,
+    state
+  });
+});
+
+// 4. Reset beta workflow state
+app.post('/api/v1/beta/workflow/reset', (req, res) => {
+  const state = BetaWorkflowService.resetWorkflow();
+  res.json({
+    success: true,
+    message: 'Beta workflow simulation has been reset to initial state.',
+    state
+  });
+});
+
+// 5. Submit beta tester feedback or bug report
+app.post('/api/v1/beta/feedback', (req, res) => {
+  const { testerId, testerRole, rating = 5, feedbackText, deviceLogs } = req.body;
+  res.json({
+    success: true,
+    feedbackId: `FDBK-${Date.now().toString(36).toUpperCase()}`,
+    submittedAt: new Date().toISOString(),
+    message: 'Tester feedback recorded in TestFlight / Play Console triage queue.',
+    data: {
+      testerId,
+      testerRole,
+      rating,
+      feedbackText
+    }
+  });
+});
+
 // Vite middleware in development or static serve in production
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {

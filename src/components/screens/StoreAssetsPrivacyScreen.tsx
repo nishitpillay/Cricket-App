@@ -97,13 +97,22 @@ export const StoreAssetsPrivacyScreen: React.FC<StoreAssetsPrivacyScreenProps> =
               <span className="hidden sm:inline">Export Store Manifest</span>
             </button>
             {onNavigate && (
-              <button
-                onClick={() => onNavigate('security-gate-2')}
-                className="px-3 py-1.5 rounded-xl bg-[#c3f400] hover:bg-[#b0dc00] text-black font-extrabold text-xs flex items-center gap-1 transition cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[16px]">verified_user</span>
-                <span className="hidden sm:inline">Security Gate 2</span>
-              </button>
+              <>
+                <button
+                  onClick={() => onNavigate('testflight-internal-testing')}
+                  className="px-3.5 py-1.5 rounded-xl bg-[#c3f400] hover:bg-[#b0dc00] text-black font-extrabold text-xs flex items-center gap-1 transition cursor-pointer shadow-md"
+                >
+                  <span className="material-symbols-outlined text-[16px]">cell_tower</span>
+                  <span className="hidden sm:inline">Step 5: TestFlight & Play Beta</span>
+                </button>
+                <button
+                  onClick={() => onNavigate('security-gate-2')}
+                  className="px-3 py-1.5 rounded-xl bg-[#222] hover:bg-[#333] border border-[#333] text-zinc-300 font-bold text-xs flex items-center gap-1 transition cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[16px]">verified_user</span>
+                  <span className="hidden sm:inline">Gate 2</span>
+                </button>
+              </>
             )}
           </div>
         </div>
