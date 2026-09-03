@@ -163,6 +163,33 @@ export const SecurityGateOneScreen: React.FC<{ onNavigate?: (screen: string) => 
           </div>
         </div>
 
+        {/* Step 2 Banner Link */}
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-[#1c1b1b] via-[#141414] to-[#1c1b1b] border border-[#c3f400]/30 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-[#c3f400]/20 flex items-center justify-center text-[#c3f400]">
+              <span className="material-symbols-outlined text-[20px]">cloud_sync</span>
+            </div>
+            <div>
+              <div className="text-xs font-bold text-white flex items-center gap-2">
+                <span>Step 2: Cloud Infrastructure + Secure Video Pipeline</span>
+                <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#c3f400] text-black font-extrabold uppercase">ACTIVE</span>
+              </div>
+              <div className="text-[11px] text-[#8e9285]">
+                Cloud Run API → Cloud SQL Connection Pooling → Multi-Env Isolated Buckets (dev/test/prod) → Enforceable Video Gate
+              </div>
+            </div>
+          </div>
+          {onNavigate && (
+            <button
+              onClick={() => onNavigate('cloud-infrastructure')}
+              className="px-3.5 py-1.5 rounded-xl bg-[#c3f400] hover:bg-[#b0dc00] text-black font-extrabold text-xs flex items-center gap-1 transition cursor-pointer shadow-md whitespace-nowrap"
+            >
+              <span>Explore Cloud Infra</span>
+              <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+            </button>
+          )}
+        </div>
+
         {/* Security Gate 1 Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="p-3.5 rounded-2xl bg-[#171717] border border-[#2a2a2a]">

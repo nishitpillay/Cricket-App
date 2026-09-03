@@ -23,6 +23,7 @@ export type ScreenType =
   | 'source-code-security'
   | 'mobile-bridge'
   | 'security-gate-1'
+  | 'cloud-infrastructure'
   | 'work'
   | 'more'
   | 'support'

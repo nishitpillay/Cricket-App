@@ -1843,6 +1843,142 @@ app.post('/api/v1/security-gate1/account/delete-cascade', (req, res) => {
   });
 });
 
+// =========================================================================
+// STEP 2: CLOUD INFRASTRUCTURE & SECURE VIDEO PIPELINE APIS
+// Target Architecture:
+// App -> Cloud Run API -> Auth/Authz -> Cloud SQL (Connection Pooling)
+// App -> Request Upload -> Validate Player+Resource -> Short-Lived Signed URL -> Private Cloud Storage
+// =========================================================================
+import { CloudInfraService, EnvironmentType } from './server/services/cloudInfrastructure';
+
+// 1. Cloud Infrastructure & Connection Pool Status
+app.get('/api/v1/cloud-infra/status', (req, res) => {
+  res.json({
+    success: true,
+    cloudRun: {
+      service: 'pitchprecision-api',
+      region: 'australia-southeast1 (Sydney)',
+      concurrency: 80,
+      memory: '1Gi',
+      cpu: '1.0',
+      minInstances: 1,
+      maxInstances: 20,
+      ingress: 'all',
+      tlsEnforcement: 'TLS 1.3 / HSTS 2-Year Max-Age'
+    },
+    cloudSql: {
+      databaseEngine: 'PostgreSQL 16 (High Availability)',
+      instanceName: 'pitchprecision-prod:australia-southeast1:cricket-db-cluster',
+      connectionPoolStats: CloudInfraService.getPoolStats(),
+      poolingStrategy: 'Google Cloud Run Best Practice Connection Pool (5-10 max per instance, reuse active connections)'
+    },
+    environments: CloudInfraService.getEnvironments()
+  });
+});
+
+// 2. Cloud SQL Connection Pool Load Simulator
+app.post('/api/v1/cloud-infra/cloud-sql/pool-test', async (req, res) => {
+  const queryCount = parseInt(req.body.queryCount || '20', 10);
+  try {
+    const result = await CloudInfraService.simulateConcurrentQueries(queryCount);
+    res.json({ success: true, ...result });
+  } catch (e: any) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// 3. Multi-Environment Private Bucket Configs
+app.get('/api/v1/cloud-infra/environments', (req, res) => {
+  res.json({
+    success: true,
+    environments: CloudInfraService.getEnvironments()
+  });
+});
+
+// 4. Video Resource Registry
+app.get('/api/v1/cloud-infra/videos', (req, res) => {
+  res.json({
+    success: true,
+    videos: CloudInfraService.listVideos()
+  });
+});
+
+// 5. Video Pipeline: Request Upload Permission
+// Validates Player + Resource -> Generates short-lived signed upload PUT URL into isolated private bucket
+app.post('/api/v1/cloud-infra/video/request-upload-url', (req, res) => {
+  const { playerId, resourceType, fileName, fileSizeBytes, mimeType, environment } = req.body;
+  const requesterId = (req as any).user?.session?.userId || playerId || 'usr_athlete_caller';
+
+  try {
+    const ticket = CloudInfraService.requestUploadPermission(requesterId, {
+      playerId,
+      resourceType,
+      fileName,
+      fileSizeBytes: parseInt(fileSizeBytes || '0', 10),
+      mimeType,
+      environment: environment as EnvironmentType
+    });
+    res.json({ success: true, ...ticket });
+  } catch (e: any) {
+    res.status(400).json({
+      success: false,
+      error: e.message,
+      errorCode: e.message?.split(':')[0] || 'ERR_UPLOAD_PERMISSION_REJECTED'
+    });
+  }
+});
+
+// 6. Video Pipeline: Request Playback Permission
+// Strict Enforce: User -> API -> Authenticate -> Authorise -> Establish Player/Video Relationship -> Issue Temporary URL
+app.post('/api/v1/cloud-infra/video/request-playback-url', (req, res) => {
+  const { videoId, viewerId, viewerRole, environment } = req.body;
+  const clientIp = req.ip || (req.headers['x-forwarded-for'] as string) || '127.0.0.1';
+
+  try {
+    const playbackTicket = CloudInfraService.requestPlaybackPermission({
+      videoId,
+      viewerId,
+      viewerRole: viewerRole || 'player',
+      environment: environment as EnvironmentType,
+      clientIp
+    });
+    res.json({ success: true, ...playbackTicket });
+  } catch (e: any) {
+    const status = e.message?.includes('ERR_RELATIONSHIP') || e.message?.includes('ERR_UNAUTHORIZED') ? 403 : 400;
+    res.status(status).json({
+      success: false,
+      error: e.message,
+      errorCode: e.message?.split(':')[0] || 'ERR_RELATIONSHIP_UNAUTHORIZED'
+    });
+  }
+});
+
+// 7. Toggle Coaching Relationship Grant (Interactive Test Control)
+app.post('/api/v1/cloud-infra/video/toggle-coach-relationship', (req, res) => {
+  const { playerId, coachId } = req.body;
+  const targetPlayer = playerId || 'usr-devang';
+  const targetCoach = coachId || 'usr_coach_shane';
+
+  const isActive = CloudInfraService.toggleCoachRelationship(targetPlayer, targetCoach);
+  res.json({
+    success: true,
+    playerId: targetPlayer,
+    coachId: targetCoach,
+    isActive,
+    message: isActive
+      ? `Active coaching relationship established for ${targetCoach} on ${targetPlayer}. Temporary signed playback URLs authorized.`
+      : `Coaching relationship REVOKED for ${targetCoach} on ${targetPlayer}. Temporary signed playback URLs will be rejected (403).`
+  });
+});
+
+// 8. Real-Time Cloud Infrastructure & Video Pipeline Audit Trail
+app.get('/api/v1/cloud-infra/audit-logs', (req, res) => {
+  res.json({
+    success: true,
+    logs: CloudInfraService.getAuditEvents()
+  });
+});
+
 // Vite middleware in development or static serve in production
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {
