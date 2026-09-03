@@ -1979,6 +1979,116 @@ app.get('/api/v1/cloud-infra/audit-logs', (req, res) => {
   });
 });
 
+// =========================================================================
+// STEP 3: SECURITY GATE 2 - AUTOMATED END-TO-END SECURITY VERIFICATION
+// Required before App Store Preparation:
+// 1. Player A cannot obtain Player B's video (IDOR)
+// 2. Coach A cannot access an unrelated player (ReBAC)
+// 3. Expired coach relationships deny access (TTL)
+// 4. Junior-player media isn't publicly accessible (COPPA)
+// 5. Guardian restrictions work (Minor co-sign)
+// 6. Changing a URL/UUID doesn't bypass access control (Tampering)
+// 7. Expired signed URLs fail (Crypto TTL)
+// 8. Deleted videos cannot be retrieved (Hard Delete)
+// 9. Unauthenticated client cannot request upload/download URLs (Auth guard)
+// 10. Role changes cannot be performed from mobile client (RBAC)
+// 11. Administrative endpoints aren't accessible to coaches/players (Privilege barrier)
+// 12. Production secrets aren't present inside the IPA/APK/AAB (Static analysis)
+// =========================================================================
+import { SecurityGateTwoEngine } from './server/services/securityGateTwo';
+
+// 1. Run all 12 Security Gate 2 automated tests
+app.post('/api/v1/security-gate2/run-all', async (req, res) => {
+  try {
+    const report = await SecurityGateTwoEngine.runAllGateTwoTests();
+    res.json({
+      success: true,
+      report
+    });
+  } catch (e: any) {
+    res.status(500).json({
+      success: false,
+      error: e.message
+    });
+  }
+});
+
+// 2. Get Security Gate 2 status / latest report
+app.get('/api/v1/security-gate2/status', async (req, res) => {
+  try {
+    const report = await SecurityGateTwoEngine.runAllGateTwoTests();
+    res.json({
+      success: true,
+      gateStatus: report.status,
+      report
+    });
+  } catch (e: any) {
+    res.status(500).json({
+      success: false,
+      error: e.message
+    });
+  }
+});
+
+// 3. Run individual Gate 2 test by ID
+app.post('/api/v1/security-gate2/run-test/:testNumber', async (req, res) => {
+  const num = parseInt(req.params.testNumber, 10);
+  try {
+    let result;
+    switch (num) {
+      case 1: result = await SecurityGateTwoEngine.test01_PlayerCrossAccess(); break;
+      case 2: result = await SecurityGateTwoEngine.test02_UnrelatedCoachAccess(); break;
+      case 3: result = await SecurityGateTwoEngine.test03_ExpiredCoachRelationship(); break;
+      case 4: result = await SecurityGateTwoEngine.test04_JuniorMediaNotPublic(); break;
+      case 5: result = await SecurityGateTwoEngine.test05_GuardianRestrictions(); break;
+      case 6: result = await SecurityGateTwoEngine.test06_UuidFuzzingTamperResistance(); break;
+      case 7: result = await SecurityGateTwoEngine.test07_ExpiredSignedUrlsFail(); break;
+      case 8: result = await SecurityGateTwoEngine.test08_DeletedVideosUnretrievable(); break;
+      case 9: result = await SecurityGateTwoEngine.test09_UnauthenticatedClientBlocked(); break;
+      case 10: result = await SecurityGateTwoEngine.test10_ClientRoleChangesBlocked(); break;
+      case 11: result = await SecurityGateTwoEngine.test11_AdminEndpointsRestricted(); break;
+      case 12: result = await SecurityGateTwoEngine.test12_ProductionSecretsScan(); break;
+      default:
+        return res.status(404).json({ success: false, error: 'Invalid test number (1-12).' });
+    }
+    res.json({ success: true, result });
+  } catch (e: any) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// 4. Export signed Gate 2 Compliance Certificate
+app.get('/api/v1/security-gate2/certificate', async (req, res) => {
+  try {
+    const report = await SecurityGateTwoEngine.runAllGateTwoTests();
+    const certificateSignature = crypto
+      .createHmac('sha256', 'PITCHPRECISION_GATE2_CERTIFICATE_SECRET')
+      .update(JSON.stringify({
+        gateId: report.gateId,
+        timestamp: report.timestamp,
+        testsPassed: report.testsPassed,
+        totalTests: report.totalTests
+      }))
+      .digest('hex');
+
+    res.json({
+      success: true,
+      certificate: {
+        certificateId: `CERT-GATE2-${Date.now().toString(36).toUpperCase()}`,
+        issuedTo: 'Pitch Precision Mobile Client & Cloud API Subsystem',
+        certifiedFor: 'Apple App Store & Google Play Store Production Release',
+        passedChecks: `${report.testsPassed} / ${report.totalTests}`,
+        complianceStatus: report.status,
+        issuedAt: report.timestamp,
+        cryptographicSignature: `SHA256:${certificateSignature}`,
+        standardAuditsPassed: report.complianceStandards
+      }
+    });
+  } catch (e: any) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
 // Vite middleware in development or static serve in production
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {

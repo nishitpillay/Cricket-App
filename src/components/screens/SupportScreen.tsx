@@ -7,13 +7,14 @@ interface SupportScreenProps {
 
 export const SupportScreen: React.FC<SupportScreenProps> = ({ onNavigate }) => {
   const supportItems = [
-    { id: 'privacy-governance', label: 'Data Privacy', icon: 'verified_user', desc: 'Governance & classification' },
+    { id: 'security-gate-2', label: 'Security Gate 2 (App Store Test Proof)', icon: 'verified_user', desc: '12 automated E2E tests: IDOR, ReBAC, COPPA, TTL, and zero secrets' },
+    { id: 'cloud-infrastructure', label: 'Cloud Infra & Video Pipeline', icon: 'cloud_sync', desc: 'Cloud Run, Cloud SQL pooling, private buckets & signed URL gate' },
+    { id: 'security-gate-1', label: 'Security Gate 1 Freeze', icon: 'gavel', desc: 'RBAC, Guardian consent, signed video URLs & audit trail' },
+    { id: 'privacy-governance', label: 'Data Privacy', icon: 'shield', desc: 'Governance & classification' },
     { id: 'encryption-governance', label: 'Data Encryption', icon: 'lock', desc: 'KMS & transit settings' },
     { id: 'mobile-security', label: 'Mobile Security', icon: 'smartphone', desc: 'OWASP MASVS controls' },
     { id: 'source-code-security', label: 'Source Code Security', icon: 'code', desc: 'Git secrets, branch protection, SBOM & signed builds' },
     { id: 'mobile-bridge', label: 'Mobile Bridge & Hardware', icon: 'devices', desc: 'Capacitor 6, 60fps camera, mic & store manifests' },
-    { id: 'cloud-infrastructure', label: 'Cloud Infra & Video Pipeline', icon: 'cloud_sync', desc: 'Cloud Run, Cloud SQL pooling, private buckets & signed URL gate' },
-    { id: 'security-gate-1', label: 'Security Gate 1 Freeze', icon: 'gavel', desc: 'RBAC, Guardian consent, signed video URLs & audit trail' },
   ];
 
   return (

@@ -1,6 +1,6 @@
 {
   "name": "Pitch Precision",
-  "description": "High-stakes cricket performance analytics, AI telemetry recording, complete player & coach profile questionnaires, and COPPA/ECB junior player child-safety safeguarding guardrails.",
+  "description": "High-stakes cricket performance analytics, AI telemetry recording, Cloud Run API, connection pooled Cloud SQL, multi-env isolated private buckets, and Security Gate 2 automated test certification.",
   "requestFramePermissions": ["camera", "microphone", "geolocation"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

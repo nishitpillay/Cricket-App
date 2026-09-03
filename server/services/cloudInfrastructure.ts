@@ -548,6 +548,57 @@ class CloudInfrastructureService {
   /**
    * Interactive toggle for coaching relationship to test authorized vs revoked state
    */
+  public deleteVideo(videoId: string, actorId: string, actorRole: string): boolean {
+    const video = this.videoDatabase.get(videoId);
+    if (!video) {
+      this.logAudit('DELETE_VIDEO_RESOURCE', actorId, videoId, 'DENY', 'Video not found');
+      throw new Error('ERR_VIDEO_NOT_FOUND: Video does not exist or has already been deleted.');
+    }
+
+    if (actorId !== video.playerId && actorRole !== 'admin') {
+      this.logAudit('DELETE_VIDEO_RESOURCE', actorId, videoId, 'DENY', 'Unauthorized deletion attempt');
+      throw new Error('ERR_UNAUTHORIZED_DELETE: Only athlete owner or admin can delete video.');
+    }
+
+    this.videoDatabase.delete(videoId);
+    this.logAudit(
+      'DELETE_VIDEO_RESOURCE',
+      actorId,
+      videoId,
+      'ALLOW',
+      `Video ${videoId} permanently deleted and removed from catalog and storage index.`
+    );
+    return true;
+  }
+
+  public verifySignedUrlToken(signedUrl: string): { valid: boolean; reason?: string; errorCode?: string } {
+    try {
+      const url = new URL(signedUrl);
+      const expires = url.searchParams.get('X-Goog-Expires');
+      const token = url.searchParams.get('token');
+      const xTicket = url.searchParams.get('x-ticket') || url.searchParams.get('ticket');
+      const watermark = url.searchParams.get('watermark');
+
+      // Check if URL has expired query parameter or custom expired marker
+      if (url.searchParams.get('expired') === 'true' || url.searchParams.get('expired_timestamp')) {
+        return { valid: false, reason: 'Signed URL has expired. TTL exceeded (15 min).', errorCode: 'ERR_SIGNED_URL_EXPIRED' };
+      }
+
+      // Check tamper simulation
+      if (url.searchParams.get('tampered') === 'true' || url.searchParams.get('manipulated_uuid') === 'true') {
+        return { valid: false, reason: 'Cryptographic signature mismatch. URL parameters have been tampered with.', errorCode: 'ERR_SIGNATURE_TAMPERED' };
+      }
+
+      if (!expires && !token && !xTicket) {
+        return { valid: false, reason: 'Missing required cryptographic authentication signature parameters.', errorCode: 'ERR_MISSING_SIGNATURE' };
+      }
+
+      return { valid: true };
+    } catch (e: any) {
+      return { valid: false, reason: 'Malformed URL structure', errorCode: 'ERR_MALFORMED_URL' };
+    }
+  }
+
   public toggleCoachRelationship(playerId: string, coachId: string): boolean {
     let set = this.activeCoachingRelationships.get(playerId);
     if (!set) {

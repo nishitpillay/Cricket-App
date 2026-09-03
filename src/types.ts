@@ -24,6 +24,7 @@ export type ScreenType =
   | 'mobile-bridge'
   | 'security-gate-1'
   | 'cloud-infrastructure'
+  | 'security-gate-2'
   | 'work'
   | 'more'
   | 'support'

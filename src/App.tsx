@@ -28,6 +28,7 @@ import { SourceCodeSecurityScreen } from './components/screens/SourceCodeSecurit
 import { MobileBridgeScreen } from './components/screens/MobileBridgeScreen';
 import { SecurityGateOneScreen } from './components/screens/SecurityGateOneScreen';
 import { CloudInfrastructureScreen } from './components/screens/CloudInfrastructureScreen';
+import { SecurityGateTwoScreen } from './components/screens/SecurityGateTwoScreen';
 import { WorkScreen } from './components/screens/WorkScreen';
 import { MoreScreen } from './components/screens/MoreScreen';
 import { SupportScreen } from './components/screens/SupportScreen';
@@ -76,6 +77,7 @@ const PARENT_SCREEN_MAP: Partial<Record<ScreenType, ScreenType>> = {
   'mobile-bridge': 'support',
   'security-gate-1': 'support',
   'cloud-infrastructure': 'support',
+  'security-gate-2': 'support',
 
   'auth-player': 'home',
   'auth-coach': 'home',
@@ -452,6 +454,13 @@ export default function App() {
           <CloudInfrastructureScreen
             currentUser={currentUser}
             onNavigate={handleNavigate}
+          />
+        )}
+
+        {currentScreen === 'security-gate-2' && (
+          <SecurityGateTwoScreen
+            onNavigate={handleNavigate}
+            onBack={handleBack}
           />
         )}
 

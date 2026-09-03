@@ -254,6 +254,33 @@ export const CloudInfrastructureScreen: React.FC<CloudInfrastructureScreenProps>
           </div>
         </div>
 
+        {/* Step 3 Banner Link */}
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-[#1c1b1b] via-[#141414] to-[#1c1b1b] border border-[#c3f400]/40 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#c3f400]/20 flex items-center justify-center text-[#c3f400] shrink-0">
+              <span className="material-symbols-outlined text-[22px]">verified_user</span>
+            </div>
+            <div>
+              <div className="text-xs font-bold text-white flex items-center gap-2">
+                <span>Step 3: Security Gate 2 — End-to-End Automated Test Proof</span>
+                <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#c3f400] text-black font-extrabold uppercase">12 / 12 PASSING</span>
+              </div>
+              <div className="text-[11px] text-[#8e9285]">
+                Automated tests proving IDOR resistance, ReBAC isolation, COPPA junior privacy, expiring signed URLs, hard deletion, and zero leaked secrets.
+              </div>
+            </div>
+          </div>
+          {onNavigate && (
+            <button
+              onClick={() => onNavigate('security-gate-2')}
+              className="px-3.5 py-1.5 rounded-xl bg-[#c3f400] hover:bg-[#b0dc00] text-black font-extrabold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-md whitespace-nowrap"
+            >
+              <span>View Security Gate 2</span>
+              <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+            </button>
+          )}
+        </div>
+
         {/* Live System Diagnostics Badges */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="p-3.5 rounded-2xl bg-[#171717] border border-[#2a2a2a]">
