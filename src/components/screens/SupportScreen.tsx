@@ -11,6 +11,8 @@ export const SupportScreen: React.FC<SupportScreenProps> = ({ onNavigate }) => {
     { id: 'encryption-governance', label: 'Data Encryption', icon: 'lock', desc: 'KMS & transit settings' },
     { id: 'mobile-security', label: 'Mobile Security', icon: 'smartphone', desc: 'OWASP MASVS controls' },
     { id: 'source-code-security', label: 'Source Code Security', icon: 'code', desc: 'Git secrets, branch protection, SBOM & signed builds' },
+    { id: 'mobile-bridge', label: 'Mobile Bridge & Hardware', icon: 'devices', desc: 'Capacitor 6, 60fps camera, mic & store manifests' },
+    { id: 'security-gate-1', label: 'Security Gate 1 Freeze', icon: 'gavel', desc: 'RBAC, Guardian consent, signed video URLs & audit trail' },
   ];
 
   return (

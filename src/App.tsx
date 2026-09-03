@@ -25,6 +25,8 @@ import { DataPrivacyGovernanceScreen } from './components/privacy/DataPrivacyGov
 import { DataEncryptionGovernanceScreen } from './components/encryption/DataEncryptionGovernanceScreen';
 import { MobileSecurityGovernanceScreen } from './components/screens/MobileSecurityGovernanceScreen';
 import { SourceCodeSecurityScreen } from './components/screens/SourceCodeSecurityScreen';
+import { MobileBridgeScreen } from './components/screens/MobileBridgeScreen';
+import { SecurityGateOneScreen } from './components/screens/SecurityGateOneScreen';
 import { WorkScreen } from './components/screens/WorkScreen';
 import { MoreScreen } from './components/screens/MoreScreen';
 import { SupportScreen } from './components/screens/SupportScreen';
@@ -70,6 +72,8 @@ const PARENT_SCREEN_MAP: Partial<Record<ScreenType, ScreenType>> = {
   'encryption-governance': 'support',
   'mobile-security': 'support',
   'source-code-security': 'support',
+  'mobile-bridge': 'support',
+  'security-gate-1': 'support',
 
   'auth-player': 'home',
   'auth-coach': 'home',
@@ -425,6 +429,19 @@ export default function App() {
         {currentScreen === 'source-code-security' && (
           <SourceCodeSecurityScreen
             currentUser={currentUser}
+            onNavigate={handleNavigate}
+          />
+        )}
+
+        {currentScreen === 'mobile-bridge' && (
+          <MobileBridgeScreen
+            currentUser={currentUser}
+            onNavigate={handleNavigate}
+          />
+        )}
+
+        {currentScreen === 'security-gate-1' && (
+          <SecurityGateOneScreen
             onNavigate={handleNavigate}
           />
         )}

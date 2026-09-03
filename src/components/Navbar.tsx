@@ -20,7 +20,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentScreen, onNavigate, onBac
       id: 'more',
       label: 'MORE',
       icon: 'menu',
-      aliases: ['support', 'help', 'terms', 'security-settings', 'privacy-governance', 'encryption-governance', 'mobile-security', 'source-code-security']
+      aliases: ['support', 'help', 'terms', 'security-settings', 'privacy-governance', 'encryption-governance', 'mobile-security', 'source-code-security', 'mobile-bridge', 'security-gate-1']
     },
     { id: 'back', label: 'BACK', icon: 'arrow_back' }
   ];

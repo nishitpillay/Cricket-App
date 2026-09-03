@@ -21,6 +21,8 @@ export type ScreenType =
   | 'encryption-governance'
   | 'mobile-security'
   | 'source-code-security'
+  | 'mobile-bridge'
+  | 'security-gate-1'
   | 'work'
   | 'more'
   | 'support'
