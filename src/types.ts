@@ -25,6 +25,7 @@ export type ScreenType =
   | 'security-gate-1'
   | 'cloud-infrastructure'
   | 'security-gate-2'
+  | 'store-assets-privacy'
   | 'work'
   | 'more'
   | 'support'

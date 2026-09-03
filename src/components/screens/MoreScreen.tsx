@@ -22,9 +22,10 @@ export const MoreScreen: React.FC<MoreScreenProps> = ({ onNavigate }) => {
       ]
     },
     {
-      title: 'Security & Legal',
+      title: 'Security, Legal & Store Readiness',
       items: [
-        { id: 'security-gate-2', label: 'Security Gate 2 (App Store Test Proof)', icon: 'verified_user', highlight: true },
+        { id: 'store-assets-privacy', label: 'Step 4: Store Assets & Privacy Center', icon: 'app_shortcut', highlight: true },
+        { id: 'security-gate-2', label: 'Security Gate 2 (App Store Test Proof)', icon: 'verified_user' },
         { id: 'cloud-infrastructure', label: 'Cloud Infrastructure & Secure Video Pipeline', icon: 'cloud_sync' },
         { id: 'security-gate-1', label: 'Security Gate 1 Freeze', icon: 'gavel' },
         { id: 'security-settings', label: 'Security & Sessions', icon: 'shield' },
