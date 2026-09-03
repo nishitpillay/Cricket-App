@@ -29,6 +29,7 @@ interface SecurityAndSessionsScreenProps {
   onOpenPrivacy?: () => void;
   onOpenEncryption?: () => void;
   onOpenMobileSecurity?: () => void;
+  onOpenSourceCodeSecurity?: () => void;
 }
 
 export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps> = ({
@@ -37,16 +38,30 @@ export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps>
   onNavigateBack,
   onOpenPrivacy,
   onOpenEncryption,
-  onOpenMobileSecurity
+  onOpenMobileSecurity,
+  onOpenSourceCodeSecurity
 }) => {
   const [activeTab, setActiveTab] = useState<'sessions' | 'mfa_passkeys' | 'sensitive_actions' | 'audit_logs' | 'incident_response'>('sessions');
-  const [sessions, setSessions] = useState<UserSession[]>(getStoredSessions());
-  const [securityLogs, setSecurityLogs] = useState<SecurityEvent[]>(getSecurityLogs());
+  const [sessions, setSessions] = useState<UserSession[]>(() => {
+    try {
+      return getStoredSessions() || [];
+    } catch {
+      return [];
+    }
+  });
+  const [securityLogs, setSecurityLogs] = useState<SecurityEvent[]>(() => {
+    try {
+      return getSecurityLogs() || [];
+    } catch {
+      return [];
+    }
+  });
   const [isRegisteringPasskey, setIsRegisteringPasskey] = useState(false);
   const [passkeySuccessMessage, setPasskeySuccessMessage] = useState<string | null>(null);
-  const [mfaEnabled, setMfaEnabled] = useState(
-    currentUser.securitySettings?.mfaEnabled ?? (isMfaMandatory(currentUser.role) ? true : false)
-  );
+  const [mfaEnabled, setMfaEnabled] = useState(() => {
+    const role = currentUser?.role || 'player';
+    return currentUser?.securitySettings?.mfaEnabled ?? (isMfaMandatory(role) ? true : false);
+  });
   const [totpSecret, setTotpSecret] = useState('JBSWY3DPEHPK3PXP');
   const [verificationCodeInput, setVerificationCodeInput] = useState('');
   const [isEnablingMfa, setIsEnablingMfa] = useState(false);
@@ -67,13 +82,31 @@ export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps>
   const [adminTargetRole, setAdminTargetRole] = useState('club_admin');
 
   // Incident Response States
-  const [incidents, setIncidents] = useState<IncidentRecord[]>(getIncidentRecords());
-  const [chainValid, setChainValid] = useState(verifyChainIntegrity().isValid);
-  const [brokenAtId, setBrokenAtId] = useState<string | undefined>(verifyChainIntegrity().brokenAt);
+  const [incidents, setIncidents] = useState<IncidentRecord[]>(() => {
+    try {
+      return getIncidentRecords() || [];
+    } catch {
+      return [];
+    }
+  });
+  const [chainValid, setChainValid] = useState(() => {
+    try {
+      return verifyChainIntegrity().isValid;
+    } catch {
+      return true;
+    }
+  });
+  const [brokenAtId, setBrokenAtId] = useState<string | undefined>(() => {
+    try {
+      return verifyChainIntegrity().brokenAt;
+    } catch {
+      return undefined;
+    }
+  });
 
   const [incCategory, setIncCategory] = useState<IncidentCategory>('security_breach');
   const [incSeverity, setIncSeverity] = useState<IncidentSeverity>('MEDIUM');
-  const [incReporter, setIncReporter] = useState(currentUser.name || 'Anonymous User');
+  const [incReporter, setIncReporter] = useState(currentUser?.name || 'Authorized Athlete');
   const [incDesc, setIncDesc] = useState('');
   const [incAction, setIncAction] = useState('');
 
@@ -87,7 +120,8 @@ export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps>
   const [logFilterType, setLogFilterType] = useState<string>('all');
   const [logSearchQuery, setLogSearchQuery] = useState<string>('');
 
-  const roleRequiresMfa = isMfaMandatory(currentUser.role);
+  const currentRole = currentUser?.role || 'player';
+  const roleRequiresMfa = isMfaMandatory(currentRole);
 
   const showNotification = (msg: string) => {
     setActionNotice(msg);
@@ -456,6 +490,32 @@ export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps>
         </div>
       )}
 
+      {/* Source Code Security & DevSecOps Banner */}
+      {onOpenSourceCodeSecurity && (
+        <div className="mb-4 p-4 rounded-2xl bg-[#1c1b1b] border border-[#c3f400]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#c3f400]/10 border border-[#c3f400]/30 flex items-center justify-center text-[#c3f400]">
+              <span className="material-symbols-outlined text-[20px]">terminal</span>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                Source Code Security & DevSecOps
+              </h4>
+              <p className="text-[11px] text-[#8e9285] mt-0.5">
+                Pre-commit secret scans, branch protection, code review gates, automated Dependabot CVE SLAs, CycloneDX SBOM, and signed release builds.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onOpenSourceCodeSecurity}
+            className="px-3.5 py-2 rounded-xl bg-[#c3f400] hover:bg-[#b0dc00] text-black text-xs font-extrabold flex items-center justify-center gap-1.5 whitespace-nowrap transition cursor-pointer"
+          >
+            <span>Open DevSecOps</span>
+            <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+          </button>
+        </div>
+      )}
+
       {/* Role Mandate Notice */}
       {roleRequiresMfa && (
         <div className="mb-6 p-4 rounded-2xl bg-[#9cf0ff]/10 border border-[#9cf0ff]/30 text-white flex items-start gap-3 shadow-md">
@@ -467,7 +527,7 @@ export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps>
               Mandatory Safeguarding MFA Policy Active
             </h4>
             <p className="text-xs text-[#c4c9ac] mt-1 leading-relaxed">
-              As a verified <strong className="text-white capitalize">{currentUser.role.replace('_', ' ')}</strong> with access to junior players or club rosters, 
+              As a verified <strong className="text-white capitalize">{(currentUser?.role || 'player').replace('_', ' ')}</strong> with access to junior players or club rosters, 
               Multi-Factor Authentication (MFA) is strictly enforced under ECB, COPPA, and Club Safeguarding policies.
             </p>
           </div>
@@ -912,16 +972,19 @@ export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps>
       {/* TAB 3: AUDIT STREAM */}
       {activeTab === 'audit_logs' && (() => {
         // Compute active suspicious activity alerts dynamically
-        const activeAlerts = securityLogs.filter(log => 
-          (log.status === 'blocked' || log.status === 'flagged' || log.type === 'failed_authentication' || log.type === 'suspicious_api_activity') && 
+        const activeAlerts = (securityLogs || []).filter(log => 
+          log && (log.status === 'blocked' || log.status === 'flagged' || log.type === 'failed_authentication' || log.type === 'suspicious_api_activity') && 
           !(window as any).acknowledgedAlertIds?.includes(log.id)
         );
 
         // Filter security logs based on user filters & search query
-        const filteredLogs = securityLogs.filter(log => {
-          const matchesSearch = log.details.toLowerCase().includes(logSearchQuery.toLowerCase()) || 
-                                log.type.toLowerCase().includes(logSearchQuery.toLowerCase()) ||
-                                log.location.toLowerCase().includes(logSearchQuery.toLowerCase());
+        const filteredLogs = (securityLogs || []).filter(log => {
+          if (!log) return false;
+          const q = (logSearchQuery || '').toLowerCase();
+          const details = (log.details || '').toLowerCase();
+          const type = (log.type || '').toLowerCase();
+          const location = (log.location || '').toLowerCase();
+          const matchesSearch = !q || details.includes(q) || type.includes(q) || location.includes(q);
           const matchesStatus = logFilterStatus === 'all' || log.status === logFilterStatus;
           const matchesType = logFilterType === 'all' || log.type === logFilterType;
           return matchesSearch && matchesStatus && matchesType;
@@ -1046,7 +1109,7 @@ export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps>
                         <button
                           onClick={() => {
                             playBeep(400, 0.1);
-                            showNotification(`Source node ${alert.location.split(' ')[0]} isolated & blocked from main API gateway.`);
+                            showNotification(`Source node ${(alert.location || 'Unknown').split(' ')[0]} isolated & blocked from main API gateway.`);
                           }}
                           className="px-2.5 py-1.5 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-200 text-[10px] font-bold transition-all border border-red-500/30 cursor-pointer"
                         >
@@ -1438,7 +1501,7 @@ export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps>
                   Mandatory containment protocols for this category:
                 </span>
                 <ul className="text-[10px] text-[#c4c9ac] space-y-1 list-disc list-inside">
-                  {CONTAINMENT_PROTOCOLS[incCategory].map((step, idx) => (
+                  {(CONTAINMENT_PROTOCOLS[incCategory] || []).map((step, idx) => (
                     <li key={idx} className="leading-snug">{step}</li>
                   ))}
                 </ul>
@@ -1536,7 +1599,7 @@ export const SecurityAndSessionsScreen: React.FC<SecurityAndSessionsScreenProps>
                       <div className="p-3 bg-black/40 rounded-xl border border-white/5 space-y-1">
                         <span className="text-[9px] font-bold uppercase text-amber-400">Containment Verification Log:</span>
                         <div className="space-y-1 text-[10px] text-[#8e918f]">
-                          {inc.containmentProtocol.map((protocol, pIdx) => (
+                          {(inc.containmentProtocol || []).map((protocol, pIdx) => (
                             <div key={pIdx} className="flex items-center gap-2">
                               <span className="material-symbols-outlined text-emerald-400 text-[14px]">check_circle</span>
                               <span className="line-through text-[#8e918f]">{protocol}</span>

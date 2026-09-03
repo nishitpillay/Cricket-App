@@ -17,7 +17,7 @@ interface DrawnPath {
   points: PathPoint[];
   color: string;
   width: number;
-  type: 'line' | 'arrow' | 'curve';
+  type: 'line' | 'arrow' | 'curve' | 'ball';
 }
 
 export const DigitalChalkboard: React.FC<DigitalChalkboardProps> = ({ onNavigate }) => {

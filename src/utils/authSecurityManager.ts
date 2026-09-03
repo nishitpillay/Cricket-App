@@ -98,7 +98,24 @@ export const isMfaMandatory = (role: UserRole): boolean => {
 export const getStoredSessions = (): UserSession[] => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_SESSIONS);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map((s, idx) => ({
+          id: s?.id || `sess-auto-${idx}`,
+          userId: s?.userId || 'usr-alex',
+          deviceName: s?.deviceName || 'Authorized Device',
+          deviceType: (s?.deviceType === 'mobile' || s?.deviceType === 'tablet' || s?.deviceType === 'desktop') ? s.deviceType : 'desktop',
+          browser: s?.browser || 'Web Browser',
+          ipAddressMasked: s?.ipAddressMasked || '***.***.***.***',
+          locationCity: s?.locationCity || 'United Kingdom',
+          lastActive: s?.lastActive || 'Active right now',
+          isCurrentSession: Boolean(s?.isCurrentSession),
+          createdAt: s?.createdAt || new Date().toISOString(),
+          mfaVerified: Boolean(s?.mfaVerified)
+        }));
+      }
+    }
   } catch (e) {
     console.warn('Failed to read stored sessions', e);
   }
@@ -115,7 +132,7 @@ export const saveStoredSessions = (sessions: UserSession[]): void => {
 
 export const terminateSession = (sessionId: string): UserSession[] => {
   const current = getStoredSessions();
-  const updated = current.filter(s => s.id !== sessionId);
+  const updated = (current || []).filter(s => s && s.id !== sessionId);
   saveStoredSessions(updated);
   logSecurityEvent('session_terminated', `Session ${sessionId} terminated by user.`, 'Manual Revocation', 'success');
   return updated;
@@ -123,13 +140,14 @@ export const terminateSession = (sessionId: string): UserSession[] => {
 
 export const terminateAllOtherSessions = (currentSessionId: string): UserSession[] => {
   const current = getStoredSessions();
-  const updated = current.filter(s => s.id === currentSessionId || s.isCurrentSession);
+  const updated = (current || []).filter(s => s && (s.id === currentSessionId || s.isCurrentSession));
   saveStoredSessions(updated);
   logSecurityEvent('session_terminated', 'All other active sessions revoked across all devices.', 'Global Sign-Out', 'success');
   return updated;
 };
 
 export function scrubSensitiveData(text: string): string {
+  if (!text || typeof text !== 'string') return '';
   let clean = text;
 
   // 1. Scrub passwords and credentials phrases
@@ -155,7 +173,19 @@ export function scrubSensitiveData(text: string): string {
 export const getSecurityLogs = (): SecurityEvent[] => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_SECURITY_LOG);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map((log, idx) => ({
+          id: log?.id || `sec-log-${idx}`,
+          timestamp: log?.timestamp || new Date().toISOString(),
+          type: log?.type || 'login',
+          details: log?.details || 'Event logged',
+          location: log?.location || 'London, UK',
+          status: (log?.status === 'flagged' || log?.status === 'blocked' || log?.status === 'success') ? log.status : 'success'
+        }));
+      }
+    }
   } catch (e) {
     console.warn('Failed to read security logs', e);
   }

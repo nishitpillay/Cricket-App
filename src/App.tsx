@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ScreenType, UserProfile, DrillItem } from './types';
 import { mockUsers, mockDrills } from './data/mockData';
+import { ThemeMode, getStoredTheme, setStoredTheme, applyTheme } from './utils/themeManager';
 import { Header } from './components/Header';
 import { Navbar } from './components/Navbar';
 import { OfflineBanner } from './components/OfflineBanner';
@@ -23,6 +24,7 @@ import { SecurityAndSessionsScreen } from './components/screens/SecurityAndSessi
 import { DataPrivacyGovernanceScreen } from './components/privacy/DataPrivacyGovernanceScreen';
 import { DataEncryptionGovernanceScreen } from './components/encryption/DataEncryptionGovernanceScreen';
 import { MobileSecurityGovernanceScreen } from './components/screens/MobileSecurityGovernanceScreen';
+import { SourceCodeSecurityScreen } from './components/screens/SourceCodeSecurityScreen';
 import { WorkScreen } from './components/screens/WorkScreen';
 import { MoreScreen } from './components/screens/MoreScreen';
 import { SupportScreen } from './components/screens/SupportScreen';
@@ -40,6 +42,7 @@ import { SafeguardingReportModal } from './components/safeguarding/SafeguardingR
 import { JuniorSafetyBanner } from './components/safeguarding/JuniorSafetyBanner';
 import { GoogleFitnessData, GoogleCricketVenueLocation } from './types';
 import { playBeep } from './utils/audioFeedback';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 const PARENT_SCREEN_MAP: Partial<Record<ScreenType, ScreenType>> = {
   'video-analysis': 'work',
@@ -66,6 +69,7 @@ const PARENT_SCREEN_MAP: Partial<Record<ScreenType, ScreenType>> = {
   'privacy-governance': 'support',
   'encryption-governance': 'support',
   'mobile-security': 'support',
+  'source-code-security': 'support',
 
   'auth-player': 'home',
   'auth-coach': 'home',
@@ -99,6 +103,26 @@ export default function App() {
   const [detectedVenue, setDetectedVenue] = useState<GoogleCricketVenueLocation | null>(null);
   const [selectedDrill, setSelectedDrill] = useState<DrillItem>(mockDrills[0]);
   const [authMode, setAuthMode] = useState<'player' | 'coach' | 'admin'>('player');
+  const [theme, setTheme] = useState<ThemeMode>(getStoredTheme);
+
+  useEffect(() => {
+    applyTheme(theme);
+
+    const onThemeChange = (e: Event) => {
+      const customEvent = e as CustomEvent<{ theme: ThemeMode }>;
+      if (customEvent.detail?.theme && customEvent.detail.theme !== theme) {
+        setTheme(customEvent.detail.theme);
+      }
+    };
+
+    window.addEventListener('pitch_precision_theme_change', onThemeChange);
+    return () => window.removeEventListener('pitch_precision_theme_change', onThemeChange);
+  }, [theme]);
+
+  const handleToggleTheme = (newTheme: ThemeMode) => {
+    setTheme(newTheme);
+    setStoredTheme(newTheme);
+  };
 
   const handleNavigate = (screen: ScreenType) => {
     playBeep(650, 0.06);
@@ -219,13 +243,15 @@ export default function App() {
   const hideNavbar = currentScreen === 'record' || currentScreen === 'drill-practice' || isAuthScreen;
 
   return (
-    <div className="min-h-screen bg-[#131313] text-[#e5e2e1] font-body antialiased flex flex-col selection:bg-[#c3f400] selection:text-[#161e00]">
+    <div className={`min-h-screen ${theme === 'day' ? 'bg-[#f8fafc] text-[#0f172a] day-mode' : 'bg-[#131313] text-[#e5e2e1]'} font-body antialiased flex flex-col selection:bg-[#c3f400] selection:text-[#161e00]`}>
       {/* Top Persistent Header */}
       <Header
         title={headerTitle}
         showBack={showBack}
         onBack={handleBack}
         currentUser={currentUser}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
         onProfileClick={() => setIsRoleModalOpen(true)}
         onGoogleSyncClick={() => setIsGoogleModalOpen(true)}
         onGuardianPortalClick={() => setIsGuardianPortalOpen(true)}
@@ -250,6 +276,8 @@ export default function App() {
         {currentScreen === 'home' && (
           <HomeScreen
             currentUser={currentUser}
+            theme={theme}
+            onToggleTheme={handleToggleTheme}
             onNavigate={handleNavigate}
             onSelectDrill={(drill) => {
               setSelectedDrill(drill);
@@ -360,14 +388,17 @@ export default function App() {
         )}
 
         {currentScreen === 'security-settings' && (
-          <SecurityAndSessionsScreen
-            currentUser={currentUser}
-            onUpdateUser={(updated) => setCurrentUser(updated)}
-            onNavigateBack={() => handleNavigate('home')}
-            onOpenPrivacy={() => handleNavigate('privacy-governance')}
-            onOpenEncryption={() => handleNavigate('encryption-governance')}
-            onOpenMobileSecurity={() => handleNavigate('mobile-security')}
-          />
+          <ErrorBoundary fallbackTitle="Security & Sessions Management">
+            <SecurityAndSessionsScreen
+              currentUser={currentUser}
+              onUpdateUser={(updated) => setCurrentUser(updated)}
+              onNavigateBack={() => handleNavigate('home')}
+              onOpenPrivacy={() => handleNavigate('privacy-governance')}
+              onOpenEncryption={() => handleNavigate('encryption-governance')}
+              onOpenMobileSecurity={() => handleNavigate('mobile-security')}
+              onOpenSourceCodeSecurity={() => handleNavigate('source-code-security')}
+            />
+          </ErrorBoundary>
         )}
 
         {currentScreen === 'privacy-governance' && (
@@ -386,6 +417,13 @@ export default function App() {
 
         {currentScreen === 'mobile-security' && (
           <MobileSecurityGovernanceScreen
+            currentUser={currentUser}
+            onNavigate={handleNavigate}
+          />
+        )}
+
+        {currentScreen === 'source-code-security' && (
+          <SourceCodeSecurityScreen
             currentUser={currentUser}
             onNavigate={handleNavigate}
           />
@@ -431,10 +469,12 @@ export default function App() {
           setIsWizardOpen(true);
         }}
         onOpenAuth={(mode) => {
-          setAuthMode(mode);
-          if (mode === 'player') handleNavigate('auth-player');
-          if (mode === 'coach') handleNavigate('auth-coach');
-          if (mode === 'admin') handleNavigate('auth-admin');
+          const mappedMode: 'player' | 'coach' | 'admin' =
+            mode === 'coach' ? 'coach' : (mode === 'club_admin' || (mode as string) === 'admin') ? 'admin' : 'player';
+          setAuthMode(mappedMode);
+          if (mappedMode === 'player') handleNavigate('auth-player');
+          if (mappedMode === 'coach') handleNavigate('auth-coach');
+          if (mappedMode === 'admin') handleNavigate('auth-admin');
         }}
       />
 

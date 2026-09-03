@@ -25,6 +25,7 @@ export const MoreScreen: React.FC<MoreScreenProps> = ({ onNavigate }) => {
       title: 'Security & Legal',
       items: [
         { id: 'security-settings', label: 'Security & Sessions', icon: 'shield' },
+        { id: 'source-code-security', label: 'Source Code & DevSecOps', icon: 'terminal' },
         { id: 'terms', label: 'Terms of Service', icon: 'gavel' },
       ]
     }

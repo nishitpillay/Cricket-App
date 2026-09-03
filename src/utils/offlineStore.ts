@@ -20,7 +20,7 @@ export interface SavedChalkboard {
   title: string;
   format: string;
   fielders: { id: string; label: string; x: number; y: number; role: string }[];
-  paths: { points: { x: number; y: number }[]; color: string; type: 'line' | 'arrow' | 'ball' }[];
+  paths: { points: { x: number; y: number }[]; color: string; type: 'line' | 'arrow' | 'curve' | 'ball' }[];
   notes: string;
   savedAt: string;
 }

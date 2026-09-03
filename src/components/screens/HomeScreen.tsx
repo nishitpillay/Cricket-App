@@ -1,11 +1,17 @@
-import React, { useState } from 'react';
-import { UserProfile, SessionRecord, ScreenType, DrillItem } from '../../types';
-import { mockRecentSessions, mockUsers } from '../../data/mockData';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { UserProfile, SessionRecord, ScreenType, DrillItem, TacticalMasterclass } from '../../types';
+import { mockRecentSessions, mockUsers, mockDrills } from '../../data/mockData';
+import { mockSmartDrillsVault } from '../../data/smartDrillsVaultData';
+import { mockMasterclasses } from '../../data/tacticsAndPlannerData';
 import { playBeep } from '../../utils/audioFeedback';
+import { ThemeMode, getStoredTheme, setStoredTheme } from '../../utils/themeManager';
+import { ThemeToggle } from '../ThemeToggle';
 
 interface HomeScreenProps {
   currentUser?: UserProfile;
   user?: UserProfile;
+  theme?: ThemeMode;
+  onToggleTheme?: (theme: ThemeMode) => void;
   onNavigate: (screen: ScreenType) => void;
   onSelectSession?: (session: SessionRecord) => void;
   onSelectDrill?: (drill: DrillItem) => void;
@@ -14,19 +20,109 @@ interface HomeScreenProps {
 export const HomeScreen: React.FC<HomeScreenProps> = ({
   currentUser,
   user,
+  theme,
+  onToggleTheme,
   onNavigate,
   onSelectSession,
   onSelectDrill
 }) => {
   const activeUser = currentUser || user || mockUsers.player;
+  const [internalTheme, setInternalTheme] = useState<ThemeMode>(getStoredTheme);
+  const activeTheme = theme || internalTheme;
+
+  const handleToggle = (newTheme: ThemeMode) => {
+    setInternalTheme(newTheme);
+    setStoredTheme(newTheme);
+    onToggleTheme?.(newTheme);
+  };
+
   const [activeSpeedTab, setActiveSpeedTab] = useState<'week' | 'month'>('week');
   const [sessions, setSessions] = useState<SessionRecord[]>(mockRecentSessions);
+
+  // Global search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<'all' | 'drills' | 'masterclasses' | 'sessions'>('all');
+  const [showFilterPills, setShowFilterPills] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  // Close search dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setIsSearchOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Deduplicated list of drills
+  const allDrills: DrillItem[] = useMemo(() => {
+    const map = new Map<string, DrillItem>();
+    mockDrills.forEach((d) => map.set(d.id, d));
+    mockSmartDrillsVault.forEach((d) => {
+      if (!map.has(d.id)) map.set(d.id, d);
+    });
+    return Array.from(map.values());
+  }, []);
+
+  // Filtered search results
+  const searchResults = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) {
+      return { drills: [], masterclasses: [], sessions: [], total: 0 };
+    }
+
+    const matchedDrills = allDrills.filter((d) => {
+      return (
+        d.title.toLowerCase().includes(query) ||
+        d.category.toLowerCase().includes(query) ||
+        d.subCategory?.toLowerCase().includes(query) ||
+        d.description?.toLowerCase().includes(query) ||
+        d.coach?.toLowerCase().includes(query) ||
+        d.tags?.some((t) => t.toLowerCase().includes(query))
+      );
+    });
+
+    const matchedMasterclasses = mockMasterclasses.filter((mc) => {
+      return (
+        mc.title.toLowerCase().includes(query) ||
+        mc.coach.toLowerCase().includes(query) ||
+        mc.coachRole?.toLowerCase().includes(query) ||
+        mc.badge?.toLowerCase().includes(query) ||
+        mc.overview?.toLowerCase().includes(query) ||
+        mc.keyTactics?.some(
+          (t) => t.title.toLowerCase().includes(query) || t.description.toLowerCase().includes(query)
+        )
+      );
+    });
+
+    const matchedSessions = sessions.filter((s) => {
+      return (
+        s.title.toLowerCase().includes(query) ||
+        s.type.toLowerCase().includes(query) ||
+        s.date.toLowerCase().includes(query) ||
+        s.insight?.toLowerCase().includes(query) ||
+        s.timing?.toLowerCase().includes(query)
+      );
+    });
+
+    return {
+      drills: matchedDrills,
+      masterclasses: matchedMasterclasses,
+      sessions: matchedSessions,
+      total: matchedDrills.length + matchedMasterclasses.length + matchedSessions.length
+    };
+  }, [searchQuery, allDrills, sessions]);
+
+  const popularSuggestions = ['Cover Drive', 'Yorker', 'Death Overs', 'Spin Drift', 'Net Session'];
 
   return (
     <div className="flex flex-col w-full px-4 sm:px-6 max-w-4xl mx-auto gap-6 pt-3 pb-28">
       {/* Welcome / Progress Overview */}
       <section className="flex flex-col gap-4">
-        <div className="flex justify-between items-end">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3">
           <div>
             <h2 className="font-headline font-semibold text-lg sm:text-xl text-[#c4c9ac]">
               Welcome back,
@@ -35,40 +131,331 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               {activeUser.name}
             </h1>
           </div>
-          <div className="flex flex-col items-end">
-            <span className="font-headline font-bold text-xs uppercase tracking-wider text-[#e9c400] mb-1.5 flex items-center gap-1">
-              <span className="material-symbols-outlined text-[14px]">military_tech</span>
-              LEVEL {activeUser.level}
-            </span>
-            <div className="h-1.5 w-20 bg-[#353534] rounded-full overflow-hidden shadow-inner">
-              <div
-                className="h-full bg-gradient-to-r from-[#e9c400] to-[#ffdb3c] rounded-full shadow-[0_0_8px_#ffdb3c]"
-                style={{ width: `${activeUser.xpProgress}%` }}
-              />
+          <div className="flex items-center gap-3 self-end sm:self-auto">
+            {/* Day / Night Mode Toggle Button at top right of Home Screen */}
+            <ThemeToggle
+              id="home-day-night-toggle"
+              theme={activeTheme}
+              onToggle={handleToggle}
+              variant="pill"
+            />
+
+            <div className="flex flex-col items-end">
+              <span className="font-headline font-bold text-xs uppercase tracking-wider text-[#e9c400] mb-1.5 flex items-center gap-1">
+                <span className="material-symbols-outlined text-[14px]">military_tech</span>
+                LEVEL {activeUser.level}
+              </span>
+              <div className="h-1.5 w-20 bg-[#353534] rounded-full overflow-hidden shadow-inner">
+                <div
+                  className="h-full bg-gradient-to-r from-[#e9c400] to-[#ffdb3c] rounded-full shadow-[0_0_8px_#ffdb3c]"
+                  style={{ width: `${activeUser.xpProgress}%` }}
+                />
+              </div>
             </div>
           </div>
         </div>
 
         {/* Global Search Bar */}
-        <div className="relative group">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <span className="material-symbols-outlined text-[#c4c9ac] group-focus-within:text-[#c3f400] transition-colors text-[20px]">
-              search
-            </span>
+        <div ref={searchContainerRef} className="relative z-30">
+          <div className="relative group">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <span className="material-symbols-outlined text-[#c4c9ac] group-focus-within:text-[#c3f400] transition-colors text-[20px]">
+                search
+              </span>
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setIsSearchOpen(true);
+              }}
+              onFocus={() => setIsSearchOpen(true)}
+              placeholder="Search drills, masterclasses, or sessions..."
+              className="w-full bg-[#1f1e1e] text-white text-sm rounded-2xl pl-12 pr-24 py-3.5 outline-none border border-white/10 focus:border-[#c3f400]/50 focus:bg-[#282727] focus:shadow-[0_0_15px_rgba(195,244,0,0.1)] transition-all shadow-inner placeholder:text-[#c4c9ac]/70"
+            />
+            <div className="absolute inset-y-0 right-0 pr-2 flex items-center gap-1">
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setIsSearchOpen(false);
+                  }}
+                  className="p-1.5 rounded-lg hover:bg-white/10 text-[#c4c9ac] hover:text-white transition-colors cursor-pointer"
+                  title="Clear search"
+                >
+                  <span className="material-symbols-outlined text-[18px]">close</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setShowFilterPills(!showFilterPills)}
+                className={`p-2 rounded-xl transition-all border flex items-center justify-center cursor-pointer ${
+                  showFilterPills || activeFilter !== 'all'
+                    ? 'bg-[#c3f400] text-[#161e00] border-[#c3f400] shadow-[0_0_8px_rgba(195,244,0,0.4)]'
+                    : 'bg-white/5 hover:bg-white/10 border-white/5 text-[#c4c9ac] hover:text-[#c3f400]'
+                }`}
+                title="Filter categories"
+              >
+                <span className="material-symbols-outlined text-[18px]">tune</span>
+              </button>
+            </div>
           </div>
-          <input
-            type="text"
-            placeholder="Search drills, masterclasses, or sessions..."
-            className="w-full bg-[#1f1e1e] text-white text-sm rounded-2xl pl-12 pr-12 py-3.5 outline-none border border-white/10 focus:border-[#c3f400]/50 focus:bg-[#282727] focus:shadow-[0_0_15px_rgba(195,244,0,0.1)] transition-all shadow-inner placeholder:text-[#c4c9ac]/70"
-          />
-          <div className="absolute inset-y-0 right-0 pr-1.5 flex items-center">
-            <button 
-              className="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all text-[#c4c9ac] hover:text-[#c3f400] flex items-center justify-center"
-              title="Advanced Filters"
-            >
-              <span className="material-symbols-outlined text-[18px]">tune</span>
-            </button>
-          </div>
+
+          {/* Quick Filter Category Pills */}
+          {showFilterPills && (
+            <div className="flex items-center gap-1.5 pt-2 px-1 overflow-x-auto hide-scrollbar animate-fadeIn">
+              {(
+                [
+                  { id: 'all', label: 'All', count: searchResults.total },
+                  { id: 'drills', label: 'Drills', count: searchResults.drills.length },
+                  { id: 'masterclasses', label: 'Masterclasses', count: searchResults.masterclasses.length },
+                  { id: 'sessions', label: 'Sessions', count: searchResults.sessions.length },
+                ] as const
+              ).map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveFilter(tab.id)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                    activeFilter === tab.id
+                      ? 'bg-[#c3f400] text-[#161e00] font-bold shadow-sm'
+                      : 'bg-[#282727] text-[#c4c9ac] hover:text-white border border-white/5'
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  {searchQuery && (
+                    <span
+                      className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                        activeFilter === tab.id
+                          ? 'bg-[#161e00]/20 text-[#161e00] font-mono'
+                          : 'bg-white/10 text-gray-300'
+                      }`}
+                    >
+                      {tab.count}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Dropdown Results Overlay */}
+          {isSearchOpen && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-[#1f1e1e] border border-[#c3f400]/30 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fadeIn backdrop-blur-xl">
+              {searchQuery.trim().length > 0 ? (
+                <div className="max-h-96 overflow-y-auto divide-y divide-white/5">
+                  {/* Results Count Banner */}
+                  <div className="px-4 py-2 bg-black/40 flex justify-between items-center text-xs text-[#c4c9ac]">
+                    <span>
+                      Found <strong className="text-white">{searchResults.total}</strong> results for &ldquo;
+                      <span className="text-[#c3f400]">{searchQuery}</span>&rdquo;
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setIsSearchOpen(false)}
+                      className="text-[11px] text-[#c4c9ac] hover:text-white underline cursor-pointer"
+                    >
+                      Close
+                    </button>
+                  </div>
+
+                  {/* 1. Drills Section */}
+                  {(activeFilter === 'all' || activeFilter === 'drills') &&
+                    searchResults.drills.length > 0 && (
+                      <div className="p-2">
+                        <div className="px-3 py-1 text-[11px] font-mono uppercase tracking-wider text-[#c3f400] flex items-center gap-1.5 font-bold">
+                          <span className="material-symbols-outlined text-[15px]">sports_cricket</span>
+                          Drills ({searchResults.drills.length})
+                        </div>
+                        <div className="flex flex-col gap-1 mt-1">
+                          {searchResults.drills.slice(0, 5).map((drill) => (
+                            <button
+                              key={drill.id}
+                              type="button"
+                              onClick={() => {
+                                playBeep(700, 0.05);
+                                onSelectDrill?.(drill);
+                                onNavigate('drill-details');
+                                setIsSearchOpen(false);
+                                setSearchQuery('');
+                              }}
+                              className="w-full text-left p-2.5 rounded-xl hover:bg-white/5 transition-colors flex items-center justify-between group cursor-pointer"
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-8 h-8 rounded-lg bg-[#c3f400]/10 flex items-center justify-center text-[#c3f400] shrink-0">
+                                  <span className="material-symbols-outlined text-[18px]">fitness_center</span>
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="font-headline font-bold text-sm text-white group-hover:text-[#c3f400] transition-colors truncate">
+                                    {drill.title}
+                                  </div>
+                                  <div className="text-[11px] text-[#c4c9ac] truncate">
+                                    {drill.category} {drill.subCategory ? `• ${drill.subCategory}` : ''} • {drill.duration} • {drill.level}
+                                  </div>
+                                </div>
+                              </div>
+                              <span className="material-symbols-outlined text-[#c4c9ac] group-hover:text-[#c3f400] group-hover:translate-x-0.5 transition-all text-[18px] shrink-0 ml-2">
+                                arrow_forward
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                  {/* 2. Tactical Masterclasses Section */}
+                  {(activeFilter === 'all' || activeFilter === 'masterclasses') &&
+                    searchResults.masterclasses.length > 0 && (
+                      <div className="p-2">
+                        <div className="px-3 py-1 text-[11px] font-mono uppercase tracking-wider text-[#ffdb3c] flex items-center gap-1.5 font-bold">
+                          <span className="material-symbols-outlined text-[15px]">smart_display</span>
+                          Masterclasses ({searchResults.masterclasses.length})
+                        </div>
+                        <div className="flex flex-col gap-1 mt-1">
+                          {searchResults.masterclasses.slice(0, 5).map((mc) => (
+                            <button
+                              key={mc.id}
+                              type="button"
+                              onClick={() => {
+                                playBeep(700, 0.05);
+                                onNavigate('masterclasses');
+                                setIsSearchOpen(false);
+                                setSearchQuery('');
+                              }}
+                              className="w-full text-left p-2.5 rounded-xl hover:bg-white/5 transition-colors flex items-center justify-between group cursor-pointer"
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-8 h-8 rounded-lg bg-[#ffdb3c]/10 flex items-center justify-center text-[#ffdb3c] shrink-0">
+                                  <span className="material-symbols-outlined text-[18px]">play_circle</span>
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="font-headline font-bold text-sm text-white group-hover:text-[#ffdb3c] transition-colors truncate">
+                                    {mc.title}
+                                  </div>
+                                  <div className="text-[11px] text-[#c4c9ac] truncate">
+                                    {mc.coach} • {mc.badge || mc.duration}
+                                  </div>
+                                </div>
+                              </div>
+                              <span className="material-symbols-outlined text-[#c4c9ac] group-hover:text-[#ffdb3c] group-hover:translate-x-0.5 transition-all text-[18px] shrink-0 ml-2">
+                                arrow_forward
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                  {/* 3. Saved Sessions Section */}
+                  {(activeFilter === 'all' || activeFilter === 'sessions') &&
+                    searchResults.sessions.length > 0 && (
+                      <div className="p-2">
+                        <div className="px-3 py-1 text-[11px] font-mono uppercase tracking-wider text-[#9cf0ff] flex items-center gap-1.5 font-bold">
+                          <span className="material-symbols-outlined text-[15px]">history</span>
+                          Saved Sessions ({searchResults.sessions.length})
+                        </div>
+                        <div className="flex flex-col gap-1 mt-1">
+                          {searchResults.sessions.slice(0, 5).map((sess) => (
+                            <button
+                              key={sess.id}
+                              type="button"
+                              onClick={() => {
+                                playBeep(700, 0.05);
+                                onSelectSession?.(sess);
+                                if (sess.title.toLowerCase().includes('batting')) {
+                                  onNavigate('feedback');
+                                } else {
+                                  onNavigate('stats');
+                                }
+                                setIsSearchOpen(false);
+                                setSearchQuery('');
+                              }}
+                              className="w-full text-left p-2.5 rounded-xl hover:bg-white/5 transition-colors flex items-center justify-between group cursor-pointer"
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-8 h-8 rounded-lg bg-[#9cf0ff]/10 flex items-center justify-center text-[#9cf0ff] shrink-0">
+                                  <span className="material-symbols-outlined text-[18px]">sports</span>
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="font-headline font-bold text-sm text-white group-hover:text-[#9cf0ff] transition-colors truncate">
+                                    {sess.title}
+                                  </div>
+                                  <div className="text-[11px] text-[#c4c9ac] truncate">
+                                    {sess.type} • Score: {sess.score} • {sess.date}
+                                  </div>
+                                </div>
+                              </div>
+                              <span className="material-symbols-outlined text-[#c4c9ac] group-hover:text-[#9cf0ff] group-hover:translate-x-0.5 transition-all text-[18px] shrink-0 ml-2">
+                                arrow_forward
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                  {/* No Results Found */}
+                  {searchResults.total === 0 && (
+                    <div className="p-6 text-center flex flex-col items-center gap-2">
+                      <span className="material-symbols-outlined text-[36px] text-[#c4c9ac]/50">
+                        search_off
+                      </span>
+                      <p className="text-sm font-semibold text-white">
+                        No matches found for &ldquo;{searchQuery}&rdquo;
+                      </p>
+                      <p className="text-xs text-[#c4c9ac] max-w-xs">
+                        Try searching for a drill technique, masterclass, or session type.
+                      </p>
+                      <div className="flex flex-wrap justify-center gap-1.5 mt-2">
+                        {popularSuggestions.map((term) => (
+                          <button
+                            key={term}
+                            type="button"
+                            onClick={() => setSearchQuery(term)}
+                            className="px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 text-xs text-[#c3f400] border border-white/10 transition-colors cursor-pointer"
+                          >
+                            {term}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Empty state / Search Suggestions when focused without query */
+                <div className="p-4">
+                  <div className="text-[11px] font-mono uppercase tracking-wider text-[#c4c9ac] mb-2 font-semibold flex items-center justify-between">
+                    <span>Popular Searches</span>
+                    <button
+                      type="button"
+                      onClick={() => setIsSearchOpen(false)}
+                      className="text-[11px] text-[#c4c9ac] hover:text-white underline cursor-pointer"
+                    >
+                      Close
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {popularSuggestions.map((term) => (
+                      <button
+                        key={term}
+                        type="button"
+                        onClick={() => {
+                          setSearchQuery(term);
+                          setIsSearchOpen(true);
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-[#c3f400]/10 text-xs text-[#e5e2e1] hover:text-[#c3f400] border border-white/10 hover:border-[#c3f400]/30 transition-all flex items-center gap-1 cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-[14px]">trending_up</span>
+                        <span>{term}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Action Grid: Start Live Recording + Google Health & Venue Bar */}

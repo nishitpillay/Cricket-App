@@ -540,7 +540,7 @@ export const secureLogger = {
     const { sanitized, redactedCount, categoriesRedacted } = sanitizeForTelemetry(payload);
     
     // In dev environment, console log the SANITIZED payload only
-    if (process.env.NODE_ENV !== 'production') {
+    if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
       console.log(`[PRIVACY-SANITIZED-LOG][${sourceComponent}] ${message}`, sanitized || '');
     }
 

@@ -27,6 +27,7 @@ interface GuardianSupervisionPortalProps {
   onClose: () => void;
   currentUser: UserProfile;
   onUpdateUser?: (updated: UserProfile) => void;
+  onOpenReportModal?: () => void;
 }
 
 export const GuardianSupervisionPortal: React.FC<GuardianSupervisionPortalProps> = ({

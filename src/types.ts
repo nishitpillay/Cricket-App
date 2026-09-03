@@ -20,6 +20,7 @@ export type ScreenType =
   | 'privacy-governance'
   | 'encryption-governance'
   | 'mobile-security'
+  | 'source-code-security'
   | 'work'
   | 'more'
   | 'support'
@@ -196,6 +197,96 @@ export interface DataPrivacySettings {
   videoRetentionDays: number;
   healthDataRestrictedToPlayerAndGuardian: boolean;
   coachBehavioralNotesEncrypted: boolean;
+  // Regional Hosting & Sovereignty Settings
+  preferredHostingRegion?: CloudHostingRegion;
+  enforceAustralianDataResidency?: boolean;
+  blockInternationalChildDataTransfer?: boolean;
+  requireDualGuardianApprovalForOverseasTransfer?: boolean;
+}
+
+export type CloudHostingRegion = 
+  | 'australia-southeast1' // Australia East (Sydney) - Primary AU Hub
+  | 'australia-southeast2' // Australia Southeast (Melbourne) - Secondary AU Failover
+  | 'europe-west2'         // United Kingdom (London)
+  | 'asia-south1'          // India (Mumbai)
+  | 'europe-west3'         // European Union (Frankfurt)
+  | 'us-central1';         // North America (Iowa)
+
+export interface RegionalDataHostingConfig {
+  activeRegion: CloudHostingRegion;
+  regionName: string;
+  country: string;
+  flagEmoji: string;
+  dataCenterCity: string;
+  provider: string;
+  firestoreCluster: string;
+  mediaStorageBucket: string;
+  kmsKeyRing: string;
+  vertexAiRegion: string;
+  complianceCertifications: string[];
+  latencyMs: number;
+  status: 'operational' | 'failover_ready' | 'maintenance';
+}
+
+export interface AustralianResidencyPolicy {
+  enforceAustralianResidency: boolean;
+  autoDetectAustralianCustomer: boolean;
+  australianRegionSelected: 'australia-southeast1' | 'australia-southeast2';
+  app8ComplianceEnforced: boolean; // Australian Privacy Principle 8 (Cross-border disclosure)
+  privacyAct1988Compliant: boolean;
+  isolatedAustralianStorageBucket: string;
+  cricketAustraliaAffiliated: boolean;
+  domesticDataPinnedRecordCount: number;
+  lastResidencyAudit: string;
+}
+
+export interface ChildDataProtectionPolicy {
+  blockCrossBorderTransfer: boolean;
+  domesticResidencyStrict: boolean;
+  requireDualConsentForExceptions: boolean;
+  disallowThirdPartyAiExport: boolean;
+  quarantineUnauthorizedTransfers: boolean;
+  crossBorderInterceptionsCount: number;
+  lastAuditDate: string;
+}
+
+export type SubprocessorCategory = 
+  | 'Cloud Infrastructure & Database'
+  | 'Object & Video Storage'
+  | 'Biometric Video AI & Telemetry'
+  | 'Urgent SMS & Safeguarding Alerts'
+  | 'Transactional Email Delivery'
+  | 'KMS Cryptographic Security'
+  | 'Error & Crash Telemetry';
+
+export interface ThirdPartySubprocessor {
+  id: string;
+  name: string;
+  corporateEntity: string;
+  headquarters: string;
+  category: SubprocessorCategory;
+  servicePurpose: string;
+  personalDataProcessed: string[];
+  dataHostingRegion: string;
+  hostingCountry: string;
+  crossBorderTransferMechanism: string;
+  childDataPolicy: 'STRICTLY PROHIBITED' | 'AU-DOMESTIC RESIDENCY ONLY' | 'ENCRYPTED ZERO-KNOWLEDGE' | 'PSEUDONYMIZED_ONLY';
+  certifications: string[];
+  dpaSignedDate: string;
+  lastAuditDate: string;
+  status: 'APPROVED_ACTIVE' | 'UNDER_REVIEW' | 'CONDITIONAL';
+}
+
+export interface CrossBorderAuditLog {
+  id: string;
+  timestamp: string;
+  sourceRegion: string;
+  targetRegion: string;
+  dataType: string;
+  isChildData: boolean;
+  decision: 'PERMITTED_DOMESTIC' | 'BLOCKED_CHILD_PROTECTION' | 'BLOCKED_APP8_RESTRICTION' | 'PERMITTED_GUARDIAN_APPROVED';
+  reason: string;
+  playerIdentifierMasked: string;
 }
 
 export type UserRole = 
@@ -287,7 +378,7 @@ export interface GuardianInformation {
   guardianName: string;
   guardianEmail: string;
   guardianPhone?: string;
-  relationship: 'Parent' | 'Legal Guardian' | 'Designated Club Safeguarding Lead';
+  relationship: 'Parent' | 'Legal Guardian' | 'Designated Club Safeguarding Lead' | 'Club Safeguarding Lead';
   consentStatus: 'verified' | 'pending' | 'revoked';
   consentGrantedAt?: string;
   consentVerificationToken?: string;
@@ -493,6 +584,9 @@ export interface WagonWheelShot {
   id: string;
   angle: number; // 0 - 360 degrees (0 = straight down ground, 90 = cover/point offside, 270 = square leg/midwicket legside)
   distance: number; // 0 - 100% of boundary
+  distanceMeters?: number;
+  zone?: string;
+  exitSpeedKph?: number;
   runs: 0 | 1 | 2 | 3 | 4 | 6;
   shotType: 'Cover Drive' | 'Straight Drive' | 'Pull Shot' | 'Cut Shot' | 'Sweep' | 'Flick' | 'Upper Cut' | 'Slog Sweep' | 'Defensive';
   sector: 'Fine Leg' | 'Square Leg' | 'Mid Wicket' | 'Long On' | 'Long Off' | 'Cover' | 'Point' | 'Third Man';
@@ -510,6 +604,7 @@ export interface PitchMapDelivery {
   seamDeviationDeg?: number; // e.g. +2.4 deg outswing
   outcome: 'Dot' | 'Wicket' | 'Single' | 'Boundary' | 'Play & Miss' | 'Edge';
   isWicket?: boolean;
+  deliveryType?: string;
 }
 
 export interface ScenarioChoice {
@@ -776,5 +871,119 @@ export interface CoachAuthorization {
   guardianApprovedDate?: string;
   status: CoachAuthorizationStatus;
   accessPermissions: ('view_videos' | 'submit_reviews' | 'assign_drills' | 'view_telemetry')[];
+}
+
+// ==========================================
+// SOURCE CODE SECURITY & DEVSECOPS INTERFACES
+// ==========================================
+
+export type SourceCodeSecurityPillarId = 
+  | 'secrets_in_git'
+  | 'secret_management'
+  | 'branch_protection'
+  | 'code_review'
+  | 'dependency_updates'
+  | 'sbom_management'
+  | 'signed_builds'
+  | 'signing_credentials';
+
+export interface SecretScanFinding {
+  id: string;
+  ruleName: string;
+  severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  fileMatched: string;
+  lineNumber: number;
+  matchedSecretMasked: string;
+  patternType: 'AWS_KEY' | 'GITHUB_TOKEN' | 'GCP_SERVICE_ACCOUNT' | 'PRIVATE_KEY' | 'DATABASE_URL' | 'STRIPE_SECRET' | 'HIGH_ENTROPY_STRING' | 'JWT_SECRET';
+  remediationRecommendation: string;
+  timestamp: string;
+}
+
+export interface SecretManagementPlatformConfig {
+  id: string;
+  platformName: string;
+  provider: 'Google Cloud Secret Manager' | 'HashiCorp Vault' | 'GitHub Actions Encrypted Secrets' | 'AWS Secrets Manager';
+  status: 'ACTIVE' | 'ENFORCED' | 'SYNCED';
+  secretsManagedCount: number;
+  rotationIntervalDays: number;
+  lastRotated: string;
+  auditLoggingEnabled: boolean;
+  iamBindingPolicy: string;
+  zeroHardcodedCredentialsVerified: boolean;
+}
+
+export interface BranchProtectionRuleset {
+  branchPattern: string; // e.g. "main", "release/*"
+  enforceProtection: boolean;
+  blockForcePushes: boolean;
+  blockBranchDeletion: boolean;
+  requireLinearHistory: boolean;
+  requireSignedCommits: boolean;
+  requiredApprovalsCount: number;
+  requireCodeOwnerReviews: boolean;
+  dismissStaleApprovalsOnPush: boolean;
+  requireStatusChecksToPass: string[];
+  blockAdminBypass: boolean;
+}
+
+export interface CodeReviewPolicyConfig {
+  minimumApproversRequired: number;
+  securityReviewMandatoryForPaths: string[];
+  codeOwnersConfigured: boolean;
+  codeOwnersList: { path: string; owners: string[] }[];
+  deploymentEnvironmentGating: {
+    environment: 'production' | 'staging';
+    requiredReviewers: string[];
+    waitTimerMinutes: number;
+    preventSelfReviewDeployment: boolean;
+  };
+}
+
+export interface DependencyVulnerabilityItem {
+  id: string;
+  packageName: string;
+  affectedVersion: string;
+  patchedVersion: string;
+  severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  cvssScore: number;
+  cveId: string;
+  remediationSlaHoursRemaining: number;
+  autoPrStatus: 'PR_OPEN_PASSING_CI' | 'AUTO_MERGED' | 'AWAITING_REVIEW';
+  prNumber: number;
+}
+
+export interface SBOMComponent {
+  name: string;
+  version: string;
+  purl: string;
+  type: 'library' | 'framework' | 'tool';
+  license: string;
+  sha256Hash: string;
+  isDirectDependency: boolean;
+  vulnerabilitiesCount: number;
+  supplier: string;
+}
+
+export interface SignedBuildArtifact {
+  artifactName: string;
+  platform: 'Android (AAB/APK)' | 'iOS (IPA)' | 'Web/Container (OCI)';
+  signingScheme: 'APK Signature Scheme v4 / v3' | 'Apple WWDR Codesign + Hardened Runtime' | 'Cosign Keyless OIDC / SLSA L3';
+  certificateSubject: string;
+  certificateIssuer: string;
+  fingerprintSha256: string;
+  signingTimestamp: string;
+  status: 'CRYPTOGRAPHICALLY_VERIFIED' | 'VALID_SIGNATURE';
+  hsmBacked: boolean;
+}
+
+export interface SigningCredentialProtectionConfig {
+  provider: 'Google Play Console' | 'Apple Developer Program';
+  keyType: 'Google Play App Signing (Cloud KMS HSM)' | 'Google Upload Keystore' | 'Apple Distribution Certificate (.p12)' | 'App Store Connect API Key (.p8)';
+  storageLocation: 'Google Cloud KMS (FIPS 140-2 L3)' | 'GitHub Actions Encrypted Secrets' | 'Fastlane Match Encrypted Git Vault' | 'AWS CloudHSM';
+  hardwareTokenRequired: boolean; // e.g. YubiKey FIDO2 for Account Owner
+  rotationScheduleDays: number;
+  daysUntilExpiration: number;
+  status: 'PROTECTED_IN_HSM' | 'ACTIVE_RESTRICTED' | 'WARNING_EXPIRING_SOON';
+  compromiseRevocationProtocolDocumented: boolean;
 }
 

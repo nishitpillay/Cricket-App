@@ -1,20 +1,30 @@
 import React from 'react';
 
+import { UserProfile } from '../../types';
+
 interface JuniorSafetyBannerProps {
+  user?: UserProfile;
+  onOpenPortal?: () => void;
   onOpenGuardianPortal?: () => void;
   onOpenReportModal?: () => void;
+  onReportConcern?: () => void;
   guardianEmail?: string;
   className?: string;
   variant?: 'compact' | 'full';
 }
 
 export const JuniorSafetyBanner: React.FC<JuniorSafetyBannerProps> = ({
+  user,
+  onOpenPortal,
   onOpenGuardianPortal,
   onOpenReportModal,
+  onReportConcern,
   guardianEmail = 'sarah.chen.parent@gmail.com',
   className = '',
   variant = 'compact'
 }) => {
+  const handleOpenPortal = onOpenPortal || onOpenGuardianPortal;
+  const handleReport = onReportConcern || onOpenReportModal;
   if (variant === 'compact') {
     return (
       <div className={`px-4 py-2 bg-gradient-to-r from-[#1c2e1c] via-[#141f14] to-[#121a12] border border-[#4ade80]/30 rounded-2xl flex items-center justify-between shadow-md ${className}`}>
@@ -36,9 +46,9 @@ export const JuniorSafetyBanner: React.FC<JuniorSafetyBannerProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          {onOpenGuardianPortal && (
+          {handleOpenPortal && (
             <button
-              onClick={onOpenGuardianPortal}
+              onClick={handleOpenPortal}
               className="px-2.5 py-1 rounded-lg bg-[#4ade80]/20 hover:bg-[#4ade80]/30 text-[#4ade80] text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1"
             >
               <span className="material-symbols-outlined text-[14px]">family_restroom</span>
@@ -46,9 +56,9 @@ export const JuniorSafetyBanner: React.FC<JuniorSafetyBannerProps> = ({
             </button>
           )}
 
-          {onOpenReportModal && (
+          {handleReport && (
             <button
-              onClick={onOpenReportModal}
+              onClick={handleReport}
               className="px-2 py-1 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1"
               title="Report Safeguarding Issue"
             >
@@ -82,18 +92,18 @@ export const JuniorSafetyBanner: React.FC<JuniorSafetyBannerProps> = ({
         </div>
 
         <div className="flex gap-1.5">
-          {onOpenGuardianPortal && (
+          {handleOpenPortal && (
             <button
-              onClick={onOpenGuardianPortal}
+              onClick={handleOpenPortal}
               className="px-3 py-1.5 rounded-xl bg-[#4ade80] text-[#0f240f] font-headline font-bold text-xs hover:bg-[#86efac] transition-all cursor-pointer flex items-center gap-1 shadow-md"
             >
               <span className="material-symbols-outlined text-[16px]">family_restroom</span>
               <span>Guardian Portal</span>
             </button>
           )}
-          {onOpenReportModal && (
+          {handleReport && (
             <button
-              onClick={onOpenReportModal}
+              onClick={handleReport}
               className="p-1.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-300 transition-all cursor-pointer"
               title="Report Concern"
             >

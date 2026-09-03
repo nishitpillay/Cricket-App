@@ -10,6 +10,7 @@ export const SupportScreen: React.FC<SupportScreenProps> = ({ onNavigate }) => {
     { id: 'privacy-governance', label: 'Data Privacy', icon: 'verified_user', desc: 'Governance & classification' },
     { id: 'encryption-governance', label: 'Data Encryption', icon: 'lock', desc: 'KMS & transit settings' },
     { id: 'mobile-security', label: 'Mobile Security', icon: 'smartphone', desc: 'OWASP MASVS controls' },
+    { id: 'source-code-security', label: 'Source Code Security', icon: 'code', desc: 'Git secrets, branch protection, SBOM & signed builds' },
   ];
 
   return (

@@ -23,7 +23,9 @@ import {
   ChevronRight, 
   Sliders, 
   Trash2,
-  BadgeAlert
+  BadgeAlert,
+  Globe2,
+  Building2
 } from 'lucide-react';
 import { 
   DATA_CLASSIFICATION_REGISTRY, 
@@ -32,6 +34,8 @@ import {
   secureLogger, 
   generateDataPrivacyExportPacket 
 } from '../../utils/dataPrivacyEngine';
+import { DataLocationGovernanceSection } from './DataLocationGovernanceSection';
+import { SubprocessorsRegistrySection } from './SubprocessorsRegistrySection';
 import { DataClassificationLevel, UserProfile, ScreenType, DataPrivacySettings } from '../../types';
 import { playBeep, playBallImpact } from '../../utils/audioFeedback';
 
@@ -44,7 +48,7 @@ export const DataPrivacyGovernanceScreen: React.FC<DataPrivacyGovernanceScreenPr
   currentUser,
   onNavigate
 }) => {
-  const [activeTab, setActiveTab] = useState<'classification' | 'sensitive-matrix' | 'scrubber-sim' | 'telemetry-stream' | 'settings'>('classification');
+  const [activeTab, setActiveTab] = useState<'classification' | 'location-sovereignty' | 'subprocessors' | 'sensitive-matrix' | 'scrubber-sim' | 'telemetry-stream' | 'settings'>('classification');
   const [selectedClassificationFilter, setSelectedClassificationFilter] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [privacySettings, setPrivacySettings] = useState<DataPrivacySettings>(DEFAULT_DATA_PRIVACY_SETTINGS);
@@ -314,6 +318,8 @@ export const DataPrivacyGovernanceScreen: React.FC<DataPrivacyGovernanceScreenPr
         <div className="flex items-center gap-2 border-b border-[#2b2a2a] pb-3 overflow-x-auto">
           {[
             { id: 'classification', label: 'Data Classification Registry', icon: Database },
+            { id: 'location-sovereignty', label: 'Data Location & AU Hosting', icon: Globe2, badge: 'AU Cloud' },
+            { id: 'subprocessors', label: 'Subprocessors Registry', icon: Building2, badge: '7 Vendors' },
             { id: 'sensitive-matrix', label: '12 Sensitive Categories', icon: BadgeAlert },
             { id: 'scrubber-sim', label: 'Zero-Leakage Simulator', icon: Sparkles },
             { id: 'telemetry-stream', label: 'Sanitized Audit Stream', icon: Terminal },
@@ -328,18 +334,40 @@ export const DataPrivacyGovernanceScreen: React.FC<DataPrivacyGovernanceScreenPr
                   playBeep(600, 0.03);
                   setActiveTab(tab.id as any);
                 }}
-                className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 whitespace-nowrap transition-all ${
+                className={`px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 whitespace-nowrap transition-all cursor-pointer ${
                   isSelected 
                     ? 'bg-[#c3f400] text-black shadow-[0_0_15px_rgba(195,244,0,0.25)]' 
                     : 'bg-[#1c1b1b] text-[#a6ab9d] hover:text-white hover:bg-[#252424] border border-[#2b2a2a]'
                 }`}
               >
                 <Icon className="w-4 h-4" />
-                {tab.label}
+                <span>{tab.label}</span>
+                {tab.badge && (
+                  <span className={`px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase ${
+                    isSelected ? 'bg-black/20 text-black' : 'bg-[#c3f400]/20 text-[#c3f400]'
+                  }`}>
+                    {tab.badge}
+                  </span>
+                )}
               </button>
             );
           })}
         </div>
+
+        {/* TAB: DATA LOCATION & REGIONAL SOVEREIGNTY */}
+        {activeTab === 'location-sovereignty' && (
+          <DataLocationGovernanceSection
+            currentUser={currentUser}
+            onToast={triggerToast}
+          />
+        )}
+
+        {/* TAB: SUBPROCESSORS REGISTRY */}
+        {activeTab === 'subprocessors' && (
+          <SubprocessorsRegistrySection
+            onToast={triggerToast}
+          />
+        )}
 
         {/* TAB 1: DATA CLASSIFICATION REGISTRY */}
         {activeTab === 'classification' && (
@@ -941,8 +969,49 @@ export const DataPrivacyGovernanceScreen: React.FC<DataPrivacyGovernanceScreenPr
                 </div>
               </div>
             </div>
+
+            {/* Regional Data Sovereignty & Australian Hosting Quick Access */}
+            <div className="bg-[#181717] border border-[#282727] rounded-2xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-[#c3f400]/10 border border-[#c3f400]/30 text-[#c3f400]">
+                  <Globe2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                    Regional Data Hosting & Subprocessor Governance
+                  </h4>
+                  <p className="text-[11px] text-[#8e9285] mt-0.5">
+                    Australian cloud residency (APP 8), domestic child safeguards, and 7 approved subprocessors.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    playBeep(600, 0.03);
+                    setActiveTab('location-sovereignty');
+                  }}
+                  className="px-3.5 py-2 rounded-xl bg-[#242323] hover:bg-[#2e2d2d] border border-[#3e3d3d] text-xs font-bold text-white flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Globe2 className="w-4 h-4 text-[#c3f400]" />
+                  Manage Hosting
+                </button>
+                <button
+                  onClick={() => {
+                    playBeep(600, 0.03);
+                    setActiveTab('subprocessors');
+                  }}
+                  className="px-3.5 py-2 rounded-xl bg-[#242323] hover:bg-[#2e2d2d] border border-[#3e3d3d] text-xs font-bold text-white flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Building2 className="w-4 h-4 text-[#c3f400]" />
+                  Subprocessors
+                </button>
+              </div>
+            </div>
           </div>
         )}
+
 
       </div>
 

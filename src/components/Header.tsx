@@ -1,12 +1,16 @@
 import React from 'react';
 import { Logo } from './Logo';
 import { UserProfile, ScreenType } from '../types';
+import { ThemeMode } from '../utils/themeManager';
+import { ThemeToggle } from './ThemeToggle';
 
 interface HeaderProps {
   title: string;
   currentUser?: UserProfile;
   user?: UserProfile;
   currentScreen?: ScreenType;
+  theme?: ThemeMode;
+  onToggleTheme?: (theme: ThemeMode) => void;
   onProfileClick?: () => void;
   onOpenProfile?: () => void;
   onGoogleSyncClick?: () => void;
@@ -20,6 +24,8 @@ export const Header: React.FC<HeaderProps> = ({
   currentUser,
   user,
   currentScreen,
+  theme = 'night',
+  onToggleTheme,
   onProfileClick,
   onOpenProfile,
   onGoogleSyncClick,
@@ -51,8 +57,17 @@ export const Header: React.FC<HeaderProps> = ({
           </h1>
         </div>
 
-        {/* Right action: Google Integration + Role Pill + Avatar Trigger */}
+        {/* Right action: Google Integration + Theme Toggle + Role Pill + Avatar Trigger */}
         <div className="flex items-center gap-2">
+          {onToggleTheme && (
+            <ThemeToggle
+              id="header-day-night-toggle"
+              theme={theme}
+              onToggle={onToggleTheme}
+              variant="compact"
+            />
+          )}
+
           {onGoogleSyncClick && (
             <button
               onClick={onGoogleSyncClick}
@@ -110,3 +125,4 @@ export const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
+

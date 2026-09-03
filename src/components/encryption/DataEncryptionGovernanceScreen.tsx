@@ -862,7 +862,7 @@ export const APP_CONFIG = {
                                 <span className="font-bold text-white">v{ver.versionNumber} ({ver.versionId})</span>
                               </div>
                               <div className="flex items-center gap-3">
-                                <span className="text-[11px]">{ver.recordsCount} records</span>
+                                <span className="text-[11px]">{ver.totalRecordsEncrypted ?? (ver as any).recordsCount ?? 0} records</span>
                                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                                   ver.state === 'PRIMARY_ACTIVE' 
                                     ? 'bg-[#c3f400] text-black' 
