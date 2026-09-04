@@ -32,7 +32,9 @@ import { SecurityGateTwoScreen } from './components/screens/SecurityGateTwoScree
 import { StoreAssetsPrivacyScreen } from './components/screens/StoreAssetsPrivacyScreen';
 import { TestFlightInternalTestingScreen } from './components/screens/TestFlightInternalTestingScreen';
 import { WorkScreen } from './components/screens/WorkScreen';
+import { CricketGroundsMapScreen } from './components/screens/CricketGroundsMapScreen';
 import { MoreScreen } from './components/screens/MoreScreen';
+import { UserProfilesScreen } from './components/screens/UserProfilesScreen';
 import { SupportScreen } from './components/screens/SupportScreen';
 import { PlaceholderScreen } from './components/screens/PlaceholderScreen';
 import { VideoAnalysisTool } from './components/videoAnalysis/VideoAnalysisTool';
@@ -58,6 +60,7 @@ const PARENT_SCREEN_MAP: Partial<Record<ScreenType, ScreenType>> = {
   'stats': 'work',
   'planner': 'work',
   'drills': 'work',
+  'venues': 'work',
   
   'drill-details': 'drills-vault',
   'drill-practice': 'drill-details',
@@ -66,6 +69,7 @@ const PARENT_SCREEN_MAP: Partial<Record<ScreenType, ScreenType>> = {
   'chalkboard': 'scenarios',
 
   'academy': 'more',
+  'profiles': 'more',
   'feedback': 'more',
   'support': 'more',
   'help': 'more',
@@ -396,6 +400,29 @@ export default function App() {
             onNavigate={handleNavigate}
             currentUser={currentUser}
             drill={selectedDrill}
+          />
+        )}
+
+        {currentScreen === 'venues' && (
+          <CricketGroundsMapScreen
+            onNavigate={handleNavigate}
+            onBack={handleBack}
+          />
+        )}
+
+        {currentScreen === 'profiles' && (
+          <UserProfilesScreen
+            currentUser={currentUser}
+            onSelectUser={(user) => {
+              setCurrentUser(user);
+              handleNavigate('home');
+            }}
+            onNavigate={handleNavigate}
+            onOpenWizard={(role, profile) => {
+              if (profile) setCurrentUser(profile);
+              setIsWizardOpen(true);
+            }}
+            onOpenGuardianPortal={() => setIsGuardianPortalOpen(true)}
           />
         )}
 

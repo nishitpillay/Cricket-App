@@ -31,7 +31,9 @@ export type ScreenType =
   | 'more'
   | 'support'
   | 'help'
-  | 'terms';
+  | 'terms'
+  | 'venues'
+  | 'profiles';
 
 export type MASVSDomain = 
   | 'MASVS-STORAGE'
@@ -303,6 +305,28 @@ export type UserRole =
   | 'security_admin' 
   | 'admin';
 
+export type UserMainCategory = 'Players' | 'Coach' | 'Admins';
+
+export type PlayerSubCategory = 
+  | 'Senior players' 
+  | 'Junior players' 
+  | 'Junior premiere';
+
+export type CoachSubCategory = 
+  | 'Batting coach'
+  | 'Bowling coach'
+  | 'Fielding coach'
+  | 'Wicket-keeper coach'
+  | 'Fitness training Coach'
+  | 'All-rounder coach'
+  | 'Physio coach'
+  | 'Umpires';
+
+export type AdminSubCategory = 
+  | 'Platform Admin'
+  | 'Club Admin'
+  | 'Safeguarding Admin';
+
 export interface UserSession {
   id: string;
   userId: string;
@@ -376,6 +400,7 @@ export interface PlayerCricketProfile {
   fieldingPosition?: string;
   googleConnected?: boolean;
   isJunior?: boolean;
+  playerSubCategory?: PlayerSubCategory;
   guardianInfo?: GuardianInformation;
   juniorPrivacy?: JuniorPrivacyGuardrails;
 }
@@ -460,13 +485,16 @@ export interface CoachHistoricalRecord {
 
 export interface CoachCricketProfile {
   name: string;
+  coachSubCategory?: CoachSubCategory;
   specialization: 
     | 'Batting Masterclass & Biomechanics'
     | 'Fast Bowling Pace & Seam Mechanics'
     | 'Spin Bowling Artistry & Deception'
     | 'Wicket-Keeping & Fielding Elite'
     | 'Tactical Match Strategy & Analytics'
-    | 'Head Coach / High Performance Director';
+    | 'Head Coach / High Performance Director'
+    | CoachSubCategory
+    | string;
   bioSummary: string; // Coaching philosophy & self-summary
   yearsOfExperience: number;
   accreditations: string[];
@@ -485,6 +513,13 @@ export interface UserProfile {
   name: string;
   email?: string;
   role: UserRole;
+  mainCategory?: UserMainCategory;
+  playerSubCategory?: PlayerSubCategory;
+  coachSubCategory?: CoachSubCategory;
+  adminSubCategory?: AdminSubCategory;
+  subCategoryTitle?: string;
+  officialCertifications?: string[];
+  departmentRole?: string;
   avatar: string;
   level: number;
   xpProgress: number; // 0 - 100
@@ -1115,5 +1150,32 @@ export interface NetSessionPlaylist {
   dotBallPct: number;
   stumpHitPct: number;
   clips: AutoSlicedDeliveryClip[];
+}
+
+export type PitchSurfaceType = 'Turf Grass' | 'Hybrid Turf' | 'Astro Matting' | 'Indoor Polyurethane' | 'Hard Clay';
+
+export type VenueCategory = 'International Stadium' | 'High Performance Academy' | 'Club Practice Nets' | 'Indoor Cricket Centre';
+
+export interface CricketGroundVenue {
+  id: string;
+  name: string;
+  shortName: string;
+  category: VenueCategory;
+  city: string;
+  country: string;
+  address: string;
+  lat: number;
+  lng: number;
+  pitchSurface: PitchSurfaceType;
+  pitchPaceRating: 'High Pace & Bounce' | 'True Bounce & Carry' | 'Spin & Seam Assist' | 'Fast Skidding';
+  netBaysCount: number;
+  hasFloodlights: boolean;
+  hasSpeedGunRadar: boolean;
+  hasVideoAnalysisBays: boolean;
+  rating: number;
+  reviewsCount: number;
+  phone?: string;
+  website?: string;
+  notes: string;
 }
 

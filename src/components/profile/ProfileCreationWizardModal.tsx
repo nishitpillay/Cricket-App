@@ -4,7 +4,9 @@ import {
   PlayerCricketProfile,
   CoachCricketProfile,
   CoachHistoricalRecord,
-  GoogleAuthSession
+  GoogleAuthSession,
+  PlayerSubCategory,
+  CoachSubCategory
 } from '../../types';
 import { getStoredGoogleSession } from '../../utils/googleService';
 import { playBeep, playCelebration } from '../../utils/audioFeedback';
@@ -29,6 +31,7 @@ export const ProfileCreationWizardModal: React.FC<ProfileCreationWizardModalProp
 
   // --- PLAYER STATE ---
   const [playerName, setPlayerName] = useState('Devang Dalvi');
+  const [playerSubCat, setPlayerSubCat] = useState<PlayerSubCategory>('Senior players');
   const [playerDob, setPlayerDob] = useState('2003-05-14');
   const [playerAge, setPlayerAge] = useState(23);
   const [playerStyle, setPlayerStyle] = useState<PlayerCricketProfile['playingStyle']>('Aggressive / Dominant');
@@ -56,6 +59,7 @@ export const ProfileCreationWizardModal: React.FC<ProfileCreationWizardModalProp
 
   // --- COACH STATE ---
   const [coachName, setCoachName] = useState('Arin Mishra');
+  const [coachSubCat, setCoachSubCat] = useState<CoachSubCategory>('Bowling coach');
   const [coachSpecialization, setCoachSpecialization] = useState<CoachCricketProfile['specialization']>('Fast Bowling Pace & Seam Mechanics');
   const [coachBio, setCoachBio] = useState(
     'Former international fast bowler and ECB Level 4 High Performance Director with 16+ years developing express pacers and technical top-order batsmen through real-time telemetry.'
@@ -99,6 +103,7 @@ export const ProfileCreationWizardModal: React.FC<ProfileCreationWizardModalProp
 
       if (initialProfile) {
         if (role === 'player' && initialProfile.playerProfile) {
+          if (initialProfile.playerSubCategory) setPlayerSubCat(initialProfile.playerSubCategory);
           const p = initialProfile.playerProfile;
           setPlayerName(p.name || initialProfile.name);
           setPlayerDob(p.dateOfBirth || '2003-05-14');
@@ -117,6 +122,7 @@ export const ProfileCreationWizardModal: React.FC<ProfileCreationWizardModalProp
           }
           if (p.fieldingPosition) setFieldingPos(p.fieldingPosition);
         } else if (role === 'coach' && initialProfile.coachProfile) {
+          if (initialProfile.coachSubCategory) setCoachSubCat(initialProfile.coachSubCategory);
           const c = initialProfile.coachProfile;
           setCoachName(c.name || initialProfile.name);
           setCoachSpecialization(c.specialization || 'Fast Bowling Pace & Seam Mechanics');
@@ -228,19 +234,22 @@ export const ProfileCreationWizardModal: React.FC<ProfileCreationWizardModalProp
           : `${playerOrderPos} / ${bowlingSpeedCat.split(' ')[0]}`
       }`;
 
-      const isJuniorPlayer = playerAge < 18;
+      const isJuniorPlayer = playerAge < 18 || playerSubCat === 'Junior players' || playerSubCat === 'Junior premiere';
 
       const updatedUser: UserProfile = {
         id: initialProfile?.id || 'usr-player-' + Date.now(),
         name: playerName,
         role: 'player',
+        mainCategory: 'Players',
+        playerSubCategory: playerSubCat,
+        subCategoryTitle: playerSubCat,
         avatar:
           googleSession?.user.picture ||
           initialProfile?.avatar ||
           'https://lh3.googleusercontent.com/aida-public/AB6AXuBSw2JC59TxaxcJTzcFRnzOeQPsDng9yjyDQu4fYq40HT2lDw_2QSvEL5tvbp7ruwi0BFK8HmjO8_nQTm0ZuOrt8SKVl8eWXn0LMEgajHer9HoyBBPAJ-XKmwdJ55o0zwWP9mAqqWFRK1cXcT854QENfHXfZ5XUhJL1Cyuzfv-u0_6WaiTLqg87EGsU2-C7SP8kTTpNKRwsbIQJxKvqkKdhCMn4NtEtLyDrwDNGiJOv_SJ1SOYxuhyQ',
         level: initialProfile?.level || (isJuniorPlayer ? 14 : 42),
         xpProgress: initialProfile?.xpProgress || 75,
-        tier: isJuniorPlayer ? 'U-15 JUNIOR ACADEMY' : 'ELITE PROSPECT',
+        tier: playerSubCat === 'Junior premiere' ? 'JUNIOR PREMIERE PRODIGY' : isJuniorPlayer ? 'U-15 JUNIOR ACADEMY' : 'ELITE SENIOR PROSPECT',
         specialty: specialtyLabel,
         isJunior: isJuniorPlayer,
         guardianInfo: isJuniorPlayer
@@ -298,6 +307,9 @@ export const ProfileCreationWizardModal: React.FC<ProfileCreationWizardModalProp
         id: initialProfile?.id || 'coach-' + Date.now(),
         name: coachName,
         role: 'coach',
+        mainCategory: 'Coach',
+        coachSubCategory: coachSubCat,
+        subCategoryTitle: coachSubCat,
         avatar:
           googleSession?.user.picture ||
           initialProfile?.avatar ||
@@ -419,6 +431,52 @@ export const ProfileCreationWizardModal: React.FC<ProfileCreationWizardModalProp
                           {playerAge} yrs
                         </div>
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Player Sub-Category Selection */}
+                  <div>
+                    <label className="text-[11px] font-bold text-[#c4c9ac] uppercase tracking-wider block mb-1.5">
+                      Player Sub-Category
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {(['Senior players', 'Junior players', 'Junior premiere'] as PlayerSubCategory[]).map((cat) => {
+                        const isChosen = playerSubCat === cat;
+                        return (
+                          <button
+                            key={cat}
+                            type="button"
+                            onClick={() => {
+                              playBeep(700, 0.03);
+                              setPlayerSubCat(cat);
+                              if (cat === 'Junior players' && playerAge >= 18) {
+                                setPlayerAge(15);
+                                setPlayerDob('2011-06-12');
+                              } else if (cat === 'Junior premiere' && playerAge >= 18) {
+                                setPlayerAge(16);
+                                setPlayerDob('2010-03-24');
+                              } else if (cat === 'Senior players' && playerAge < 18) {
+                                setPlayerAge(23);
+                                setPlayerDob('2003-05-14');
+                              }
+                            }}
+                            className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                              isChosen
+                                ? cat === 'Junior premiere'
+                                  ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 font-bold shadow-[0_0_10px_rgba(6,182,212,0.2)]'
+                                  : cat === 'Junior players'
+                                  ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300 font-bold shadow-[0_0_10px_rgba(16,185,129,0.2)]'
+                                  : 'bg-[#c3f400]/20 border-[#c3f400] text-[#c3f400] font-bold shadow-[0_0_10px_rgba(195,244,0,0.2)]'
+                                : 'bg-[#201f1f] border-white/10 text-[#c4c9ac] hover:border-white/20'
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-[18px] block mb-0.5">
+                              {cat === 'Senior players' ? 'military_tech' : cat === 'Junior premiere' ? 'diamond' : 'child_care'}
+                            </span>
+                            <span className="text-xs font-headline block leading-tight">{cat}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -893,6 +951,53 @@ export const ProfileCreationWizardModal: React.FC<ProfileCreationWizardModalProp
                         onChange={(e) => setCoachExperience(parseInt(e.target.value) || 1)}
                         className="w-full bg-[#201f1f] border border-white/10 focus:border-[#c3f400] rounded-xl px-3.5 py-2.5 text-sm text-white outline-none"
                       />
+                    </div>
+                  </div>
+
+                  {/* Coach Sub-Category Selector */}
+                  <div className="pt-2 border-t border-white/5">
+                    <label className="text-[11px] font-bold text-[#c4c9ac] uppercase tracking-wider block mb-1.5">
+                      Coach Sub-Category
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {([
+                        'Batting coach',
+                        'Bowling coach',
+                        'Fielding coach',
+                        'Wicket-keeper coach',
+                        'Fitness training Coach',
+                        'All-rounder coach',
+                        'Physio coach',
+                        'Umpires'
+                      ] as CoachSubCategory[]).map((cat) => {
+                        const isSelected = coachSubCat === cat;
+                        return (
+                          <button
+                            key={cat}
+                            type="button"
+                            onClick={() => {
+                              playBeep(700, 0.03);
+                              setCoachSubCat(cat);
+                              if (cat === 'Batting coach') {
+                                setCoachSpecialization('Batting Masterclass & Biomechanics');
+                              } else if (cat === 'Bowling coach') {
+                                setCoachSpecialization('Fast Bowling Pace & Seam Mechanics');
+                              } else if (cat === 'Fielding coach' || cat === 'Wicket-keeper coach') {
+                                setCoachSpecialization('Wicket-Keeping & Fielding Elite');
+                              } else if (cat === 'Umpires') {
+                                setCoachSpecialization('Tactical Match Strategy & Analytics');
+                              }
+                            }}
+                            className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                              isSelected
+                                ? 'bg-[#00d2ff]/20 border-[#00d2ff] text-[#00d2ff] font-bold shadow-[0_0_10px_rgba(0,210,255,0.2)]'
+                                : 'bg-[#201f1f] border-white/10 text-[#c4c9ac] hover:border-white/20 hover:text-white'
+                            }`}
+                          >
+                            <span className="text-[11px] font-headline block leading-tight font-bold">{cat}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>

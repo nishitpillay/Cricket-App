@@ -8,6 +8,12 @@ interface MoreScreenProps {
 export const MoreScreen: React.FC<MoreScreenProps> = ({ onNavigate }) => {
   const sections = [
     {
+      title: 'User Profiles & Roles',
+      items: [
+        { id: 'profiles', label: 'User Profiles Directory (Players, Coach, Admins)', icon: 'badge', highlight: true },
+      ]
+    },
+    {
       title: 'Academy & Training',
       items: [
         { id: 'academy', label: 'Academy & Masterclasses', icon: 'school' },

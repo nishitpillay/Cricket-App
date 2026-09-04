@@ -510,6 +510,40 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             </div>
           </button>
         </div>
+
+        {/* Google Maps Grounds & Nets Locator Banner */}
+        <button
+          onClick={() => {
+            playBeep(750, 0.05);
+            onNavigate('venues');
+          }}
+          className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-[#00d2ff]/10 via-[#c3f400]/10 to-transparent border border-[#00d2ff]/30 hover:border-[#00d2ff]/60 active:scale-[0.98] transition-all cursor-pointer group shadow-lg"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#00d2ff]/20 border border-[#00d2ff]/40 flex items-center justify-center text-[#00d2ff] group-hover:scale-105 transition-transform shrink-0">
+              <span className="material-symbols-outlined text-[24px]">stadium</span>
+            </div>
+            <div className="text-left">
+              <div className="flex items-center gap-2">
+                <span className="font-headline font-bold text-sm text-white group-hover:text-[#00d2ff] transition-colors">
+                  Grounds & Practice Turf Nets Locator
+                </span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#00d2ff]/20 text-[#00d2ff] border border-[#00d2ff]/30">
+                  Google Maps
+                </span>
+              </div>
+              <p className="text-xs text-[#c4c9ac] line-clamp-1 sm:line-clamp-none">
+                Interactive Google Maps Platform with high-performance academies, turf pitches, and telemetry radar bays
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1 text-[#00d2ff] text-xs font-bold shrink-0 ml-2">
+            <span className="hidden sm:inline">Explore Map</span>
+            <span className="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">
+              chevron_right
+            </span>
+          </div>
+        </button>
       </section>
 
       {/* Weekly Progress Chart Widget */}
@@ -828,6 +862,40 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               </h4>
               <p className="text-[10px] text-[#c4c9ac] line-clamp-1">Drag Fielders & Tactics</p>
             </div>
+          </button>
+        </div>
+      </section>
+
+      {/* Google Maps Cricket Grounds & Nets Locator Banner */}
+      <section className="glass p-4 sm:p-5 rounded-2xl border border-[#c3f400]/30 relative overflow-hidden bg-gradient-to-r from-[#0f172a] via-[#1e293b] to-[#0f172a] shadow-xl">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-xl bg-[#c3f400]/15 border border-[#c3f400]/40 flex items-center justify-center text-[#c3f400] shrink-0">
+              <span className="material-symbols-outlined text-[28px]">stadium</span>
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="font-headline font-bold text-base text-white">
+                  Grounds & Nets Locator
+                </h4>
+                <span className="px-2 py-0.5 text-[9px] font-bold bg-[#c3f400] text-black rounded-full uppercase">
+                  Google Maps
+                </span>
+              </div>
+              <p className="text-xs text-[#c4c9ac] mt-0.5">
+                Explore premier turf wickets, indoor bowling centers, and MCC academies worldwide with live directions.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              playBeep(700, 0.05);
+              onNavigate('venues');
+            }}
+            className="w-full sm:w-auto px-4 py-2.5 bg-[#c3f400] hover:bg-[#b0dc00] text-black font-bold text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+          >
+            <span className="material-symbols-outlined text-[18px]">map</span>
+            <span>Open Maps Explorer</span>
           </button>
         </div>
       </section>

@@ -90,16 +90,19 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           )}
 
-          {activeUser?.role === 'coach' && (
+          {activeUser?.subCategoryTitle ? (
+            <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#c3f400]/15 text-[#c3f400] border border-[#c3f400]/30">
+              {activeUser.subCategoryTitle}
+            </span>
+          ) : activeUser?.role === 'coach' ? (
             <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#ffdb3c]/15 text-[#ffdb3c] border border-[#ffdb3c]/30">
               COACH MODE
             </span>
-          )}
-          {activeUser?.role === 'admin' && (
+          ) : activeUser?.role === 'admin' ? (
             <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#c3f400]/15 text-[#c3f400] border border-[#c3f400]/30">
               ADMIN
             </span>
-          )}
+          ) : null}
 
           <button
             onClick={handleProfile}
