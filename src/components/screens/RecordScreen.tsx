@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ScreenType, UserProfile } from '../../types';
+import { ScreenType, UserProfile, PitchCalibrationState } from '../../types';
 import { playBeep, playBallImpact } from '../../utils/audioFeedback';
 import { scrubImageExif, scrubVideoMetadata, SanitizedMediaResult } from '../../utils/exifScrubber';
+import { CameraCalibrationHUD } from '../recording/CameraCalibrationHUD';
+import { VirtualStumpsOverlay } from '../recording/VirtualStumpsOverlay';
+import { getStoredCalibrationState, saveCalibrationState } from '../../utils/pitchCalibrationManager';
+import { BeehiveVisualizer } from '../telemetry/BeehiveVisualizer';
+import { AutoSlicerLiveTray } from '../recording/AutoSlicerLiveTray';
+import { NetSessionPlaylistFeed } from '../telemetry/NetSessionPlaylistFeed';
 
 interface RecordScreenProps {
   onNavigate: (screen: ScreenType) => void;
@@ -18,6 +24,18 @@ export const RecordScreen: React.FC<RecordScreenProps> = ({ onNavigate, currentU
   const [heartRate, setHeartRate] = useState(164);
   const [pitchLength, setPitchLength] = useState<'Good Length' | 'Full' | 'Short'>('Good Length');
   const [pitchLine, setPitchLine] = useState<'Off Stump' | 'Middle Stump' | 'Outside Off'>('Off Stump');
+
+  // Fulltrack-style Pitch & Virtual Stumps Calibration
+  const [calibrationState, setCalibrationState] = useState<PitchCalibrationState>(getStoredCalibrationState);
+  const [showCalibrationHUD, setShowCalibrationHUD] = useState<boolean>(false);
+  const [showBeehiveModal, setShowBeehiveModal] = useState<boolean>(false);
+  const [showPlaylistModal, setShowPlaylistModal] = useState<boolean>(false);
+  const [lastDelivery, setLastDelivery] = useState<{ speed: number; length: string; line: string; timestamp: string } | undefined>({
+    speed: 142,
+    length: 'Good Length',
+    line: 'Off Stump',
+    timestamp: '02:14',
+  });
 
   // HUD Toggles
   const [showLayers, setShowLayers] = useState(true);
@@ -98,6 +116,12 @@ export const RecordScreen: React.FC<RecordScreenProps> = ({ onNavigate, currentU
     setPitchLine(newLine);
     setDeliveryCount((c) => c + 1);
     setHeartRate((hr) => Math.min(185, hr + Math.floor(Math.random() * 4) - 1));
+    setLastDelivery({
+      speed: newSpeed,
+      length: newLength,
+      line: newLine,
+      timestamp: formatTime(seconds),
+    });
     showToast(`⚡ Delivery #${deliveryCount + 1} Logged: ${newSpeed} km/h on ${newLength}!`);
   };
 
@@ -331,6 +355,46 @@ export const RecordScreen: React.FC<RecordScreenProps> = ({ onNavigate, currentU
         >
           <span className="material-symbols-outlined text-[22px]">settings_accessibility</span>
         </button>
+
+        {/* Fulltrack Calibration Button */}
+        <button
+          onClick={() => {
+            playBeep(700, 0.08);
+            setShowCalibrationHUD(true);
+          }}
+          title="Fulltrack Stumps & Pitch Calibration"
+          className={`glass w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-xl active:scale-95 ${
+            calibrationState.isVirtualStumpsLocked
+              ? 'text-[#c3f400] border border-[#c3f400] shadow-[0_0_15px_rgba(195,244,0,0.35)]'
+              : 'text-amber-400 border border-amber-400/80 animate-pulse'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[22px]">view_in_ar</span>
+        </button>
+
+        {/* Fulltrack Beehive & 3D Flight Arc Button */}
+        <button
+          onClick={() => {
+            playBeep(750, 0.08);
+            setShowBeehiveModal(true);
+          }}
+          title="Live Stumps Beehive & 3D Flight Arc"
+          className="glass w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-xl active:scale-95 text-white hover:text-[#c3f400] border border-white/15 hover:border-[#c3f400]/40"
+        >
+          <span className="material-symbols-outlined text-[22px]">sports_cricket</span>
+        </button>
+
+        {/* Auto-Slicer Net Playlist Feed Button */}
+        <button
+          onClick={() => {
+            playBeep(800, 0.08);
+            setShowPlaylistModal(true);
+          }}
+          title="Ball-by-Ball Auto-Slicer Playlist Feed"
+          className="glass w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-xl active:scale-95 text-white hover:text-[#c3f400] border border-white/15 hover:border-[#c3f400]/40"
+        >
+          <span className="material-symbols-outlined text-[22px]">video_library</span>
+        </button>
       </div>
 
       {/* Center Pitch Reticle & AI Target Oval */}
@@ -399,8 +463,14 @@ export const RecordScreen: React.FC<RecordScreenProps> = ({ onNavigate, currentU
         </div>
       )}
 
-      {/* Bottom HUD: Length/Line Badges + Controls */}
-      <div className="absolute bottom-6 left-0 right-0 flex flex-col items-center gap-5 z-20 px-4">
+      {/* Bottom HUD: Auto-Slicer Tray, Length/Line Badges + Controls */}
+      <div className="absolute bottom-4 left-0 right-0 flex flex-col items-center gap-3 z-20 px-4 max-w-2xl mx-auto">
+        {/* Fulltrack-Style Continuous Auto-Slicer Buffer Tray */}
+        <AutoSlicerLiveTray
+          isRecording={isRecording && !isPaused}
+          onOpenPlaylistModal={() => setShowPlaylistModal(true)}
+        />
+
         {/* Pitch Area Status Chips */}
         <div className="flex items-center gap-3">
           <div className="glass px-3.5 py-1.5 rounded-full flex items-center gap-2 border border-white/10 shadow-lg">
@@ -458,12 +528,64 @@ export const RecordScreen: React.FC<RecordScreenProps> = ({ onNavigate, currentU
           <span>•</span>
           <button
             onClick={handleSimulateDelivery}
-            className="text-[#c3f400] font-bold hover:underline"
+            className="text-[#c3f400] font-bold hover:underline cursor-pointer"
           >
             + Bowl Next Delivery
           </button>
         </div>
       </div>
+
+      {/* Persistent Fulltrack Virtual Stumps & Corridor Overlay */}
+      <VirtualStumpsOverlay
+        calibrationState={calibrationState}
+        showGrid={showGrid}
+        onOpenCalibration={() => {
+          playBeep(700, 0.08);
+          setShowCalibrationHUD(true);
+        }}
+        lastDelivery={lastDelivery}
+      />
+
+      {/* Fulltrack Camera & Virtual Stumps Calibration Interactive Drawer */}
+      <CameraCalibrationHUD
+        isOpen={showCalibrationHUD}
+        onClose={() => setShowCalibrationHUD(false)}
+        calibrationState={calibrationState}
+        onUpdateCalibration={(updated) => {
+          setCalibrationState(updated);
+          saveCalibrationState(updated);
+        }}
+      />
+
+      {/* Fulltrack Stumps Beehive & 3D Flight Arc Modal */}
+      {showBeehiveModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-fadeIn">
+          <div className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-3xl bg-[#141414] border border-white/15 p-4 sm:p-6 shadow-2xl">
+            <button
+              onClick={() => setShowBeehiveModal(false)}
+              className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[20px]">close</span>
+            </button>
+            <BeehiveVisualizer />
+          </div>
+        </div>
+      )}
+
+      {/* Auto-Slicer Net Session Playlist Feed Modal */}
+      {showPlaylistModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md animate-fadeIn">
+          <div className="relative w-full max-w-5xl max-h-[94vh] overflow-y-auto rounded-3xl bg-[#141414] border border-white/15 p-4 sm:p-6 shadow-2xl">
+            <NetSessionPlaylistFeed
+              onClose={() => setShowPlaylistModal(false)}
+              onOpenBeehive={() => {
+                setShowPlaylistModal(false);
+                setShowBeehiveModal(true);
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

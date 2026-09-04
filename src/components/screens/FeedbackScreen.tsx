@@ -3,6 +3,8 @@ import { ScreenType, TelestrationFeedback, UserProfile, DrillItem } from '../../
 import { mockTelestration } from '../../data/mockData';
 import { playBeep } from '../../utils/audioFeedback';
 import { ShareCardModal } from '../ShareCardModal';
+import { BeehiveVisualizer } from '../telemetry/BeehiveVisualizer';
+import { NetSessionPlaylistFeed } from '../telemetry/NetSessionPlaylistFeed';
 
 interface FeedbackScreenProps {
   onNavigate: (screen: ScreenType) => void;
@@ -20,6 +22,8 @@ export const FeedbackScreen: React.FC<FeedbackScreenProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(45);
   const [showCoachChat, setShowCoachChat] = useState(false);
+  const [showBeehiveAnalysis, setShowBeehiveAnalysis] = useState(true);
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<{ sender: 'coach' | 'player'; text: string; time: string }[]>([
     {
@@ -373,6 +377,65 @@ export const FeedbackScreen: React.FC<FeedbackScreenProps> = ({
             </div>
           </div>
 
+          {/* Fulltrack AI Stumps Beehive & 3D Flight Arc Section */}
+          <div className="glass rounded-2xl p-4 border border-white/10 shadow-xl flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[#c3f400] text-[22px]">sports_cricket</span>
+                <h4 className="font-headline font-bold text-sm text-white">
+                  Hawk-Eye Stumps Beehive & 3D Flight Arc
+                </h4>
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-[#c3f400]/20 text-[#c3f400]">
+                  FULLTRACK
+                </span>
+              </div>
+              <button
+                onClick={() => setShowBeehiveAnalysis(!showBeehiveAnalysis)}
+                className="text-xs font-bold text-[#c3f400] hover:underline cursor-pointer"
+              >
+                {showBeehiveAnalysis ? 'Collapse' : 'Expand'}
+              </button>
+            </div>
+
+            {showBeehiveAnalysis && (
+              <div className="pt-2 animate-fadeIn">
+                <BeehiveVisualizer compact={true} />
+              </div>
+            )}
+          </div>
+
+          {/* Fulltrack Net Session Playlist Feed Button */}
+          <div
+            onClick={() => {
+              playBeep(750, 0.05);
+              setShowPlaylistModal(true);
+            }}
+            className="p-4 rounded-2xl bg-gradient-to-r from-[#1c1d1a] to-[#141512] border border-white/10 hover:border-[#c3f400]/40 flex items-center justify-between shadow-xl cursor-pointer group transition-all"
+          >
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-[#c3f400]/10 border border-[#c3f400]/30 flex items-center justify-center text-[#c3f400] group-hover:scale-105 transition-transform">
+                <span className="material-symbols-outlined text-[24px]">video_library</span>
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h4 className="font-headline font-bold text-sm text-white group-hover:text-[#c3f400] transition-colors">
+                    Ball-by-Ball Auto-Slicer Playlist
+                  </h4>
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-[#c3f400]/20 text-[#c3f400]">
+                    12 CLIPS
+                  </span>
+                </div>
+                <p className="text-xs text-[#c4c9ac]">
+                  Browse slow-mo clips, Hawk-Eye pitch maps, and coach tags for this spell
+                </p>
+              </div>
+            </div>
+            <button className="px-3.5 py-1.5 rounded-xl bg-white/10 text-white font-headline font-bold text-xs flex items-center gap-1 group-hover:bg-[#c3f400] group-hover:text-[#161e00] transition-colors shadow-md">
+              <span>Open Reel</span>
+              <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+            </button>
+          </div>
+
           {/* Social Share Callout Card */}
           <div
             onClick={handleShare}
@@ -403,6 +466,15 @@ export const FeedbackScreen: React.FC<FeedbackScreenProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Fulltrack Net Session Playlist Feed Modal */}
+      {showPlaylistModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md animate-fadeIn">
+          <div className="relative w-full max-w-5xl max-h-[94vh] overflow-y-auto rounded-3xl bg-[#141414] border border-white/15 p-4 sm:p-6 shadow-2xl">
+            <NetSessionPlaylistFeed onClose={() => setShowPlaylistModal(false)} />
+          </div>
+        </div>
+      )}
 
       {/* Social Media Share Card Modal */}
       <ShareCardModal

@@ -993,3 +993,127 @@ export interface SigningCredentialProtectionConfig {
   compromiseRevocationProtocolDocumented: boolean;
 }
 
+export type PitchPresetType = 'standard_match_22yd' | 'indoor_net_20m' | 'junior_u13_18yd' | 'custom';
+
+export interface StumpsBoundingBox {
+  x: number; // percentage 0-100
+  y: number; // percentage 0-100
+  width: number;
+  height: number;
+  isAligned: boolean;
+}
+
+export interface PitchCalibrationState {
+  preset: PitchPresetType;
+  pitchLengthMeters: number;
+  tripodPitchAngleDeg: number; // Downward tilt (ideal 8° - 12°)
+  tripodRollAngleDeg: number; // Horizon level (ideal -1.5° to +1.5°)
+  tripodHeightMeters: number; // Height from ground (ideal 1.4m - 1.65m)
+  distanceBehindStumpsMeters: number; // Distance behind bowler stumps (ideal 3.5m - 4.5m)
+  bowlerStumpsBox: StumpsBoundingBox;
+  batterStumpsBox: StumpsBoundingBox;
+  isVirtualStumpsLocked: boolean;
+  calibrationConfidenceScore: number; // 0 to 100%
+  lensFovHorizontalDeg: number;
+  lightingEstimatedLux: number;
+  lastCalibratedAt?: string;
+}
+
+export type HawkEyeHitVerdict = 
+  | 'HITTING_MIDDLE'
+  | 'HITTING_OFF'
+  | 'HITTING_LEG'
+  | 'CLIPPING_BAILS_UMPIRES_CALL'
+  | 'MISSING_OVER'
+  | 'MISSING_OFF'
+  | 'MISSING_LEG';
+
+export interface Trajectory3DCoordinates {
+  x: number; // Lateral deviation in meters (-1.5 to +1.5m)
+  y: number; // Vertical height in meters (0 to 2.6m)
+  z: number; // Distance down the pitch in meters (0m = bowler crease, 20.12m = batter stumps)
+}
+
+export interface BeehiveDelivery {
+  id: string;
+  ballNumber: number;
+  overNumber: string; // e.g. "4.2"
+  bowlerName: string;
+  batterName: string;
+  speedKmh: number;
+  postBounceSpeedKmh: number;
+  lengthCategory: 'Yorker' | 'Full' | 'Good Length' | 'Short of Length' | 'Bouncer';
+  lineCategory: 'Wide Outside Off' | '4th Stump' | 'Off Stump' | 'Middle Stump' | 'Leg Stump' | 'Down Leg';
+  // Vertical impact grid coordinates at the stumps plane:
+  // impactXCm: horizontal deviation from middle stump center (-60cm to +60cm)
+  // impactYCm: vertical height from ground (0cm to 160cm; standard stumps top = 71.1cm)
+  impactXCm: number;
+  impactYCm: number;
+  outcome: 'Wicket' | 'Dot' | 'Single' | 'Boundary' | 'Play and Miss';
+  wicketType?: 'Bowled' | 'LBW' | 'Caught Behind' | 'Clean Bowled';
+  swingDeg: number; // in-swing (<0) / out-swing (>0)
+  seamCutDeg: number; // deviation off pitch deck
+  spinRpm?: number;
+  hawkEyeVerdict: HawkEyeHitVerdict;
+  lbwProbabilityPct: number; // 0 - 100%
+  isStumpHit: boolean;
+  flightTrajectory: {
+    releasePoint: Trajectory3DCoordinates;
+    apexPoint: Trajectory3DCoordinates;
+    pitchPoint: Trajectory3DCoordinates;
+    impactPoint: Trajectory3DCoordinates;
+    projectedEnd: Trajectory3DCoordinates;
+  };
+}
+
+export type AutoSlicerTriggerMethod = 
+  | 'OPTICAL_MOTION_RELEASE'
+  | 'ACOUSTIC_SNICK_TRIGGER'
+  | 'DUAL_VISION_AUDIO_FUSION'
+  | 'MANUAL_OVERRIDE';
+
+export interface AutoSlicerConfig {
+  isEnabled: boolean;
+  preRollSeconds: number; // e.g. 1.5s before release
+  postRollSeconds: number; // e.g. 2.5s after impact
+  soundThresholdDb: number; // e.g. -18 dB
+  motionSensitivity: 'LOW' | 'MEDIUM' | 'HIGH';
+  autoBookmarkWickets: boolean;
+  hapticFeedbackOnSlice: boolean;
+  audioFeedbackOnSlice: boolean;
+  slowMoFrameRateFps: 60 | 120 | 240;
+}
+
+export interface AutoSlicedDeliveryClip {
+  id: string;
+  ballNumber: number;
+  overNumber: string; // e.g. "2.1"
+  sessionTitle: string;
+  timestamp: string;
+  durationSeconds: number; // e.g. 4.8s
+  thumbnailUrl: string;
+  videoSimUrl: string;
+  triggerMethod: AutoSlicerTriggerMethod;
+  detectionConfidencePct: number; // 0 - 100
+  isBookmarked: boolean;
+  coachNotes?: string;
+  tags: string[];
+  delivery: BeehiveDelivery;
+}
+
+export interface NetSessionPlaylist {
+  id: string;
+  title: string;
+  date: string;
+  venue: string;
+  bowlerName: string;
+  batterName: string;
+  pitchCondition: 'Turf' | 'Synthetic Matting' | 'Indoor Concrete Bay';
+  totalDeliveries: number;
+  topSpeedKmh: number;
+  avgSpeedKmh: number;
+  dotBallPct: number;
+  stumpHitPct: number;
+  clips: AutoSlicedDeliveryClip[];
+}
+

@@ -4,6 +4,8 @@ import { mockMatches, mockTrainingHistory, mockTechniqueScores, mockUsers } from
 import { mockWagonWheelShots, mockPitchMapDeliveries } from '../../data/tacticsAndPlannerData';
 import { playBeep, playBallImpact } from '../../utils/audioFeedback';
 import { PlayerHealthDashboard } from '../health/PlayerHealthDashboard';
+import { BeehiveVisualizer } from '../telemetry/BeehiveVisualizer';
+import { NetSessionPlaylistFeed } from '../telemetry/NetSessionPlaylistFeed';
 
 interface StatsScreenProps {
   onNavigate: (screen: ScreenType) => void;
@@ -12,7 +14,7 @@ interface StatsScreenProps {
 
 export const StatsScreen: React.FC<StatsScreenProps> = ({ onNavigate, currentUser }) => {
   const activeUser = currentUser || mockUsers.player;
-  const [statsView, setStatsView] = useState<'dashboard' | 'health' | 'wagon-wheel' | 'pitch-map' | 'history'>('dashboard');
+  const [statsView, setStatsView] = useState<'dashboard' | 'health' | 'wagon-wheel' | 'pitch-map' | 'beehive' | 'playlist' | 'history'>('dashboard');
   const [activeHistoryTab, setActiveHistoryTab] = useState<'matches' | 'training'>('matches');
   const [techniqueScores, setTechniqueScores] = useState<TechniqueScores>(mockTechniqueScores);
   const [selectedMatch, setSelectedMatch] = useState<MatchStat | null>(null);
@@ -119,6 +121,46 @@ export const StatsScreen: React.FC<StatsScreenProps> = ({ onNavigate, currentUse
         >
           <span className="material-symbols-outlined text-[18px]">scatter_plot</span>
           <span>Bowling Pitch Maps</span>
+        </button>
+
+        <button
+          onClick={() => {
+            playBeep(700, 0.04);
+            setStatsView('beehive');
+          }}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-headline font-bold text-xs transition-all cursor-pointer whitespace-nowrap ${
+            statsView === 'beehive'
+              ? 'bg-[#c3f400] text-[#161e00] shadow-[0_0_12px_rgba(195,244,0,0.3)]'
+              : 'text-[#c4c9ac] hover:text-white'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[18px]">grid_4x4</span>
+          <span>Stumps Beehive & 3D Arc</span>
+          <span className={`text-[8px] px-1.5 py-0.5 rounded font-mono font-bold ${
+            statsView === 'beehive' ? 'bg-[#161e00] text-[#c3f400]' : 'bg-[#c3f400]/20 text-[#c3f400]'
+          }`}>
+            PRO
+          </span>
+        </button>
+
+        <button
+          onClick={() => {
+            playBeep(700, 0.04);
+            setStatsView('playlist');
+          }}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-headline font-bold text-xs transition-all cursor-pointer whitespace-nowrap ${
+            statsView === 'playlist'
+              ? 'bg-[#c3f400] text-[#161e00] shadow-[0_0_12px_rgba(195,244,0,0.3)]'
+              : 'text-[#c4c9ac] hover:text-white'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[18px]">video_library</span>
+          <span>Net Playlist Feed</span>
+          <span className={`text-[8px] px-1.5 py-0.5 rounded font-mono font-bold ${
+            statsView === 'playlist' ? 'bg-[#161e00] text-[#c3f400]' : 'bg-[#c3f400]/20 text-[#c3f400]'
+          }`}>
+            AUTO-SLICER
+          </span>
         </button>
 
         <button
@@ -553,7 +595,21 @@ export const StatsScreen: React.FC<StatsScreenProps> = ({ onNavigate, currentUse
         </div>
       )}
 
-      {/* VIEW 4: MATCH & TRAINING HISTORY */}
+      {/* VIEW 4: STUMPS BEEHIVE & 3D FLIGHT ARC (FULLTRACK AI) */}
+      {statsView === 'beehive' && (
+        <div className="flex flex-col w-full animate-fadeIn">
+          <BeehiveVisualizer />
+        </div>
+      )}
+
+      {/* VIEW 5: AUTO-SLICED NET SESSION PLAYLIST FEED (FULLTRACK AI) */}
+      {statsView === 'playlist' && (
+        <div className="flex flex-col w-full animate-fadeIn">
+          <NetSessionPlaylistFeed onOpenBeehive={() => setStatsView('beehive')} />
+        </div>
+      )}
+
+      {/* VIEW 6: MATCH & TRAINING HISTORY */}
       {statsView === 'history' && (
         <div className="bg-[#201f1f] glass rounded-3xl overflow-hidden flex flex-col border border-white/10 shadow-xl animate-fadeIn">
           <div className="flex px-4 pt-4 gap-2 border-b border-white/5">
