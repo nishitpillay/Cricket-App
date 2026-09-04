@@ -17,9 +17,9 @@ export const WorkScreen: React.FC<WorkScreenProps> = ({ onNavigate }) => {
 
   return (
     <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-6 w-full">
-      <div className="mb-6">
-        <h2 className="text-xl sm:text-2xl font-headline font-bold text-white mb-2">Workspace Dashboard</h2>
-        <p className="text-[#c4c9ac] text-sm">Access your core performance tools and analytics.</p>
+      <div className="mb-4">
+        <h2 className="text-lg sm:text-xl font-headline font-bold text-white mb-1">Workspace Dashboard</h2>
+        <p className="text-[#c4c9ac] text-xs sm:text-sm">Access your core performance tools and analytics.</p>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">

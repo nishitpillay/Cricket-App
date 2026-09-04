@@ -52,7 +52,7 @@ export const Header: React.FC<HeaderProps> = ({
             <Logo size="sm" />
           )}
 
-          <h1 className="font-headline font-semibold text-lg sm:text-xl text-[#e5e2e1] tracking-tight">
+          <h1 className="font-headline font-semibold text-base sm:text-lg text-[#e5e2e1] tracking-tight truncate max-w-[200px] sm:max-w-md">
             {title}
           </h1>
         </div>

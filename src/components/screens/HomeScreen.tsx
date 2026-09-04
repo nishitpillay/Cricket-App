@@ -124,10 +124,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       <section className="flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3">
           <div>
-            <h2 className="font-headline font-semibold text-lg sm:text-xl text-[#c4c9ac]">
+            <span className="text-xs sm:text-sm font-medium text-[#c4c9ac] block">
               Welcome back,
-            </h2>
-            <h1 className="font-headline font-extrabold text-2xl sm:text-3xl text-white tracking-tight">
+            </span>
+            <h1 className="font-headline font-bold text-xl sm:text-2xl text-white tracking-tight">
               {activeUser.name}
             </h1>
           </div>

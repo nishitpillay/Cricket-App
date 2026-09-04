@@ -39,9 +39,9 @@ export const MoreScreen: React.FC<MoreScreenProps> = ({ onNavigate }) => {
 
   return (
     <div className="p-4 sm:p-6 max-w-lg mx-auto space-y-6 w-full">
-      <div className="mb-4">
-        <h2 className="text-xl sm:text-2xl font-headline font-bold text-white mb-2">More Options</h2>
-        <p className="text-[#c4c9ac] text-sm">Additional resources, learning, and app settings.</p>
+      <div className="mb-3">
+        <h2 className="text-lg sm:text-xl font-headline font-bold text-white mb-1">More Options</h2>
+        <p className="text-[#c4c9ac] text-xs sm:text-sm">Additional resources, learning, and app settings.</p>
       </div>
 
       <div className="space-y-6">
