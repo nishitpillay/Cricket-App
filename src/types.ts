@@ -1170,3 +1170,101 @@ export interface NetSessionPlaylist {
   clips: AutoSlicedDeliveryClip[];
 }
 
+export type CricketDiscipline = 'batting' | 'bowling' | 'fielding';
+
+export interface VideoKeyframe {
+  id: string;
+  name: string;
+  timestampSec: number;
+  frameIndex: number;
+  discipline: CricketDiscipline;
+  description: string;
+  optimalAngle?: string;
+  playerAngle?: string;
+  status: 'optimal' | 'warning' | 'needs_work';
+  highlightPoint?: { x: number; y: number; label: string };
+  biomechanicCue: string;
+}
+
+export interface CoachVideoComment {
+  id: string;
+  coachName: string;
+  coachAvatar: string;
+  coachRole: string;
+  timestampSec: number;
+  frameIndex: number;
+  title: string;
+  textComment: string;
+  voiceDurationSec?: number;
+  voiceWaveform?: number[];
+  priority: 'technique' | 'high' | 'praise';
+  discipline: CricketDiscipline;
+  isResolved?: boolean;
+  drawingCoordinates?: Array<{ x1: number; y1: number; x2: number; y2: number; color: string; type: 'line' | 'circle' | 'angle' }>;
+}
+
+export interface ComparisonPair {
+  id: string;
+  title: string;
+  discipline: CricketDiscipline;
+  category: 'before_after' | 'pro_benchmark' | 'cross_session';
+  clipA: {
+    title: string;
+    date: string;
+    label: string;
+    speedOrMetric: string;
+    metricDetail: string;
+    tag: string;
+    keyAngle: string;
+    avatarOrThumbnail?: string;
+  };
+  clipB: {
+    title: string;
+    date: string;
+    label: string;
+    speedOrMetric: string;
+    metricDetail: string;
+    tag: string;
+    keyAngle: string;
+    avatarOrThumbnail?: string;
+  };
+  deltaInsights: {
+    metric: string;
+    change: string;
+    isImprovement: boolean;
+    explanation: string;
+  }[];
+  recommendedDrillId?: string;
+  recommendedDrillTitle?: string;
+}
+
+export interface VideoProgressEntry {
+  id: string;
+  date: string;
+  weekLabel: string;
+  discipline: CricketDiscipline;
+  title: string;
+  clipDuration: string;
+  speedOrPace: string;
+  primaryMetric: string;
+  metricDelta: string;
+  isPositiveDelta: boolean;
+  coachRating: number; // 1 to 10
+  coachNotesCount: number;
+  keyframeMilestone: string;
+  thumbnailBg: string;
+  tags: string[];
+}
+
+export interface QuickUploadVideoPreset {
+  id: string;
+  title: string;
+  discipline: CricketDiscipline;
+  duration: string;
+  resolution: string;
+  fps: number;
+  techniqueTags: string[];
+  keyMoment: string;
+  sourceType: 'sample_reel' | 'user_upload' | 'tripod_capture';
+}
+

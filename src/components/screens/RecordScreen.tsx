@@ -8,6 +8,7 @@ import { getStoredCalibrationState, saveCalibrationState } from '../../utils/pit
 import { BeehiveVisualizer } from '../telemetry/BeehiveVisualizer';
 import { AutoSlicerLiveTray } from '../recording/AutoSlicerLiveTray';
 import { NetSessionPlaylistFeed } from '../telemetry/NetSessionPlaylistFeed';
+import { QuickUploadAndCaptureModal } from '../videoAnalysis/QuickUploadAndCaptureModal';
 
 interface RecordScreenProps {
   onNavigate: (screen: ScreenType) => void;
@@ -47,6 +48,7 @@ export const RecordScreen: React.FC<RecordScreenProps> = ({ onNavigate, currentU
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [uploadedMediaResult, setUploadedMediaResult] = useState<SanitizedMediaResult | null>(null);
   const [isScrubbing, setIsScrubbing] = useState(false);
+  const [showQuickModal, setShowQuickModal] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -296,6 +298,15 @@ export const RecordScreen: React.FC<RecordScreenProps> = ({ onNavigate, currentU
                 {isScrubbing ? 'sync' : 'security'}
               </span>
               {isScrubbing ? 'Scrubbing...' : 'Upload & Scrub EXIF'}
+            </button>
+
+            {/* Quick Practice Presets & Studio Ingestion */}
+            <button
+              onClick={() => setShowQuickModal(true)}
+              className="px-2.5 py-1 rounded-lg bg-black/40 glass border border-[#c3f400]/40 hover:border-[#c3f400] text-[10px] font-bold text-[#c3f400] flex items-center gap-1.5 w-fit cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[14px]">video_library</span>
+              <span>Reels &amp; Presets</span>
             </button>
           </div>
 
@@ -586,6 +597,21 @@ export const RecordScreen: React.FC<RecordScreenProps> = ({ onNavigate, currentU
           </div>
         </div>
       )}
+
+      {/* Quick Video Presets & Ingestion Modal */}
+      <QuickUploadAndCaptureModal
+        isOpen={showQuickModal}
+        onClose={() => setShowQuickModal(false)}
+        onSelectPreset={(preset) => {
+          setToastMessage(`Loaded Preset: ${preset.title}`);
+          setSpeed(preset.discipline === 'bowling' ? 142 : 118);
+          playBallImpact();
+        }}
+        onCustomUploadComplete={(info) => {
+          setToastMessage(`Uploaded: ${info.name} • 120 FPS Telemetry Ready`);
+          playBallImpact();
+        }}
+      />
     </div>
   );
 };

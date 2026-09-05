@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { UserProfile, SessionRecord, ScreenType, DrillItem } from '../../types';
 import { playBeep, playCelebration } from '../../utils/audioFeedback';
 import { CoreCricketLoopStepper } from '../loop/CoreCricketLoopStepper';
+import { VideoCentricPlayerSpotlight } from './VideoCentricPlayerSpotlight';
 
 interface PlayerHomeViewProps {
   user: UserProfile;
@@ -118,6 +119,14 @@ export const PlayerHomeView: React.FC<PlayerHomeViewProps> = ({
       {/* ========================================================================= */}
       <CoreCricketLoopStepper
         currentUser={user}
+        onNavigate={onNavigate}
+      />
+
+      {/* ========================================================================= */}
+      {/* 0.5 VIDEO-CENTRIC PLAYER DEVELOPMENT HERO SPOTLIGHT */}
+      {/* ========================================================================= */}
+      <VideoCentricPlayerSpotlight
+        user={user}
         onNavigate={onNavigate}
       />
 
