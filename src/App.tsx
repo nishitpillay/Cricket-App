@@ -32,7 +32,6 @@ import { SecurityGateTwoScreen } from './components/screens/SecurityGateTwoScree
 import { StoreAssetsPrivacyScreen } from './components/screens/StoreAssetsPrivacyScreen';
 import { TestFlightInternalTestingScreen } from './components/screens/TestFlightInternalTestingScreen';
 import { WorkScreen } from './components/screens/WorkScreen';
-import { CricketGroundsMapScreen } from './components/screens/CricketGroundsMapScreen';
 import { MoreScreen } from './components/screens/MoreScreen';
 import { UserProfilesScreen } from './components/screens/UserProfilesScreen';
 import { SupportScreen } from './components/screens/SupportScreen';
@@ -60,7 +59,6 @@ const PARENT_SCREEN_MAP: Partial<Record<ScreenType, ScreenType>> = {
   'stats': 'work',
   'planner': 'work',
   'drills': 'work',
-  'venues': 'work',
   
   'drill-details': 'drills-vault',
   'drill-practice': 'drill-details',
@@ -400,13 +398,6 @@ export default function App() {
             onNavigate={handleNavigate}
             currentUser={currentUser}
             drill={selectedDrill}
-          />
-        )}
-
-        {currentScreen === 'venues' && (
-          <CricketGroundsMapScreen
-            onNavigate={handleNavigate}
-            onBack={handleBack}
           />
         )}
 

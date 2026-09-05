@@ -32,7 +32,6 @@ export type ScreenType =
   | 'support'
   | 'help'
   | 'terms'
-  | 'venues'
   | 'profiles';
 
 export type MASVSDomain = 
@@ -1150,32 +1149,5 @@ export interface NetSessionPlaylist {
   dotBallPct: number;
   stumpHitPct: number;
   clips: AutoSlicedDeliveryClip[];
-}
-
-export type PitchSurfaceType = 'Turf Grass' | 'Hybrid Turf' | 'Astro Matting' | 'Indoor Polyurethane' | 'Hard Clay';
-
-export type VenueCategory = 'International Stadium' | 'High Performance Academy' | 'Club Practice Nets' | 'Indoor Cricket Centre';
-
-export interface CricketGroundVenue {
-  id: string;
-  name: string;
-  shortName: string;
-  category: VenueCategory;
-  city: string;
-  country: string;
-  address: string;
-  lat: number;
-  lng: number;
-  pitchSurface: PitchSurfaceType;
-  pitchPaceRating: 'High Pace & Bounce' | 'True Bounce & Carry' | 'Spin & Seam Assist' | 'Fast Skidding';
-  netBaysCount: number;
-  hasFloodlights: boolean;
-  hasSpeedGunRadar: boolean;
-  hasVideoAnalysisBays: boolean;
-  rating: number;
-  reviewsCount: number;
-  phone?: string;
-  website?: string;
-  notes: string;
 }
 

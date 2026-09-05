@@ -14,7 +14,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentScreen, onNavigate, onBac
       id: 'work',
       label: 'WORK',
       icon: 'engineering',
-      aliases: ['record', 'video-analysis', 'stats', 'drills-vault', 'drills', 'drill-details', 'drill-practice', 'scenarios', 'masterclasses', 'chalkboard', 'planner', 'academy', 'feedback', 'venues']
+      aliases: ['record', 'video-analysis', 'stats', 'drills-vault', 'drills', 'drill-details', 'drill-practice', 'scenarios', 'masterclasses', 'chalkboard', 'planner', 'academy', 'feedback']
     },
     {
       id: 'more',

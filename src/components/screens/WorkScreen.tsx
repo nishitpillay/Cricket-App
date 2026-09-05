@@ -13,7 +13,6 @@ export const WorkScreen: React.FC<WorkScreenProps> = ({ onNavigate }) => {
     { id: 'scenarios', label: 'Tactics & Scenarios', icon: 'psychology', color: 'text-purple-400' },
     { id: 'stats', label: 'Stats & Wagon', icon: 'radar', color: 'text-amber-400' },
     { id: 'planner', label: 'Training Planner', icon: 'calendar_month', color: 'text-[#c3f400]' },
-    { id: 'venues', label: 'Grounds & Nets Map', icon: 'stadium', color: 'text-cyan-400' },
   ];
 
   return (

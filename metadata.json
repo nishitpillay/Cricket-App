@@ -1,6 +1,6 @@
 {
   "name": "Pitch Precision",
-  "description": "High-stakes cricket performance analytics, AI telemetry recording, Google Maps Platform Grounds & Practice Nets Locator, Cloud Run API, connection pooled Cloud SQL, multi-env private buckets, Security Gate 2 certification, App Store assets, and TestFlight & Play Internal Testing with 11 controlled beta accounts and Junior-Parent-Coach workflow verification.",
+  "description": "High-stakes cricket performance analytics, AI telemetry recording, Cloud Run API, connection pooled Cloud SQL, multi-env private buckets, Security Gate 2 certification, App Store assets, and TestFlight & Play Internal Testing with 11 controlled beta accounts and Junior-Parent-Coach workflow verification.",
   "requestFramePermissions": ["camera", "microphone", "geolocation"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

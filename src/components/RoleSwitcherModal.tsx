@@ -354,19 +354,6 @@ export const RoleSwitcherModal: React.FC<RoleSwitcherModalProps> = ({
               <span>Privacy</span>
             </button>
           )}
-
-          {onNavigate && (
-            <button
-              onClick={() => {
-                onClose();
-                onNavigate('venues');
-              }}
-              className="p-1.5 rounded-xl bg-[#ffdb3c]/15 border border-[#ffdb3c]/30 hover:bg-[#ffdb3c]/25 text-[9px] font-bold text-[#ffdb3c] flex flex-col items-center justify-center gap-0.5 cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-[15px]">map</span>
-              <span>Grounds</span>
-            </button>
-          )}
         </div>
       </div>
     </div>
