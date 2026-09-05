@@ -1,7 +1,12 @@
 export type ScreenType = 
-  | 'home' 
+  | 'home'
+  | 'train'
+  | 'video'
+  | 'progress'
   | 'record' 
   | 'video-analysis'
+  | 'skill-tree'
+  | 'pdp'
   | 'stats' 
   | 'drills' 
   | 'drills-vault'
@@ -1267,4 +1272,208 @@ export interface QuickUploadVideoPreset {
   keyMoment: string;
   sourceType: 'sample_reel' | 'user_upload' | 'tripod_capture';
 }
+
+export type SkillMasteryLevel = 
+  | 'L1_FUNDAMENTALS' 
+  | 'L2_CLUB_ACADEMY' 
+  | 'L3_REPRESENTATIVE' 
+  | 'L4_ELITE_PRO';
+
+export type SkillNodeStatus = 
+  | 'MASTERED' 
+  | 'IN_TRAINING' 
+  | 'NEEDS_WORK' 
+  | 'LOCKED';
+
+export interface SkillCheckpoint {
+  id: string;
+  label: string;
+  targetCriteria: string;
+  completed: boolean;
+  coachSignOff?: boolean;
+}
+
+export interface CricketSkillNode {
+  id: string;
+  discipline: CricketDiscipline;
+  categoryKey: string;
+  categoryLabel: string;
+  title: string;
+  tierLevel: 1 | 2 | 3 | 4;
+  masteryLevel: SkillMasteryLevel;
+  status: SkillNodeStatus;
+  progressPct: number; // 0 - 100
+  shortSummary: string;
+  biomarkers: string[]; // Specific technical biomarkers (e.g., "Visor perpendicular to ball path")
+  commonFaults: string[]; // Cricket-specific errors (e.g., "Falling away outside off")
+  coachDiagnostic: string;
+  assignedDrillId: string;
+  assignedDrillTitle: string;
+  drillCategory: string;
+  videoClipRef?: string;
+  videoKeyframeFrame?: number;
+  verifiedByCoach?: string;
+  lastAssessedDate?: string;
+  prerequisites: string[]; // IDs of prerequisite skill nodes
+  checkpoints: SkillCheckpoint[];
+  coachTips: string[];
+}
+
+export interface CricketSkillTreeBranch {
+  id: string;
+  discipline: CricketDiscipline;
+  categoryKey: string;
+  categoryLabel: string;
+  icon: string;
+  description: string;
+  totalSkills: number;
+  masteredSkills: number;
+  inTrainingSkills: number;
+  nodes: CricketSkillNode[];
+}
+
+// ==========================================
+// PLAYER DEVELOPMENT PLAN (PDP) INTERFACES
+// ==========================================
+
+export type PDPItemCategory = 'batting' | 'bowling' | 'fielding' | 'fitness' | 'mental' | 'biomechanics';
+
+export interface PlayerStrength {
+  id: string;
+  category: PDPItemCategory;
+  title: string;
+  description: string;
+  evidenceMetric: string; // e.g. "172.4° knee brace on release producing 142.4 kph"
+  videoMilestoneRef?: string;
+  coachEndorsement: string; // e.g. "Coach Ryan Harris: Elite benchmark"
+  icon: string;
+}
+
+export interface DevelopmentArea {
+  id: string;
+  category: PDPItemCategory;
+  priority: 'HIGH' | 'MEDIUM' | 'FOUNDATIONAL';
+  title: string;
+  biomechanicalTarget: string; // e.g. "Maintain 22° cocked wrist through release window"
+  currentFlaw: string; // e.g. "Wrist drops 4° backwards prior to release causing seam wobble"
+  rootCause: string; // e.g. "Bottom hand tightening during downswing"
+  targetCompletionDate: string;
+  status: 'IDENTIFIED' | 'IN_PROGRESS' | 'RE_TESTING' | 'RESOLVED';
+  progressPct: number;
+  linkedDrillIds: string[];
+}
+
+export interface GoalMilestone {
+  id: string;
+  title: string;
+  completed: boolean;
+  targetDate: string;
+}
+
+export interface ActiveGoal {
+  id: string;
+  title: string;
+  category: PDPItemCategory;
+  linkedDevelopmentAreaId?: string;
+  targetMetric: string;
+  baselineValue: string;
+  currentValue: string;
+  targetValue: string;
+  deadline: string;
+  status: 'ACTIVE' | 'ON_TRACK' | 'AT_RISK' | 'ACHIEVED';
+  progressPct: number;
+  milestones: GoalMilestone[];
+  coachNotes: string;
+}
+
+export interface AssignedDrillPlan {
+  id: string;
+  drillId: string;
+  drillTitle: string;
+  category: PDPItemCategory;
+  focusArea: string;
+  weeklyPrescription: string; // e.g. "3x weekly • 20 minutes"
+  setsReps: string; // e.g. "4 sets of 6 balls with weighted ball"
+  coachInstructions: string;
+  status: 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED';
+  completedSessions: number;
+  targetSessions: number;
+  lastCompletedDate?: string;
+}
+
+export interface CoachObservation {
+  id: string;
+  coachName: string;
+  coachRole: string;
+  coachAvatar: string;
+  date: string;
+  primaryDiscipline: PDPItemCategory;
+  technicalDiagnostic: string;
+  praisePoint: string;
+  correctiveAction: string;
+  audioVoiceNoteUrl?: string;
+  audioDurationSec?: number;
+  linkedKeyframe?: string;
+  verifiedBadge: boolean;
+}
+
+export interface RecentPDPVideo {
+  id: string;
+  title: string;
+  date: string;
+  discipline: PDPItemCategory;
+  fps: number;
+  duration: string;
+  thumbnail: string;
+  keyMetricBadge: string;
+  analysisVerdict: 'OPTIMAL' | 'GOOD' | 'NEEDS_WORK';
+  biomechanicalNote: string;
+  comparisonReady: boolean;
+}
+
+export interface ProgressEvidence {
+  id: string;
+  metricTitle: string;
+  category: PDPItemCategory;
+  baselineState: {
+    date: string;
+    value: string;
+    description: string;
+    visualAngle?: string;
+  };
+  currentState: {
+    date: string;
+    value: string;
+    description: string;
+    visualAngle?: string;
+  };
+  deltaImprovement: string;
+  coachVerdict: string;
+  signOffDate: string;
+  coachSignature: string;
+  status: 'VERIFIED' | 'PENDING_RETEST';
+}
+
+export interface PlayerDevelopmentPlan {
+  id: string;
+  playerId: string;
+  playerName: string;
+  playerAvatar: string;
+  playerRoleTitle: string;
+  primaryDiscipline: CricketDiscipline | 'all-rounder' | 'wicketkeeping' | 'fitness';
+  coachInCharge: string;
+  coachAvatar: string;
+  planCycle: string; // e.g., "2026 Q3/Q4 Representative Season"
+  lastReviewDate: string;
+  nextScheduledReview: string;
+  executiveSummary: string;
+  strengths: PlayerStrength[];
+  developmentAreas: DevelopmentArea[];
+  activeGoals: ActiveGoal[];
+  assignedDrills: AssignedDrillPlan[];
+  coachObservations: CoachObservation[];
+  recentVideos: RecentPDPVideo[];
+  progressEvidence: ProgressEvidence[];
+}
+
 

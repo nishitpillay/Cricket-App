@@ -35,7 +35,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const isAcademyAdmin =
     (currentUser?.role === 'admin' || currentUser?.role === 'club_admin') && !isPlatformAdmin;
 
-  // Generate role-specific navigation items adhering to the Role-to-Feature Matrix
+  // Generate consolidated navigation items grouping related functions
   const getNavItems = (): NavItemConfig[] => {
     if (isPlatformAdmin) {
       return [
@@ -67,152 +67,64 @@ export const Navbar: React.FC<NavbarProps> = ({
       ];
     }
 
-    if (isAcademyAdmin) {
-      return [
-        { id: 'home', label: 'HOME', icon: 'home' },
-        {
-          id: 'profiles',
-          label: 'ROSTERS',
-          icon: 'badge',
-          aliases: ['profiles']
-        },
-        {
-          id: 'planner',
-          label: 'BAYS',
-          icon: 'calendar_month',
-          aliases: ['planner']
-        },
-        {
-          id: 'privacy-governance',
-          label: 'AUDITS',
-          icon: 'verified_user',
-          aliases: ['privacy-governance', 'security-gate-1', 'security-gate-2']
-        },
-        {
-          id: 'work',
-          label: 'MORE',
-          icon: 'apps',
-          aliases: ['work', 'more', 'support', 'help', 'terms']
-        }
-      ];
-    }
-
-    if (isCoach) {
-      return [
-        { id: 'home', label: 'HOME', icon: 'home' },
-        {
-          id: 'video-analysis',
-          label: 'MOTION LAB',
-          icon: 'slow_motion_video',
-          aliases: ['video-analysis', 'record']
-        },
-        {
-          id: 'drills-vault',
-          label: 'DRILLS',
-          icon: 'fitness_center',
-          aliases: ['drills-vault', 'drills', 'drill-details', 'drill-practice']
-        },
-        {
-          id: 'chalkboard',
-          label: 'TACTICS',
-          icon: 'gesture',
-          aliases: ['chalkboard', 'scenarios', 'masterclasses']
-        },
-        {
-          id: 'work',
-          label: 'MORE',
-          icon: 'apps',
-          aliases: ['work', 'more', 'planner', 'feedback', 'profiles']
-        }
-      ];
-    }
-
-    if (isParent) {
-      return [
-        { id: 'home', label: 'HOME', icon: 'home' },
-        {
-          id: 'feedback',
-          label: 'COACH NOTES',
-          icon: 'rate_review',
-          aliases: ['feedback']
-        },
-        {
-          id: 'planner',
-          label: 'SCHEDULE',
-          icon: 'calendar_month',
-          aliases: ['planner']
-        },
-        {
-          id: 'privacy-governance',
-          label: 'SAFETY',
-          icon: 'shield',
-          aliases: ['privacy-governance']
-        },
-        {
-          id: 'work',
-          label: 'MORE',
-          icon: 'apps',
-          aliases: ['work', 'more', 'profiles', 'support', 'help']
-        }
-      ];
-    }
-
-    if (isJunior) {
-      return [
-        { id: 'home', label: 'HOME', icon: 'home' },
-        {
-          id: 'drills-vault',
-          label: 'MY DRILLS',
-          icon: 'fitness_center',
-          aliases: ['drills-vault', 'drills', 'drill-details', 'drill-practice']
-        },
-        {
-          id: 'record',
-          label: 'RECORD',
-          icon: 'videocam',
-          aliases: ['record']
-        },
-        {
-          id: 'stats',
-          label: 'MY STATS',
-          icon: 'radar',
-          aliases: ['stats']
-        },
-        {
-          id: 'work',
-          label: 'MORE',
-          icon: 'apps',
-          aliases: ['work', 'more', 'feedback', 'scenarios']
-        }
-      ];
-    }
-
-    // Default: Senior Player
+    // Default for Players, Coaches, Parents & Academy Admins:
+    // Unified High-Performance Nav: [HOME, TRAIN, VIDEO, PROGRESS, MORE]
     return [
       { id: 'home', label: 'HOME', icon: 'home' },
       {
-        id: 'record',
-        label: 'CAMERA',
-        icon: 'videocam',
-        aliases: ['record']
-      },
-      {
-        id: 'video-analysis',
-        label: 'MOTION LAB',
-        icon: 'slow_motion_video',
-        aliases: ['video-analysis']
-      },
-      {
-        id: 'drills-vault',
-        label: 'DRILLS',
+        id: 'train',
+        label: 'TRAIN',
         icon: 'fitness_center',
-        aliases: ['drills-vault', 'drills', 'drill-details', 'drill-practice']
+        aliases: [
+          'train',
+          'drills-vault',
+          'drills',
+          'drill-details',
+          'drill-practice',
+          'planner',
+          'scenarios',
+          'masterclasses',
+          'chalkboard',
+          'skill-tree'
+        ]
+      },
+      {
+        id: 'video',
+        label: 'VIDEO',
+        icon: 'slow_motion_video',
+        aliases: [
+          'video',
+          'record',
+          'video-analysis'
+        ]
+      },
+      {
+        id: 'progress',
+        label: 'PROGRESS',
+        icon: 'trending_up',
+        aliases: [
+          'progress',
+          'pdp',
+          'stats',
+          'feedback'
+        ]
       },
       {
         id: 'work',
         label: 'MORE',
         icon: 'apps',
-        aliases: ['work', 'more', 'stats', 'feedback', 'masterclasses', 'scenarios', 'planner', 'chalkboard']
+        aliases: [
+          'work',
+          'more',
+          'academy',
+          'profiles',
+          'security-settings',
+          'privacy-governance',
+          'cloud-infrastructure',
+          'support',
+          'help',
+          'terms'
+        ]
       }
     ];
   };

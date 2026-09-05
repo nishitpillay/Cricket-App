@@ -33,7 +33,53 @@ export const WorkScreen: React.FC<WorkScreenProps> = ({ currentUser, onNavigate,
   const [activeTab, setActiveTab] = useState<WorkspaceCategory>(getInitialCategory());
 
   const tools = [
+    // 0. UNIFIED FLAGSHIP HUBS
+    {
+      id: 'train',
+      label: 'Train (All-In-One Hub)',
+      categories: ['player', 'junior', 'coach', 'parent', 'all'],
+      journeyBadge: 'Flagship Hub • Drills, Plan & Scenarios',
+      icon: 'fitness_center',
+      color: 'text-[#c3f400]',
+      desc: 'Smart Drills Vault, weekly training planners, active practice rep counters & tactical match scenarios'
+    },
+    {
+      id: 'video',
+      label: 'Video Studio (All-In-One Hub)',
+      categories: ['player', 'junior', 'coach', 'parent', 'all'],
+      journeyBadge: 'Flagship Hub • Capture, Lab & Dual Sync',
+      icon: 'slow_motion_video',
+      color: 'text-blue-400',
+      desc: '120-240 FPS Camera record, media vault, frame-by-frame biomechanical slow-motion & side-by-side comparison'
+    },
+    {
+      id: 'progress',
+      label: 'Progress & PDP (All-In-One Hub)',
+      categories: ['player', 'junior', 'coach', 'parent', 'all'],
+      journeyBadge: 'Flagship Hub • Goals, Stats & Evidence',
+      icon: 'trending_up',
+      color: 'text-emerald-400',
+      desc: 'Active goals, performance radar stats, coach voice notes & verified before/after development evidence'
+    },
     // 1. SENIOR PLAYER TOOLS
+    {
+      id: 'pdp',
+      label: 'Player Development Plan (PDP)',
+      categories: ['player', 'junior', 'coach', 'parent', 'all'],
+      journeyBadge: 'Core Flagship • Evidence-Backed PDP',
+      icon: 'assignment_ind',
+      color: 'text-[#c3f400]',
+      desc: 'Strengths, growth areas, active goals, assigned drills, coach voice notes, recent videos & before/after evidence'
+    },
+    {
+      id: 'skill-tree',
+      label: 'Cricket Skill Trees',
+      categories: ['player', 'junior', 'coach', 'all'],
+      journeyBadge: 'Core • Player / Coach',
+      icon: 'account_tree',
+      color: 'text-[#c3f400]',
+      desc: 'Structured technical trees: stance, trigger, bat path, gather, front-arm, brace & release'
+    },
     {
       id: 'record',
       label: 'Live AI Camera & Radar',

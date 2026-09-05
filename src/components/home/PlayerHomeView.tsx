@@ -3,6 +3,7 @@ import { UserProfile, SessionRecord, ScreenType, DrillItem } from '../../types';
 import { playBeep, playCelebration } from '../../utils/audioFeedback';
 import { CoreCricketLoopStepper } from '../loop/CoreCricketLoopStepper';
 import { VideoCentricPlayerSpotlight } from './VideoCentricPlayerSpotlight';
+import { SkillTreeProgressWidget } from './SkillTreeProgressWidget';
 
 interface PlayerHomeViewProps {
   user: UserProfile;
@@ -129,6 +130,138 @@ export const PlayerHomeView: React.FC<PlayerHomeViewProps> = ({
         user={user}
         onNavigate={onNavigate}
       />
+
+      {/* ========================================================================= */}
+      {/* 0.75 CRICKET-SPECIFIC SKILL TREE FOCUS PROGRESSION */}
+      {/* ========================================================================= */}
+      <SkillTreeProgressWidget
+        currentUser={user}
+        onNavigate={onNavigate}
+      />
+
+      {/* ========================================================================= */}
+      {/* 0.85 PLAYER DEVELOPMENT PLAN (PDP) INTEGRATED COCKPIT */}
+      {/* ========================================================================= */}
+      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#171f11] via-[#1c2217] to-[#12140f] border border-[#c3f400]/30 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-[#c3f400] text-black flex items-center justify-center font-bold shadow-lg shrink-0">
+            <span className="material-symbols-outlined text-[24px]">assignment_ind</span>
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="font-headline font-bold text-sm sm:text-base text-white">
+                Player Development Plan (PDP)
+              </h3>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#c3f400]/20 text-[#c3f400] border border-[#c3f400]/30">
+                Live Evidence
+              </span>
+            </div>
+            <p className="text-xs text-[#c4c9ac] mt-0.5">
+              Strengths, growth areas, active goals, assigned drills, coach audio memos &amp; verified before/after evidence.
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => {
+            playBeep(850, 0.05);
+            onNavigate('progress');
+          }}
+          className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#c3f400] hover:bg-[#b0dc00] text-black text-xs font-bold flex items-center justify-center gap-1.5 shadow-md transition-all cursor-pointer shrink-0"
+        >
+          <span>Open Progress &amp; PDP Hub</span>
+          <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+        </button>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 0.9 UNIFIED CORE ACTION HUBS (TRAIN, VIDEO, PROGRESS) */}
+      {/* ========================================================================= */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {/* Train Hub */}
+        <div
+          onClick={() => {
+            playBeep(750, 0.05);
+            onNavigate('train');
+          }}
+          className="p-4 rounded-2xl bg-[#1b1f16] border border-[#c3f400]/20 hover:border-[#c3f400]/50 hover:bg-[#20271a] transition-all shadow-md cursor-pointer flex flex-col justify-between group"
+        >
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-9 h-9 rounded-xl bg-[#c3f400]/15 text-[#c3f400] border border-[#c3f400]/30 flex items-center justify-center group-hover:bg-[#c3f400] group-hover:text-black transition-all">
+                <span className="material-symbols-outlined text-[20px]">fitness_center</span>
+              </div>
+              <span className="text-[10px] font-bold text-[#c3f400] uppercase tracking-wider">Hub</span>
+            </div>
+            <h3 className="font-headline font-bold text-base text-white group-hover:text-[#c3f400] transition-colors">
+              Train
+            </h3>
+            <p className="text-xs text-[#c4c9ac] mt-1 line-clamp-2">
+              Drills Vault, Weekly Training Plan, Practice Reps &amp; Match Scenarios.
+            </p>
+          </div>
+          <div className="flex items-center gap-1 text-xs font-bold text-[#c3f400] mt-3">
+            <span>Explore Training</span>
+            <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+          </div>
+        </div>
+
+        {/* Video Hub */}
+        <div
+          onClick={() => {
+            playBeep(750, 0.05);
+            onNavigate('video');
+          }}
+          className="p-4 rounded-2xl bg-[#151c22] border border-blue-500/20 hover:border-blue-400/50 hover:bg-[#19242d] transition-all shadow-md cursor-pointer flex flex-col justify-between group"
+        >
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-9 h-9 rounded-xl bg-blue-500/15 text-blue-400 border border-blue-500/30 flex items-center justify-center group-hover:bg-blue-400 group-hover:text-black transition-all">
+                <span className="material-symbols-outlined text-[20px]">slow_motion_video</span>
+              </div>
+              <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Hub</span>
+            </div>
+            <h3 className="font-headline font-bold text-base text-white group-hover:text-blue-400 transition-colors">
+              Video
+            </h3>
+            <p className="text-xs text-[#c4c9ac] mt-1 line-clamp-2">
+              120 FPS Record, Upload Vault, Motion Biomechanics &amp; Dual Sync Compare.
+            </p>
+          </div>
+          <div className="flex items-center gap-1 text-xs font-bold text-blue-400 mt-3">
+            <span>Launch Video Studio</span>
+            <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+          </div>
+        </div>
+
+        {/* Progress Hub */}
+        <div
+          onClick={() => {
+            playBeep(750, 0.05);
+            onNavigate('progress');
+          }}
+          className="p-4 rounded-2xl bg-[#181d19] border border-emerald-500/20 hover:border-emerald-400/50 hover:bg-[#1d2620] transition-all shadow-md cursor-pointer flex flex-col justify-between group"
+        >
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center justify-center group-hover:bg-emerald-400 group-hover:text-black transition-all">
+                <span className="material-symbols-outlined text-[20px]">trending_up</span>
+              </div>
+              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Hub</span>
+            </div>
+            <h3 className="font-headline font-bold text-base text-white group-hover:text-emerald-400 transition-colors">
+              Progress
+            </h3>
+            <p className="text-xs text-[#c4c9ac] mt-1 line-clamp-2">
+              Active Goals, Radar Statistics, Coach Audio Feedback &amp; Evidence History.
+            </p>
+          </div>
+          <div className="flex items-center gap-1 text-xs font-bold text-emerald-400 mt-3">
+            <span>View Progress &amp; PDP</span>
+            <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+          </div>
+        </div>
+      </div>
 
       {/* ========================================================================= */}
       {/* 1. TODAY'S TRAINING */}

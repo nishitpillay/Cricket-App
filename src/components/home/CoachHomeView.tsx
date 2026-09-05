@@ -228,6 +228,16 @@ export const CoachHomeView: React.FC<CoachHomeViewProps> = ({
           <button
             onClick={() => {
               playBeep(750, 0.05);
+              onNavigate('skill-tree');
+            }}
+            className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-[#c3f400]/15 hover:bg-[#c3f400]/25 text-[#c3f400] text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-[#c3f400]/30"
+          >
+            <span className="material-symbols-outlined text-[18px]">account_tree</span>
+            <span>Skill Trees</span>
+          </button>
+          <button
+            onClick={() => {
+              playBeep(750, 0.05);
               onNavigate('chalkboard');
             }}
             className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
@@ -246,6 +256,33 @@ export const CoachHomeView: React.FC<CoachHomeViewProps> = ({
             <span>Prescribe Drill</span>
           </button>
         </div>
+      </div>
+
+      {/* Squad Technical Skill Tree Matrix Strip */}
+      <div className="p-4 sm:p-5 rounded-2xl bg-[#1c1f1a] border border-white/10 shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-[#c3f400]/20 text-[#c3f400] flex items-center justify-center font-bold">
+            <span className="material-symbols-outlined text-[20px]">account_tree</span>
+          </div>
+          <div>
+            <h3 className="font-headline font-bold text-sm text-white">
+              Squad Technical Skill Trees &amp; Sign-Offs
+            </h3>
+            <p className="text-xs text-[#c4c9ac]">
+              Review stance, balance, bat path, gather, front-arm pull, and knee brace lockout criteria across players.
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => {
+            playBeep(800, 0.05);
+            onNavigate('skill-tree');
+          }}
+          className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors shrink-0"
+        >
+          <span>Audit Skill Trees</span>
+          <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+        </button>
       </div>
 
       {/* ========================================================================= */}

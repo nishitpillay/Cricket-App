@@ -3,6 +3,7 @@ import { UserProfile, SessionRecord, ScreenType, DrillItem } from '../../types';
 import { playBeep, playCelebration } from '../../utils/audioFeedback';
 import { CoreCricketLoopStepper } from '../loop/CoreCricketLoopStepper';
 import { VideoCentricPlayerSpotlight } from './VideoCentricPlayerSpotlight';
+import { SkillTreeProgressWidget } from './SkillTreeProgressWidget';
 
 interface JuniorPlayerHomeViewProps {
   user: UserProfile;
@@ -117,6 +118,14 @@ export const JuniorPlayerHomeView: React.FC<JuniorPlayerHomeViewProps> = ({
       {/* ========================================================================= */}
       <VideoCentricPlayerSpotlight
         user={user}
+        onNavigate={onNavigate}
+      />
+
+      {/* ========================================================================= */}
+      {/* 0.75 CRICKET-SPECIFIC SKILL TREE FOCUS PROGRESSION */}
+      {/* ========================================================================= */}
+      <SkillTreeProgressWidget
+        currentUser={user}
         onNavigate={onNavigate}
       />
 

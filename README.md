@@ -1,12 +1,36 @@
 # Pitch Precision
 
-> High-Performance Biomechanical Cricket Analytics & Safeguarding Platform (OWASP MASVS & GDPR Compliant)
+> High-Performance Biomechanical Cricket Analytics, Training Hub & Safeguarding Platform (OWASP MASVS & GDPR Compliant)
 
-Pitch Precision is a state-of-the-art sports science and biomechanical coaching application designed to analyze delivery trajectories, swing metrics, and physical recovery markers for elite cricket athletes. Built with a full-stack architecture using **React, Vite, Express, and Tailwind CSS**, the platform incorporates enterprise-grade safeguarding, offline-first cryptographic vaults, and advanced session security frameworks.
+Pitch Precision is a comprehensive, elite sports science and biomechanical coaching application designed to analyze delivery trajectories, bat swing mechanics, training routines, and physical recovery markers for cricket athletes. Built with a full-stack architecture using **React, Vite, Express, and Tailwind CSS**, the platform organizes complex capabilities into intuitive core hubs, featuring enterprise-grade safeguarding, offline-first cryptographic vaults, and advanced session security frameworks.
 
 ---
 
-## 🚀 Key Architectural Pillars
+## 🧭 Core Architectural Hubs
+
+To provide a clean, focused user experience while housing deep coaching and analytics functionality, Pitch Precision groups all features into three unified flagship hubs:
+
+### 1. 🏋️‍♂️ Train Hub (`TrainHubScreen`)
+*   **Smart Drills Vault:** Curated drills repository categorized by discipline (bowling, batting, fielding, fitness, mental), difficulty tier, and skill tree paths.
+*   **Training Plan & Bay Scheduling:** Interactive weekly calendar, net bay reservations, and workload volume allocation.
+*   **Practice Sessions:** Active rep execution counters, target completion timers, and instant auditory feedback cues.
+*   **Scenario Training:** Match tactical scenarios, death-overs simulation, tactical masterclasses, and an interactive digital tactical chalkboard.
+
+### 2. 🎥 Video Studio Hub (`VideoHubScreen`)
+*   **120–240 FPS Camera Capture:** High-frame-rate recording with live pitch landing zone grids, virtual stumps, release corridors, and simulated Doppler speed radar.
+*   **Secure Media Vault:** Cloud and local encrypted media vault with auto-delivery slicing, tamper-proof hashes, and server-side EXIF sanitization.
+*   **Frame-by-Frame Motion Lab:** Biomechanical video player with joint angle calculations (e.g. front knee brace at release, elbow extension), speed scrubbing, and multi-color telestrator drawing tools.
+*   **Dual Video Synchronizer:** Side-by-side synchronized scrubbing with ghost overlay comparison between baseline and current deliveries.
+
+### 3. 📈 Progress & PDP Hub (`ProgressHubScreen`)
+*   **Active Goals & Milestones:** Player Development Plan (PDP) tracking with measurable targets, baseline-to-target meters, and completion deadlines.
+*   **Biomechanical Statistics:** Radar performance profiles, Wagon Wheel shot distribution vectors, Pitch Corridor heatmap logs, and readiness indices.
+*   **Coach Observations & Voice Memos:** Timestamped diagnostic feedback, praise cues, corrective action guides, and synchronized audio voice note playback.
+*   **Development History & Evidence:** Side-by-side baseline vs. current telemetry comparison matrix with verified coach endorsements and PDF/Print reporting.
+
+---
+
+## 🚀 Key Security & Safeguarding Pillars
 
 ### 1. Robust Session Management & Security Clearance
 *   **Short-Lived Access Tokens:** Stateless JWT access keys expire in 15 minutes to minimize exposure windows.
@@ -25,18 +49,17 @@ Pitch Precision is a state-of-the-art sports science and biomechanical coaching 
 ### 2. Video & Media Security (MASVS-DATA-INGESTION Compliance)
 *   **Private-By-Default Isolation:** Athlete video recordings are private by default and visible only to the uploading athlete and authorized parent-guardian links.
 *   **Zero Raw Storage URLs:** Raw storage and file system paths are never exposed to the public web root.
-*   **Temporary Signed URLs:** Access links are short-lived, single-use, and signed with short expiration windows (e.g., 10 seconds).
+*   **Temporary Signed URLs:** Access links are short-lived, single-use, and signed with short expiration windows.
 *   **Header Magic-Bytes Verification:** Deep file header checks scan uploaded video buffers to verify true magic bytes (e.g., `ftypmp42`, `moov`) before saving, blocking executable masquerading attempts.
-*   **Multi-Stage Ingestion Sanitization:** The gateway filters extension types (prohibiting `.sh`, `.exe`, `.dll`), restricts mime-type declarations, caps video sizes at 50MB, and enforces a 15-second duration threshold.
-*   **Malware Scan Engine:** Simulated ClamAV secure scanning engine immediately quarantines suspicious files.
-*   **Server-Side Metadata Stripping & Frame Grabbing:** Removes all unnecessary EXIF tags, GPS coordinate markers, and camera metadata, while rendering safe frame-grabbing base64 SVG thumbnails server-side.
+*   **Multi-Stage Ingestion Sanitization:** The gateway filters extension types, restricts mime-type declarations, caps video sizes at 50MB, and enforces duration thresholds.
+*   **Malware Scan Engine:** Secure scanning engine immediately quarantines suspicious files.
+*   **Server-Side Metadata Stripping:** Removes all unnecessary EXIF tags, GPS coordinate markers, and camera metadata, while generating safe SVG thumbnails server-side.
 *   **Self-Serve GDPR Purges:** Players or parents can trigger instant deletion of uploaded content, performing secure physical sanitization from disk.
-*   **Relationship-Bound Access Controls:** Coaches lose access immediately if the active coaching relationship is disabled or removed.
 
 ### 3. Safeguarding & Offline Cryptographic Vaults
 *   **Offline Local Vault Sync:** Complete support for local-first operations. Offline additions and logs are preserved locally and synced automatically when connections are restored.
 *   **End-to-End Envelope Cryptography:** Employs the browser Web Crypto API to wrap sensitive safeguarding files using hardware-strength AES-256-GCM encryption.
-*   **Zero-Knowledge Key Derivation:** Cryptographic keys are derived dynamically from user passwords on-the-fly and never written to persistent client storage, preventing offline side-channel leaks.
+*   **Zero-Knowledge Key Derivation:** Cryptographic keys are derived dynamically on-the-fly and never written to persistent client storage.
 
 ---
 
@@ -83,21 +106,24 @@ npm run start
 ├── index.html                      # HTML5 Canvas container & application anchor
 ├── vite.config.ts                  # Vite build and asset pipeline configurations
 ├── src/
-│   ├── App.tsx                     # Main Router and application wrapper
+│   ├── App.tsx                     # Main Router and application hub orchestrator
 │   ├── main.tsx                    # React client entry point
 │   ├── index.css                   # Global Tailwind CSS configurations
 │   ├── types.ts                    # Global shared Types, interfaces, and enums
+│   ├── data/                       # Mock data, PDP schemas, drills & video keyframes
 │   ├── utils/
 │   │   ├── authSecurityManager.ts  # Secure Fetch Client, JWT in-memory store & token rotation
 │   │   └── audioFeedback.ts        # UI Beeps & cricket ball impact sound synthesizers
 │   └── components/
-│       ├── ReauthModal.tsx         # Password Step-Up verification modal
-│       ├── videoAnalysis/
-│       │   ├── VideoAnalysisTool.tsx # Biomechanical slow-mo and angle tracker
-│       │   └── SecureMediaVault.tsx  # Dynamic file uploader, sandbox validators & signed URLs list
+│       ├── Navbar.tsx              # Consolidated 5-tab navigation bar
 │       ├── screens/
-│       │   ├── SecurityAndSessionsScreen.tsx # JWT, Refresh token, active sessions & step-up panel
-│       │   └── ...                  # Safeguarding, Tactile Boards & Athlete analytics modules
+│       │   ├── TrainHubScreen.tsx  # Unified Train Hub (Drills, Planner, Practice, Scenarios)
+│       │   ├── VideoHubScreen.tsx  # Unified Video Studio (Record, Vault, Analysis, Comparison)
+│       │   ├── ProgressHubScreen.tsx # Unified Progress Hub (Goals, Stats, Feedback, History)
+│       │   └── ...                 # Security, Safeguarding, Admin & Roster screens
+│       ├── pdp/                    # Player Development Plan views, modals & evidence matrix
+│       ├── videoAnalysis/          # Biomechanical slow-mo, telestrator, and dual synchronizer
+│       └── drills/                 # Smart Drills catalog and execution modules
 ```
 
 ---

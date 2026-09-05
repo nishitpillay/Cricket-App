@@ -42,6 +42,11 @@ import { ScenarioTraining } from './components/tactics/ScenarioTraining';
 import { TrainingPlanner } from './components/planner/TrainingPlanner';
 import { DigitalChalkboard } from './components/chalkboard/DigitalChalkboard';
 import { SmartDrillsVault } from './components/drills/SmartDrillsVault';
+import { CricketSkillTreeHub } from './components/skills/CricketSkillTreeHub';
+import { PlayerDevelopmentPlanView } from './components/pdp/PlayerDevelopmentPlanView';
+import { TrainHubScreen } from './components/screens/TrainHubScreen';
+import { VideoHubScreen } from './components/screens/VideoHubScreen';
+import { ProgressHubScreen } from './components/screens/ProgressHubScreen';
 import { GoogleIntegrationModal } from './components/GoogleIntegrationModal';
 import { ProfileCreationWizardModal } from './components/profile/ProfileCreationWizardModal';
 import { GuardianSupervisionPortal } from './components/safeguarding/GuardianSupervisionPortal';
@@ -52,23 +57,29 @@ import { playBeep } from './utils/audioFeedback';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 const PARENT_SCREEN_MAP: Partial<Record<ScreenType, ScreenType>> = {
-  'video-analysis': 'work',
-  'record': 'work',
-  'drills-vault': 'work',
-  'scenarios': 'work',
-  'stats': 'work',
-  'planner': 'work',
-  'drills': 'work',
-  
-  'drill-details': 'drills-vault',
-  'drill-practice': 'drill-details',
+  'train': 'home',
+  'video': 'home',
+  'progress': 'home',
 
-  'masterclasses': 'scenarios',
-  'chalkboard': 'scenarios',
+  'skill-tree': 'train',
+  'drills-vault': 'train',
+  'drills': 'train',
+  'planner': 'train',
+  'scenarios': 'train',
+  'masterclasses': 'train',
+  'chalkboard': 'train',
+  'drill-details': 'train',
+  'drill-practice': 'train',
+
+  'record': 'video',
+  'video-analysis': 'video',
+
+  'pdp': 'progress',
+  'stats': 'progress',
+  'feedback': 'progress',
 
   'academy': 'more',
   'profiles': 'more',
-  'feedback': 'more',
   'support': 'more',
   'help': 'more',
   'terms': 'more',
@@ -310,6 +321,30 @@ export default function App() {
           />
         )}
 
+        {currentScreen === 'train' && (
+          <TrainHubScreen
+            currentUser={currentUser}
+            selectedDrill={selectedDrill}
+            onSelectDrill={(drill) => setSelectedDrill(drill)}
+            onNavigate={handleNavigate}
+          />
+        )}
+
+        {currentScreen === 'video' && (
+          <VideoHubScreen
+            currentUser={currentUser}
+            onNavigate={handleNavigate}
+          />
+        )}
+
+        {currentScreen === 'progress' && (
+          <ProgressHubScreen
+            currentUser={currentUser}
+            selectedDrill={selectedDrill}
+            onNavigate={handleNavigate}
+          />
+        )}
+
         {currentScreen === 'more' && (
           <MoreScreen onNavigate={handleNavigate} />
         )}
@@ -328,6 +363,28 @@ export default function App() {
 
         {currentScreen === 'video-analysis' && (
           <VideoAnalysisTool onNavigate={handleNavigate} />
+        )}
+
+        {currentScreen === 'skill-tree' && (
+          <CricketSkillTreeHub
+            currentUser={currentUser}
+            onNavigate={handleNavigate}
+            onSelectDrill={(drillId) => {
+              const d = mockDrills.find((item) => item.id === drillId);
+              if (d) setSelectedDrill(d);
+            }}
+          />
+        )}
+
+        {currentScreen === 'pdp' && (
+          <PlayerDevelopmentPlanView
+            currentUser={currentUser}
+            onNavigate={handleNavigate}
+            onSelectDrill={(drillId) => {
+              const d = mockDrills.find((item) => item.id === drillId);
+              if (d) setSelectedDrill(d);
+            }}
+          />
         )}
 
         {currentScreen === 'scenarios' && (
