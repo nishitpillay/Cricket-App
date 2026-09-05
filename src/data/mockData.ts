@@ -705,6 +705,61 @@ export const mockUsers: Record<string, UserProfile> = {
   },
 
   // ==========================================
+  // PARENTS & GUARDIANS: Primary Guardians
+  // ==========================================
+  parent: {
+    id: 'usr-parent-sarah',
+    name: 'Sarah Chen',
+    role: 'parent',
+    mainCategory: 'Parents',
+    parentSubCategory: 'Primary Guardian',
+    subCategoryTitle: 'Parent of Liam Chen (Junior Fast Bowler)',
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&auto=format&fit=crop&q=80',
+    level: 18,
+    xpProgress: 60,
+    tier: 'VERIFIED GUARDIAN',
+    specialty: 'Junior Athlete Supervision & Workload Safeguarding',
+    parentProfile: {
+      childUserId: 'usr-liam-junior',
+      childName: 'Liam Chen',
+      childAge: 14,
+      childTier: 'JUNIOR ACADEMY RISING STAR',
+      relationship: 'Mother & Legal Guardian',
+      weeklyVolumeLimitBalls: 120,
+      currentWeekBallsBowled: 78,
+      safeguardingStatus: 'Verified & Active',
+      lastCoachNote: 'Liam bowled with superb upright seam alignment today. Keep hydration high for Friday match sim.',
+      nextSessionTime: 'Tomorrow • 4:30 PM (Net Bay 3)'
+    }
+  },
+
+  parent_anita: {
+    id: 'usr-parent-anita',
+    name: 'Anita Patel',
+    role: 'parent',
+    mainCategory: 'Parents',
+    parentSubCategory: 'Primary Guardian',
+    subCategoryTitle: 'Parent of Aarav Patel (Junior Leg-Spinner)',
+    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80',
+    level: 22,
+    xpProgress: 70,
+    tier: 'VERIFIED GUARDIAN',
+    specialty: 'Spin Development & School-Club Balance',
+    parentProfile: {
+      childUserId: 'usr-aarav-junior',
+      childName: 'Aarav Patel',
+      childAge: 12,
+      childTier: 'JUNIOR TALENT PATHWAY',
+      relationship: 'Mother & Legal Guardian',
+      weeklyVolumeLimitBalls: 150,
+      currentWeekBallsBowled: 92,
+      safeguardingStatus: 'Verified & Active',
+      lastCoachNote: 'Great wrist rotation on the wrong-un drill. Ensure 1 rest day before Sunday league fixture.',
+      nextSessionTime: 'Thursday • 5:00 PM (Spin Nets)'
+    }
+  },
+
+  // ==========================================
   // ADMINS: Club Admin
   // ==========================================
   admin_club: {

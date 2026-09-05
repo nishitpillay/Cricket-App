@@ -299,12 +299,13 @@ export interface CrossBorderAuditLog {
 export type UserRole = 
   | 'player' 
   | 'coach' 
+  | 'parent'
   | 'club_admin' 
   | 'platform_admin' 
   | 'security_admin' 
   | 'admin';
 
-export type UserMainCategory = 'Players' | 'Coach' | 'Admins';
+export type UserMainCategory = 'Players' | 'Coach' | 'Parents' | 'Admins';
 
 export type PlayerSubCategory = 
   | 'Senior players' 
@@ -320,6 +321,11 @@ export type CoachSubCategory =
   | 'All-rounder coach'
   | 'Physio coach'
   | 'Umpires';
+
+export type ParentSubCategory = 
+  | 'Primary Guardian'
+  | 'Safeguarding Sponsor'
+  | 'Family Member';
 
 export type AdminSubCategory = 
   | 'Platform Admin'
@@ -515,6 +521,7 @@ export interface UserProfile {
   mainCategory?: UserMainCategory;
   playerSubCategory?: PlayerSubCategory;
   coachSubCategory?: CoachSubCategory;
+  parentSubCategory?: ParentSubCategory;
   adminSubCategory?: AdminSubCategory;
   subCategoryTitle?: string;
   officialCertifications?: string[];
@@ -532,6 +539,18 @@ export interface UserProfile {
   sessions?: UserSession[];
   playerProfile?: PlayerCricketProfile;
   coachProfile?: CoachCricketProfile;
+  parentProfile?: {
+    childUserId: string;
+    childName: string;
+    childAge: number;
+    childTier: string;
+    relationship: string;
+    weeklyVolumeLimitBalls: number;
+    currentWeekBallsBowled: number;
+    safeguardingStatus: 'Verified & Active' | 'Pending Review';
+    lastCoachNote?: string;
+    nextSessionTime?: string;
+  };
 }
 
 export interface SessionRecord {

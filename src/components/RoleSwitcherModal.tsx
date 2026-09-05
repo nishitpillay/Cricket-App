@@ -51,6 +51,7 @@ export const RoleSwitcherModal: React.FC<RoleSwitcherModalProps> = ({
   // Helper to resolve main category
   const resolveMainCategory = (u: UserProfile): UserMainCategory => {
     if (u.mainCategory) return u.mainCategory;
+    if (u.role === 'parent') return 'Parents';
     if (u.role === 'coach') return 'Coach';
     if (u.role === 'admin' || u.role === 'club_admin' || u.role === 'security_admin' || u.role === 'platform_admin') return 'Admins';
     return 'Players';
@@ -60,7 +61,9 @@ export const RoleSwitcherModal: React.FC<RoleSwitcherModalProps> = ({
   const resolveSubCategory = (u: UserProfile): string => {
     if (u.playerSubCategory) return u.playerSubCategory;
     if (u.coachSubCategory) return u.coachSubCategory;
+    if (u.parentSubCategory) return u.parentSubCategory;
     if (u.adminSubCategory) return u.adminSubCategory;
+    if (u.role === 'parent') return 'Primary Guardian';
     if (u.role === 'coach') return 'Bowling coach';
     if (u.isJunior) return 'Junior players';
     if (u.role === 'player') return 'Senior players';
@@ -80,6 +83,7 @@ export const RoleSwitcherModal: React.FC<RoleSwitcherModalProps> = ({
       'Physio coach',
       'Umpires'
     ],
+    Parents: ['Primary Guardian', 'Safeguarding Sponsor', 'Family Member'],
     Admins: ['Platform Admin', 'Club Admin', 'Safeguarding Admin']
   };
 
@@ -170,8 +174,8 @@ export const RoleSwitcherModal: React.FC<RoleSwitcherModalProps> = ({
         </div>
 
         {/* 1. Main Category Tabs */}
-        <div className="grid grid-cols-3 gap-1.5 bg-[#141414] p-1 rounded-xl mb-2.5 shrink-0">
-          {(['Players', 'Coach', 'Admins'] as UserMainCategory[]).map((cat) => {
+        <div className="grid grid-cols-4 gap-1 bg-[#141414] p-1 rounded-xl mb-2.5 shrink-0">
+          {(['Players', 'Coach', 'Parents', 'Admins'] as UserMainCategory[]).map((cat) => {
             const isTabActive = activeCategoryTab === cat;
             return (
               <button
@@ -180,20 +184,23 @@ export const RoleSwitcherModal: React.FC<RoleSwitcherModalProps> = ({
                   setActiveCategoryTab(cat);
                   setActiveSubFilter('ALL');
                 }}
-                className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                className={`py-1.5 px-1 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer ${
                   isTabActive
                     ? cat === 'Players'
                       ? 'bg-[#c3f400] text-[#111800] shadow'
                       : cat === 'Coach'
                       ? 'bg-[#00d2ff] text-[#002b36] shadow'
+                      : cat === 'Parents'
+                      ? 'bg-[#4ade80] text-[#052e16] shadow'
                       : 'bg-purple-400 text-[#220738] shadow'
                     : 'text-[#8e918f] hover:text-white'
                 }`}
               >
-                {cat === 'Players' && <span className="material-symbols-outlined text-[15px]">sports_cricket</span>}
-                {cat === 'Coach' && <span className="material-symbols-outlined text-[15px]">sports</span>}
-                {cat === 'Admins' && <span className="material-symbols-outlined text-[15px]">admin_panel_settings</span>}
-                <span>{cat}</span>
+                {cat === 'Players' && <span className="material-symbols-outlined text-[14px]">sports_cricket</span>}
+                {cat === 'Coach' && <span className="material-symbols-outlined text-[14px]">sports</span>}
+                {cat === 'Parents' && <span className="material-symbols-outlined text-[14px]">family_restroom</span>}
+                {cat === 'Admins' && <span className="material-symbols-outlined text-[14px]">admin_panel_settings</span>}
+                <span className="truncate">{cat}</span>
               </button>
             );
           })}

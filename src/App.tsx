@@ -297,11 +297,17 @@ export default function App() {
               setSelectedDrill(drill);
               handleNavigate('drill-details');
             }}
+            onOpenGuardianPortal={() => setIsGuardianPortalOpen(true)}
+            onOpenRoleSwitcher={() => setIsRoleModalOpen(true)}
           />
         )}
         
         {currentScreen === 'work' && (
-          <WorkScreen onNavigate={handleNavigate} />
+          <WorkScreen
+            currentUser={currentUser}
+            onNavigate={handleNavigate}
+            onOpenGuardianPortal={() => setIsGuardianPortalOpen(true)}
+          />
         )}
 
         {currentScreen === 'more' && (

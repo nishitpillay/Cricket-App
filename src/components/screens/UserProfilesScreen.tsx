@@ -54,9 +54,16 @@ export const UserProfilesScreen: React.FC<UserProfilesScreenProps> = ({
     'Safeguarding Admin'
   ];
 
+  const parentSubCategories = [
+    'Primary Guardian',
+    'Safeguarding Sponsor',
+    'Family Member'
+  ];
+
   // Helper to resolve main category for each user profile
   const resolveMainCategory = (user: UserProfile): UserMainCategory => {
     if (user.mainCategory) return user.mainCategory;
+    if (user.role === 'parent') return 'Parents';
     if (user.role === 'coach') return 'Coach';
     if (user.role === 'admin' || user.role === 'club_admin' || user.role === 'security_admin' || user.role === 'platform_admin') return 'Admins';
     return 'Players';
@@ -66,7 +73,9 @@ export const UserProfilesScreen: React.FC<UserProfilesScreenProps> = ({
   const resolveSubCategory = (user: UserProfile): string => {
     if (user.playerSubCategory) return user.playerSubCategory;
     if (user.coachSubCategory) return user.coachSubCategory;
+    if (user.parentSubCategory) return user.parentSubCategory;
     if (user.adminSubCategory) return user.adminSubCategory;
+    if (user.role === 'parent') return 'Primary Guardian';
     if (user.role === 'coach') return 'Bowling coach';
     if (user.isJunior) return 'Junior players';
     if (user.role === 'player') return 'Senior players';
@@ -101,8 +110,9 @@ export const UserProfilesScreen: React.FC<UserProfilesScreenProps> = ({
   const counts = useMemo(() => {
     const pCount = allMockUserProfiles.filter((u) => resolveMainCategory(u) === 'Players').length;
     const cCount = allMockUserProfiles.filter((u) => resolveMainCategory(u) === 'Coach').length;
+    const parCount = allMockUserProfiles.filter((u) => resolveMainCategory(u) === 'Parents').length;
     const aCount = allMockUserProfiles.filter((u) => resolveMainCategory(u) === 'Admins').length;
-    return { Players: pCount, Coach: cCount, Admins: aCount };
+    return { Players: pCount, Coach: cCount, Parents: parCount, Admins: aCount };
   }, []);
 
   const handleCategorySwitch = (cat: UserMainCategory) => {
@@ -250,7 +260,7 @@ export const UserProfilesScreen: React.FC<UserProfilesScreenProps> = ({
           <label className="text-[11px] font-mono uppercase tracking-widest text-[#8e918f] font-bold mb-2 block">
             Select Main Category
           </label>
-          <div className="grid grid-cols-3 gap-2.5 sm:gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
             {/* Players Tab */}
             <button
               onClick={() => handleCategorySwitch('Players')}
@@ -261,7 +271,7 @@ export const UserProfilesScreen: React.FC<UserProfilesScreenProps> = ({
               }`}
             >
               <div className="flex items-center justify-between mb-1.5">
-                <span className={`material-symbols-outlined text-[24px] ${
+                <span className={`material-symbols-outlined text-[22px] ${
                   selectedMainCategory === 'Players' ? 'text-[#c3f400]' : 'text-gray-400'
                 }`}>
                   sports_cricket
@@ -274,9 +284,9 @@ export const UserProfilesScreen: React.FC<UserProfilesScreenProps> = ({
                   {counts.Players} Profiles
                 </span>
               </div>
-              <h3 className="text-base sm:text-lg font-headline font-bold text-white leading-tight">Players</h3>
-              <p className="text-[11px] text-[#8e918f] mt-0.5 line-clamp-1">
-                Senior players, Junior players, Junior premiere
+              <h3 className="text-base font-headline font-bold text-white leading-tight">Players</h3>
+              <p className="text-[10px] text-[#8e918f] mt-0.5 line-clamp-1">
+                Senior, Junior & Junior Premiere
               </p>
             </button>
 
@@ -290,7 +300,7 @@ export const UserProfilesScreen: React.FC<UserProfilesScreenProps> = ({
               }`}
             >
               <div className="flex items-center justify-between mb-1.5">
-                <span className={`material-symbols-outlined text-[24px] ${
+                <span className={`material-symbols-outlined text-[22px] ${
                   selectedMainCategory === 'Coach' ? 'text-[#00d2ff]' : 'text-gray-400'
                 }`}>
                   sports
@@ -303,9 +313,38 @@ export const UserProfilesScreen: React.FC<UserProfilesScreenProps> = ({
                   {counts.Coach} Profiles
                 </span>
               </div>
-              <h3 className="text-base sm:text-lg font-headline font-bold text-white leading-tight">Coach</h3>
-              <p className="text-[11px] text-[#8e918f] mt-0.5 line-clamp-1">
-                Batting, Bowling, Fielding, Physio, Umpires & more
+              <h3 className="text-base font-headline font-bold text-white leading-tight">Coach</h3>
+              <p className="text-[10px] text-[#8e918f] mt-0.5 line-clamp-1">
+                Batting, Bowling, Physio & Umpires
+              </p>
+            </button>
+
+            {/* Parents Tab */}
+            <button
+              onClick={() => handleCategorySwitch('Parents')}
+              className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden ${
+                selectedMainCategory === 'Parents'
+                  ? 'bg-gradient-to-br from-[#4ade80]/20 to-transparent border-[#4ade80] text-white shadow-[0_0_20px_rgba(74,222,128,0.15)]'
+                  : 'bg-[#1a1a1a] border-white/10 text-[#c4c9ac] hover:border-white/20 hover:text-white'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1.5">
+                <span className={`material-symbols-outlined text-[22px] ${
+                  selectedMainCategory === 'Parents' ? 'text-[#4ade80]' : 'text-gray-400'
+                }`}>
+                  family_restroom
+                </span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                  selectedMainCategory === 'Parents'
+                    ? 'bg-[#4ade80] text-[#052e16]'
+                    : 'bg-white/10 text-gray-300'
+                }`}>
+                  {counts.Parents} Profiles
+                </span>
+              </div>
+              <h3 className="text-base font-headline font-bold text-white leading-tight">Parents</h3>
+              <p className="text-[10px] text-[#8e918f] mt-0.5 line-clamp-1">
+                Primary Guardians & Safeguarding Sponsors
               </p>
             </button>
 
@@ -319,7 +358,7 @@ export const UserProfilesScreen: React.FC<UserProfilesScreenProps> = ({
               }`}
             >
               <div className="flex items-center justify-between mb-1.5">
-                <span className={`material-symbols-outlined text-[24px] ${
+                <span className={`material-symbols-outlined text-[22px] ${
                   selectedMainCategory === 'Admins' ? 'text-purple-400' : 'text-gray-400'
                 }`}>
                   admin_panel_settings
@@ -332,9 +371,9 @@ export const UserProfilesScreen: React.FC<UserProfilesScreenProps> = ({
                   {counts.Admins} Profiles
                 </span>
               </div>
-              <h3 className="text-base sm:text-lg font-headline font-bold text-white leading-tight">Admins</h3>
-              <p className="text-[11px] text-[#8e918f] mt-0.5 line-clamp-1">
-                Platform Admin, Club Admin, Safeguarding Admin
+              <h3 className="text-base font-headline font-bold text-white leading-tight">Admins</h3>
+              <p className="text-[10px] text-[#8e918f] mt-0.5 line-clamp-1">
+                Platform, Club & Safeguarding Leads
               </p>
             </button>
           </div>
@@ -408,6 +447,25 @@ export const UserProfilesScreen: React.FC<UserProfilesScreenProps> = ({
                     {subCat === 'All-rounder coach' && <span className="material-symbols-outlined text-[15px]">sync_alt</span>}
                     {subCat === 'Physio coach' && <span className="material-symbols-outlined text-[15px]">medical_services</span>}
                     {subCat === 'Umpires' && <span className="material-symbols-outlined text-[15px]">gavel</span>}
+                    <span>{subCat}</span>
+                  </button>
+                );
+              })}
+
+            {selectedMainCategory === 'Parents' &&
+              parentSubCategories.map((subCat) => {
+                const isSelected = selectedSubCategory === subCat;
+                return (
+                  <button
+                    key={subCat}
+                    onClick={() => handleSubCategorySwitch(subCat)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border flex items-center gap-1.5 ${
+                      isSelected
+                        ? 'bg-[#4ade80] text-[#052e16] border-[#4ade80] shadow-[0_0_12px_rgba(74,222,128,0.3)]'
+                        : 'bg-[#1e1e1e] text-[#c4c9ac] border-white/10 hover:border-white/25 hover:text-white'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[15px]">family_restroom</span>
                     <span>{subCat}</span>
                   </button>
                 );
