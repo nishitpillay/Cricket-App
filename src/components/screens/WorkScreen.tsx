@@ -8,140 +8,302 @@ interface WorkScreenProps {
   onOpenGuardianPortal?: () => void;
 }
 
-type WorkspaceCategory = 'all' | 'player' | 'coach' | 'parent' | 'admin';
+type WorkspaceCategory = 'all' | 'player' | 'junior' | 'coach' | 'parent' | 'academy_admin' | 'platform_admin';
 
 export const WorkScreen: React.FC<WorkScreenProps> = ({ currentUser, onNavigate, onOpenGuardianPortal }) => {
-  const [activeTab, setActiveTab] = useState<WorkspaceCategory>('all');
+  // Determine role default tab
+  const getInitialCategory = (): WorkspaceCategory => {
+    if (!currentUser) return 'all';
+    if (currentUser.isJunior) return 'junior';
+    if (currentUser.role === 'coach') return 'coach';
+    if (currentUser.role === 'parent') return 'parent';
+    if (
+      currentUser.role === 'platform_admin' ||
+      currentUser.role === 'security_admin' ||
+      currentUser.adminSubCategory === 'Platform Admin'
+    ) {
+      return 'platform_admin';
+    }
+    if (currentUser.role === 'admin' || currentUser.role === 'club_admin') {
+      return 'academy_admin';
+    }
+    return 'player';
+  };
+
+  const [activeTab, setActiveTab] = useState<WorkspaceCategory>(getInitialCategory());
 
   const tools = [
-    // Player Journey Tools
+    // 1. SENIOR PLAYER TOOLS
     {
       id: 'record',
-      label: 'Live AI Camera',
-      category: 'player',
-      journeyBadge: 'Player',
+      label: 'Live AI Camera & Radar',
+      categories: ['player', 'all'],
+      journeyBadge: 'Core • Player',
       icon: 'videocam',
       color: 'text-[#c3f400]',
-      desc: 'Real-time pitch map, release trajectory & ball speed'
+      desc: '120 FPS high-speed video capture, auto-delivery trimming & ball speed radar'
     },
     {
       id: 'video-analysis',
       label: 'Motion Lab & Biomechanics',
-      category: 'player',
-      journeyBadge: 'Player / Coach',
+      categories: ['player', 'coach', 'all'],
+      journeyBadge: 'Core • Player / Coach',
       icon: 'slow_motion_video',
       color: 'text-blue-400',
-      desc: 'Slow-motion stepper, joint angle calibration & side-by-side'
+      desc: 'Slow-motion stepper, release angle calibration & side-by-side comparison'
     },
     {
       id: 'drills-vault',
       label: 'Smart Drills Vault',
-      category: 'player',
-      journeyBadge: 'Player',
+      categories: ['player', 'all'],
+      journeyBadge: 'Core • Player',
       icon: 'fitness_center',
       color: 'text-emerald-400',
-      desc: 'Categorized practice routines for pace, seam & spin'
+      desc: 'Pace, spin, seam & batting skill development drills with rep counters'
     },
     {
       id: 'stats',
       label: 'Stats & Wagon Wheel',
-      category: 'player',
-      journeyBadge: 'Player',
+      categories: ['player', 'all'],
+      journeyBadge: 'Important • Player',
       icon: 'radar',
       color: 'text-amber-400',
-      desc: 'Bowling heatmaps, pitch lengths & batting wagon wheels'
+      desc: 'Pitch corridor heatmaps, release angles & wagon wheel shot vectors'
     },
-
-    // Coach Journey Tools
     {
       id: 'feedback',
-      label: 'Coach Feedback & Audio',
-      category: 'coach',
-      journeyBadge: 'Coach',
+      label: 'Coach Audio & Video Feedback',
+      categories: ['player', 'all'],
+      journeyBadge: 'Core • Player',
       icon: 'mic',
       color: 'text-cyan-400',
-      desc: 'Record voice feedback notes, review logs & dispatch drills'
+      desc: 'Listen to coach voice notes, view annotated key-frames & homework drills'
+    },
+    {
+      id: 'masterclasses',
+      label: 'Tactical Masterclasses',
+      categories: ['player', 'coach', 'all'],
+      journeyBadge: 'Advanced • Pro',
+      icon: 'school',
+      color: 'text-indigo-400',
+      desc: 'Masterclass curriculum from Brett Lee, Ashwin & international directors'
+    },
+    {
+      id: 'scenarios',
+      label: 'Match Scenario Simulator',
+      categories: ['player', 'all'],
+      journeyBadge: 'Advanced • Player',
+      icon: 'psychology',
+      color: 'text-pink-400',
+      desc: 'Death-overs tactical execution & situational pressure drills'
+    },
+
+    // 2. JUNIOR PLAYER TOOLS
+    {
+      id: 'drills-vault',
+      label: 'Junior Assigned Drills',
+      categories: ['junior'],
+      journeyBadge: 'Core • Junior',
+      icon: 'fitness_center',
+      color: 'text-emerald-400',
+      desc: 'Age-appropriate junior fast bowling and batting routines with coach targets'
+    },
+    {
+      id: 'record',
+      label: 'Supervised Video Capture',
+      categories: ['junior'],
+      journeyBadge: 'Core • Junior',
+      icon: 'videocam',
+      color: 'text-[#c3f400]',
+      desc: 'Record bowling deliveries with guardian-protected cloud review'
+    },
+    {
+      id: 'stats',
+      label: 'My Growth & Progress',
+      categories: ['junior'],
+      journeyBadge: 'Important • Junior',
+      icon: 'trending_up',
+      color: 'text-[#00d2ff]',
+      desc: 'Delivery counts, pace progression, and technique consistency scores'
+    },
+    {
+      id: 'feedback',
+      label: 'Coach Voice Notes',
+      categories: ['junior'],
+      journeyBadge: 'Core • Junior',
+      icon: 'record_voice_over',
+      color: 'text-amber-400',
+      desc: 'Listen to encouragement and technique guidance directly from coach'
+    },
+
+    // 3. COACH JOURNEY TOOLS
+    {
+      id: 'video-analysis',
+      label: 'Pro Telestrator Lab',
+      categories: ['coach'],
+      journeyBadge: 'Core • Coach',
+      icon: 'draw',
+      color: 'text-blue-400',
+      desc: 'Slow-motion video drawing suite, angle rays & release markers'
     },
     {
       id: 'chalkboard',
       label: 'Tactics Chalkboard',
-      category: 'coach',
-      journeyBadge: 'Coach',
+      categories: ['coach', 'all'],
+      journeyBadge: 'Important • Coach',
       icon: 'gesture',
       color: 'text-yellow-400',
-      desc: 'Interactive field placement board & set-piece designer'
+      desc: 'Interactive field placement board & tactical set-piece designer'
     },
     {
       id: 'planner',
       label: 'Training Planner & Schedule',
-      category: 'coach',
-      journeyBadge: 'Coach / Player',
+      categories: ['coach', 'all'],
+      journeyBadge: 'Important • Coach',
       icon: 'calendar_month',
       color: 'text-teal-400',
       desc: 'Weekly squad calendar, session dispatch & load tracking'
     },
     {
-      id: 'masterclasses',
-      label: 'Tactical Masterclasses',
-      category: 'coach',
-      journeyBadge: 'Coach / Player',
-      icon: 'school',
-      color: 'text-indigo-400',
-      desc: 'Pro insights from Brett Lee, Ashwin & elite directors'
+      id: 'feedback',
+      label: 'Review Queue & Voice Notes',
+      categories: ['coach'],
+      journeyBadge: 'Core • Coach',
+      icon: 'rate_review',
+      color: 'text-cyan-400',
+      desc: 'Unreviewed athlete video queue, voice note recording & drill dispatch'
+    },
+    {
+      id: 'profiles',
+      label: 'Squad Rosters & Triage',
+      categories: ['coach'],
+      journeyBadge: 'Core • Coach',
+      icon: 'badge',
+      color: 'text-purple-400',
+      desc: 'Manage squad athlete profiles, workload thresholds & performance tags'
     },
 
-    // Parent Journey Tools
+    // 4. PARENT JOURNEY TOOLS
     {
       id: 'guardian-portal',
       label: 'Guardian Safety Portal',
-      category: 'parent',
-      journeyBadge: 'Parent',
+      categories: ['parent', 'all'],
+      journeyBadge: 'Core • Parent',
       icon: 'family_restroom',
       color: 'text-green-400',
-      desc: 'Supervision settings, verified consent & coach CC logs',
+      desc: 'Supervision settings, verified consent, pickup bays & video quarantine',
       action: () => onOpenGuardianPortal?.()
     },
     {
-      id: 'scenarios',
-      label: 'Scenario Match Practice',
-      category: 'parent',
-      journeyBadge: 'Parent / Player',
-      icon: 'psychology',
-      color: 'text-pink-400',
-      desc: 'Match-pressure decision making & situational IQ drills'
+      id: 'feedback',
+      label: 'Coach Notes & Progress',
+      categories: ['parent'],
+      journeyBadge: 'Core • Parent',
+      icon: 'chat',
+      color: 'text-amber-400',
+      desc: 'Direct communication from coaching staff and development indices'
     },
-
-    // Admin Journey Tools
     {
-      id: 'profiles',
-      label: 'Roster & User Directory',
-      category: 'admin',
-      journeyBadge: 'Admin',
-      icon: 'badge',
-      color: 'text-purple-400',
-      desc: 'Senior, Junior, Premiere rosters & coach allocations'
+      id: 'planner',
+      label: 'Junior Session Schedule',
+      categories: ['parent'],
+      journeyBadge: 'Important • Parent',
+      icon: 'event',
+      color: 'text-teal-400',
+      desc: 'Training bay locations, pickup times & net attendance RSVP'
     },
     {
       id: 'privacy-governance',
-      label: 'Safeguarding & Governance',
-      category: 'admin',
-      journeyBadge: 'Admin',
+      label: 'Child Data Safeguards',
+      categories: ['parent'],
+      journeyBadge: 'Important • Parent',
       icon: 'shield',
-      color: 'text-red-400',
-      desc: 'Junior data guardrails, DBS compliance & audit logs'
+      color: 'text-emerald-400',
+      desc: 'DBS certified staff logs, restricted video access & privacy controls'
+    },
+
+    // 5. ACADEMY ADMIN TOOLS
+    {
+      id: 'profiles',
+      label: 'Academy Roster Directory',
+      categories: ['academy_admin'],
+      journeyBadge: 'Admin-only',
+      icon: 'badge',
+      color: 'text-purple-400',
+      desc: 'Manage Senior, Junior & Premiere squads, coaches and guardian links'
     },
     {
+      id: 'planner',
+      label: 'Facility Bay Allocations',
+      categories: ['academy_admin'],
+      journeyBadge: 'Admin-only',
+      icon: 'stadium',
+      color: 'text-teal-400',
+      desc: 'Turf wicket, astro pitch, and indoor motion studio bay assignments'
+    },
+    {
+      id: 'privacy-governance',
+      label: 'Safeguarding & Incident Audits',
+      categories: ['academy_admin'],
+      journeyBadge: 'Admin-only',
+      icon: 'gavel',
+      color: 'text-red-400',
+      desc: 'Junior data guardrails, DBS compliance tracking & incident logs'
+    },
+
+    // 6. PLATFORM ADMIN TOOLS
+    {
       id: 'cloud-infrastructure',
-      label: 'Security & Cloud Infra',
-      category: 'admin',
-      journeyBadge: 'Admin',
+      label: 'Cloud Infrastructure Telemetry',
+      categories: ['platform_admin', 'all'],
+      journeyBadge: 'Admin-only',
       icon: 'cloud_sync',
       color: 'text-orange-400',
-      desc: 'MASVS validation, KMS key versions & hardware keystore'
+      desc: 'AU-Southeast-1 data residency, Cloud Run health & video bucket telemetry'
+    },
+    {
+      id: 'security-settings',
+      label: 'Security Engine & Keystore',
+      categories: ['platform_admin', 'all'],
+      journeyBadge: 'Admin-only',
+      icon: 'shield',
+      color: 'text-red-400',
+      desc: 'MASVS L1/L2 compliance, biometric keystore & KMS envelope encryption'
+    },
+    {
+      id: 'encryption-governance',
+      label: 'Data Encryption & KMS Keys',
+      categories: ['platform_admin'],
+      journeyBadge: 'Admin-only',
+      icon: 'vpn_key',
+      color: 'text-cyan-400',
+      desc: 'AES-256-GCM hardware key versioning and rotation cycles'
+    },
+    {
+      id: 'source-code-security',
+      label: 'DevSecOps & Source Security',
+      categories: ['platform_admin'],
+      journeyBadge: 'Admin-only',
+      icon: 'terminal',
+      color: 'text-amber-400',
+      desc: 'Dependency vulnerability audits, static code analysis & build sign-offs'
     }
   ];
 
-  const filteredTools = activeTab === 'all' ? tools : tools.filter((t) => t.category === activeTab);
+  const filteredTools =
+    activeTab === 'all'
+      ? tools.filter((t, idx, arr) => arr.findIndex((x) => x.id === t.id && x.label === t.label) === idx)
+      : tools.filter((t) => t.categories.includes(activeTab));
+
+  const roleLabels: { id: WorkspaceCategory; label: string }[] = [
+    { id: 'player', label: 'Senior Player' },
+    { id: 'junior', label: 'Junior Player' },
+    { id: 'coach', label: 'Coach' },
+    { id: 'parent', label: 'Parent' },
+    { id: 'academy_admin', label: 'Academy Admin' },
+    { id: 'platform_admin', label: 'Platform Admin' },
+    { id: 'all', label: 'All Tools' }
+  ];
 
   return (
     <div className="p-4 sm:p-6 max-w-5xl mx-auto space-y-5 w-full pb-28">
@@ -149,24 +311,16 @@ export const WorkScreen: React.FC<WorkScreenProps> = ({ currentUser, onNavigate,
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
         <div>
           <h2 className="text-xl sm:text-2xl font-headline font-black text-white tracking-tight">
-            Workspace Dashboard
+            Workspace Tools &amp; Features
           </h2>
           <p className="text-[#c4c9ac] text-xs sm:text-sm">
-            Core performance suites aligned across all 4 primary user journeys.
+            Role-scoped feature suite adhering to the academy feature governance matrix.
           </p>
         </div>
 
-        {/* Journey Filter Tabs */}
+        {/* Role Filter Tabs */}
         <div className="flex items-center gap-1 bg-[#1a1a1a] p-1 rounded-xl border border-white/10 overflow-x-auto max-w-full">
-          {(
-            [
-              { id: 'all', label: 'All Tools' },
-              { id: 'player', label: 'Player' },
-              { id: 'coach', label: 'Coach' },
-              { id: 'parent', label: 'Parent' },
-              { id: 'admin', label: 'Admin' }
-            ] as const
-          ).map((tab) => (
+          {roleLabels.map((tab) => (
             <button
               key={tab.id}
               onClick={() => {
@@ -187,9 +341,9 @@ export const WorkScreen: React.FC<WorkScreenProps> = ({ currentUser, onNavigate,
 
       {/* Grid of Tools */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-        {filteredTools.map((tool) => (
+        {filteredTools.map((tool, index) => (
           <button
-            key={tool.id}
+            key={`${tool.id}-${index}`}
             onClick={() => {
               playBeep(750, 0.04);
               if (tool.action) {
@@ -217,7 +371,7 @@ export const WorkScreen: React.FC<WorkScreenProps> = ({ currentUser, onNavigate,
               {tool.desc}
             </p>
             <div className="mt-3 flex items-center gap-1 text-[11px] font-semibold text-[#c4c9ac] group-hover:text-white transition-colors">
-              <span>Launch</span>
+              <span>Launch Feature</span>
               <span className="material-symbols-outlined text-[14px] group-hover:translate-x-0.5 transition-transform">
                 arrow_forward
               </span>
@@ -228,4 +382,3 @@ export const WorkScreen: React.FC<WorkScreenProps> = ({ currentUser, onNavigate,
     </div>
   );
 };
-

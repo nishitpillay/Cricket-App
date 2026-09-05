@@ -1,48 +1,253 @@
 import React from 'react';
-import { ScreenType } from '../types';
+import { ScreenType, UserProfile } from '../types';
+import { playBeep } from '../utils/audioFeedback';
 
 interface NavbarProps {
   currentScreen: ScreenType;
+  currentUser?: UserProfile;
   onNavigate: (screen: ScreenType) => void;
   onBack?: () => void;
+  showBack?: boolean;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ currentScreen, onNavigate, onBack }) => {
-  const navItems: { id: ScreenType | 'back'; label: string; icon: string; aliases?: ScreenType[] }[] = [
-    { id: 'home', label: 'HOME', icon: 'home' },
-    {
-      id: 'work',
-      label: 'WORK',
-      icon: 'engineering',
-      aliases: ['record', 'video-analysis', 'stats', 'drills-vault', 'drills', 'drill-details', 'drill-practice', 'scenarios', 'masterclasses', 'chalkboard', 'planner', 'academy', 'feedback']
-    },
-    {
-      id: 'more',
-      label: 'MORE',
-      icon: 'menu',
-      aliases: ['support', 'help', 'terms', 'security-settings', 'privacy-governance', 'encryption-governance', 'mobile-security', 'source-code-security', 'mobile-bridge', 'security-gate-1']
-    },
-    { id: 'back', label: 'BACK', icon: 'arrow_back' }
-  ];
+interface NavItemConfig {
+  id: ScreenType;
+  label: string;
+  icon: string;
+  aliases?: ScreenType[];
+}
+
+export const Navbar: React.FC<NavbarProps> = ({
+  currentScreen,
+  currentUser,
+  onNavigate,
+  onBack,
+  showBack
+}) => {
+  // Determine role classification
+  const isCoach = currentUser?.role === 'coach';
+  const isParent = currentUser?.role === 'parent';
+  const isJunior = currentUser?.isJunior;
+  const isPlatformAdmin =
+    currentUser?.role === 'platform_admin' ||
+    currentUser?.role === 'security_admin' ||
+    currentUser?.adminSubCategory === 'Platform Admin';
+  const isAcademyAdmin =
+    (currentUser?.role === 'admin' || currentUser?.role === 'club_admin') && !isPlatformAdmin;
+
+  // Generate role-specific navigation items adhering to the Role-to-Feature Matrix
+  const getNavItems = (): NavItemConfig[] => {
+    if (isPlatformAdmin) {
+      return [
+        { id: 'home', label: 'HOME', icon: 'home' },
+        {
+          id: 'profiles',
+          label: 'USERS',
+          icon: 'badge',
+          aliases: ['profiles']
+        },
+        {
+          id: 'security-settings',
+          label: 'SECURITY',
+          icon: 'shield',
+          aliases: ['security-settings', 'encryption-governance', 'mobile-security']
+        },
+        {
+          id: 'cloud-infrastructure',
+          label: 'INFRA',
+          icon: 'cloud_sync',
+          aliases: ['cloud-infrastructure', 'source-code-security', 'mobile-bridge']
+        },
+        {
+          id: 'work',
+          label: 'MORE',
+          icon: 'apps',
+          aliases: ['work', 'more', 'support', 'help', 'terms']
+        }
+      ];
+    }
+
+    if (isAcademyAdmin) {
+      return [
+        { id: 'home', label: 'HOME', icon: 'home' },
+        {
+          id: 'profiles',
+          label: 'ROSTERS',
+          icon: 'badge',
+          aliases: ['profiles']
+        },
+        {
+          id: 'planner',
+          label: 'BAYS',
+          icon: 'calendar_month',
+          aliases: ['planner']
+        },
+        {
+          id: 'privacy-governance',
+          label: 'AUDITS',
+          icon: 'verified_user',
+          aliases: ['privacy-governance', 'security-gate-1', 'security-gate-2']
+        },
+        {
+          id: 'work',
+          label: 'MORE',
+          icon: 'apps',
+          aliases: ['work', 'more', 'support', 'help', 'terms']
+        }
+      ];
+    }
+
+    if (isCoach) {
+      return [
+        { id: 'home', label: 'HOME', icon: 'home' },
+        {
+          id: 'video-analysis',
+          label: 'MOTION LAB',
+          icon: 'slow_motion_video',
+          aliases: ['video-analysis', 'record']
+        },
+        {
+          id: 'drills-vault',
+          label: 'DRILLS',
+          icon: 'fitness_center',
+          aliases: ['drills-vault', 'drills', 'drill-details', 'drill-practice']
+        },
+        {
+          id: 'chalkboard',
+          label: 'TACTICS',
+          icon: 'gesture',
+          aliases: ['chalkboard', 'scenarios', 'masterclasses']
+        },
+        {
+          id: 'work',
+          label: 'MORE',
+          icon: 'apps',
+          aliases: ['work', 'more', 'planner', 'feedback', 'profiles']
+        }
+      ];
+    }
+
+    if (isParent) {
+      return [
+        { id: 'home', label: 'HOME', icon: 'home' },
+        {
+          id: 'feedback',
+          label: 'COACH NOTES',
+          icon: 'rate_review',
+          aliases: ['feedback']
+        },
+        {
+          id: 'planner',
+          label: 'SCHEDULE',
+          icon: 'calendar_month',
+          aliases: ['planner']
+        },
+        {
+          id: 'privacy-governance',
+          label: 'SAFETY',
+          icon: 'shield',
+          aliases: ['privacy-governance']
+        },
+        {
+          id: 'work',
+          label: 'MORE',
+          icon: 'apps',
+          aliases: ['work', 'more', 'profiles', 'support', 'help']
+        }
+      ];
+    }
+
+    if (isJunior) {
+      return [
+        { id: 'home', label: 'HOME', icon: 'home' },
+        {
+          id: 'drills-vault',
+          label: 'MY DRILLS',
+          icon: 'fitness_center',
+          aliases: ['drills-vault', 'drills', 'drill-details', 'drill-practice']
+        },
+        {
+          id: 'record',
+          label: 'RECORD',
+          icon: 'videocam',
+          aliases: ['record']
+        },
+        {
+          id: 'stats',
+          label: 'MY STATS',
+          icon: 'radar',
+          aliases: ['stats']
+        },
+        {
+          id: 'work',
+          label: 'MORE',
+          icon: 'apps',
+          aliases: ['work', 'more', 'feedback', 'scenarios']
+        }
+      ];
+    }
+
+    // Default: Senior Player
+    return [
+      { id: 'home', label: 'HOME', icon: 'home' },
+      {
+        id: 'record',
+        label: 'CAMERA',
+        icon: 'videocam',
+        aliases: ['record']
+      },
+      {
+        id: 'video-analysis',
+        label: 'MOTION LAB',
+        icon: 'slow_motion_video',
+        aliases: ['video-analysis']
+      },
+      {
+        id: 'drills-vault',
+        label: 'DRILLS',
+        icon: 'fitness_center',
+        aliases: ['drills-vault', 'drills', 'drill-details', 'drill-practice']
+      },
+      {
+        id: 'work',
+        label: 'MORE',
+        icon: 'apps',
+        aliases: ['work', 'more', 'stats', 'feedback', 'masterclasses', 'scenarios', 'planner', 'chalkboard']
+      }
+    ];
+  };
+
+  const navItems = getNavItems();
 
   return (
     <nav className="fixed bottom-0 w-full z-50 glass pb-safe border-t border-[#c3f400]/15 backdrop-blur-2xl">
-      <div className="h-16 max-w-xl mx-auto flex justify-around items-center px-1">
+      <div className="h-16 max-w-lg mx-auto flex justify-around items-center px-1">
+        {/* Back button when stack has history and not at home */}
+        {showBack && (
+          <button
+            onClick={() => {
+              playBeep(550, 0.04);
+              onBack?.();
+            }}
+            className="flex flex-col items-center justify-center gap-0.5 w-12 sm:w-14 py-1 text-[#c4c9ac] hover:text-white transition-all cursor-pointer"
+            title="Go Back"
+          >
+            <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+            <span className="text-[9px] tracking-wider uppercase leading-none font-medium">BACK</span>
+          </button>
+        )}
+
         {navItems.map((item) => {
           const isActive =
-            item.id !== 'back' &&
-            (currentScreen === item.id ||
-            (item.aliases && item.aliases.includes(currentScreen)));
+            currentScreen === item.id ||
+            (item.aliases && item.aliases.includes(currentScreen));
 
           return (
             <button
               key={item.id}
               onClick={() => {
-                if (item.id === 'back') {
-                  onBack?.();
-                } else {
-                  onNavigate(item.id as ScreenType);
-                }
+                playBeep(650, 0.04);
+                onNavigate(item.id);
               }}
               className={`flex flex-col items-center justify-center gap-0.5 w-14 sm:w-16 py-1 transition-all duration-200 cursor-pointer ${
                 isActive

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { UserProfile, SessionRecord, ScreenType, DrillItem } from '../../types';
 import { playBeep, playCelebration } from '../../utils/audioFeedback';
+import { CoreCricketLoopStepper } from '../loop/CoreCricketLoopStepper';
 
 interface PlayerHomeViewProps {
   user: UserProfile;
@@ -112,6 +113,14 @@ export const PlayerHomeView: React.FC<PlayerHomeViewProps> = ({
 
   return (
     <div className="flex flex-col gap-6 w-full animate-fadeIn">
+      {/* ========================================================================= */}
+      {/* 0. CORE CRICKET MASTERY LOOP (Central Flywheel) */}
+      {/* ========================================================================= */}
+      <CoreCricketLoopStepper
+        currentUser={user}
+        onNavigate={onNavigate}
+      />
+
       {/* ========================================================================= */}
       {/* 1. TODAY'S TRAINING */}
       {/* ========================================================================= */}

@@ -46,6 +46,38 @@ export const SmartDrillsVault: React.FC<SmartDrillsVaultProps> = ({
 
   return (
     <div className="flex flex-col w-full max-w-5xl mx-auto px-4 sm:px-6 pt-3 pb-28 gap-6 animate-fadeIn">
+      {/* Core Cricket Loop Context Strip */}
+      <div className="p-3 rounded-2xl bg-[#162215] border border-[#c3f400]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-md">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-[#c3f400]/20 flex items-center justify-center text-[#c3f400] shrink-0 font-mono font-bold">
+            5/7
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-[#c3f400] uppercase font-mono text-[10px]">Core Loop Stage 5: Assign Drill</span>
+              <span className="text-[#8e918f]">•</span>
+              <span className="text-white font-medium">Smart Drills Vault Library</span>
+            </div>
+            <p className="text-[11px] text-[#c4c9ac] hidden sm:block">
+              Select corrective drill to execute in Stage 6 (Train Again) and verify in Stage 7 (Compare Improvement).
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <button
+            onClick={() => {
+              playBeep(700, 0.05);
+              onNavigate('drill-practice');
+            }}
+            className="flex-1 sm:flex-none px-3.5 py-1.5 rounded-xl bg-[#c3f400] text-[#111800] text-xs font-bold flex items-center justify-center gap-1 cursor-pointer transition-all"
+          >
+            <span>Next: Train Again (Stage 6)</span>
+            <span className="material-symbols-outlined text-[15px]">sports_cricket</span>
+          </button>
+        </div>
+      </div>
+
       {/* Top Vault Banner */}
       <div className="bg-gradient-to-r from-[#1c260f] via-[#161f0d] to-[#202020] p-6 rounded-3xl border border-[#c3f400]/40 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>

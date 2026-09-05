@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { UserProfile, ScreenType, DrillItem } from '../../types';
 import { playBeep, playCelebration } from '../../utils/audioFeedback';
+import { CoreCricketLoopStepper } from '../loop/CoreCricketLoopStepper';
 
 interface CoachHomeViewProps {
   user: UserProfile;
@@ -246,6 +247,14 @@ export const CoachHomeView: React.FC<CoachHomeViewProps> = ({
           </button>
         </div>
       </div>
+
+      {/* ========================================================================= */}
+      {/* 0. CORE CRICKET MASTERY LOOP (Squad Review & Feedback Flywheel) */}
+      {/* ========================================================================= */}
+      <CoreCricketLoopStepper
+        currentUser={user}
+        onNavigate={onNavigate}
+      />
 
       {/* ========================================================================= */}
       {/* 1. PLAYERS NEEDING ATTENTION */}

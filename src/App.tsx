@@ -527,8 +527,10 @@ export default function App() {
       {!hideNavbar && (
         <Navbar
           currentScreen={currentScreen}
+          currentUser={currentUser}
           onNavigate={handleNavigate}
           onBack={handleBack}
+          showBack={showBack}
         />
       )}
 

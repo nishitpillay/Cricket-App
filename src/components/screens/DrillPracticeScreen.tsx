@@ -252,12 +252,21 @@ export const DrillPracticeScreen: React.FC<DrillPracticeScreenProps> = ({
               </div>
             </div>
 
-            <button
-              onClick={onFinish}
-              className="w-full py-3.5 rounded-xl bg-[#c3f400] text-[#161e00] font-headline font-extrabold text-sm shadow-[0_0_15px_rgba(195,244,0,0.3)] hover:bg-[#abd600] transition-colors"
-            >
-              View Coach Analysis & Feedback
-            </button>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={onFinish}
+                className="w-full py-3.5 rounded-xl bg-[#c3f400] text-[#161e00] font-headline font-extrabold text-sm shadow-[0_0_15px_rgba(195,244,0,0.3)] hover:bg-[#abd600] transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span>Step 7: Compare Improvement Delta</span>
+                <span className="material-symbols-outlined text-[18px]">compare_arrows</span>
+              </button>
+              <button
+                onClick={onBack}
+                className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white font-headline font-bold text-xs transition-colors cursor-pointer"
+              >
+                Back to Training Hub
+              </button>
+            </div>
           </div>
         </div>
       )}

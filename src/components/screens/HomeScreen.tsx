@@ -7,6 +7,7 @@ import { playBeep } from '../../utils/audioFeedback';
 import { ThemeMode, getStoredTheme, setStoredTheme } from '../../utils/themeManager';
 import { ThemeToggle } from '../ThemeToggle';
 import { PlayerHomeView } from '../home/PlayerHomeView';
+import { JuniorPlayerHomeView } from '../home/JuniorPlayerHomeView';
 import { CoachHomeView } from '../home/CoachHomeView';
 import { ParentHomeView } from '../home/ParentHomeView';
 import { AdminHomeView } from '../home/AdminHomeView';
@@ -302,7 +303,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         />
       )}
 
-      {isPlayer && (
+      {isPlayer && activeUser.isJunior && (
+        <JuniorPlayerHomeView
+          user={activeUser}
+          sessions={sessions}
+          onNavigate={onNavigate}
+          onSelectSession={onSelectSession}
+          onSelectDrill={onSelectDrill}
+        />
+      )}
+
+      {isPlayer && !activeUser.isJunior && (
         <PlayerHomeView
           user={activeUser}
           sessions={sessions}

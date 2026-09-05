@@ -103,6 +103,48 @@ export const VideoAnalysisTool: React.FC<VideoAnalysisToolProps> = ({ onNavigate
 
   return (
     <div className="flex flex-col w-full max-w-5xl mx-auto px-4 sm:px-6 pt-3 pb-28 gap-5 animate-fadeIn">
+      {/* Core Cricket Loop Context Strip */}
+      <div className="p-3 rounded-2xl bg-[#162215] border border-[#c3f400]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-md">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-[#c3f400]/20 flex items-center justify-center text-[#c3f400] shrink-0 font-mono font-bold">
+            3/7
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-[#c3f400] uppercase font-mono text-[10px]">Core Loop Stage 3: Analyse</span>
+              <span className="text-[#8e918f]">•</span>
+              <span className="text-white font-medium">Biomechanics & Slow-Mo Stepper</span>
+            </div>
+            <p className="text-[11px] text-[#c4c9ac] hidden sm:block">
+              Inspect release angles and front-foot brace before sending to Coach Feedback or assigning Drills.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <button
+            onClick={() => {
+              playBeep(700, 0.05);
+              onNavigate('feedback');
+            }}
+            className="flex-1 sm:flex-none px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold flex items-center justify-center gap-1 cursor-pointer transition-all border border-white/10"
+          >
+            <span>Next: Coach Feedback</span>
+            <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
+          </button>
+          <button
+            onClick={() => {
+              playBeep(700, 0.05);
+              onNavigate('drills-vault');
+            }}
+            className="flex-1 sm:flex-none px-3 py-1.5 rounded-xl bg-[#c3f400] text-[#111800] text-xs font-bold flex items-center justify-center gap-1 cursor-pointer transition-all"
+          >
+            <span>Assign Drill</span>
+            <span className="material-symbols-outlined text-[15px]">fitness_center</span>
+          </button>
+        </div>
+      </div>
+
       {/* Top Header & Clip Switcher */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#201f1f] p-4 rounded-2xl border border-white/10 glass shadow-xl">
         <div>
